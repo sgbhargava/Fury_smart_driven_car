@@ -282,8 +282,8 @@ CMD_HANDLER_FUNC(catHandler)
     cmdParams.trimEnd(" ");
 
     char c = 0;
-    output.printf("Press a key to print one buffer at a time or enter 'x' to quit...\n");
-    output.getChar(&c, portMAX_DELAY);
+    //output.printf("Press a key to print one buffer at a time or enter 'x' to quit...\n");
+    //output.getChar(&c, portMAX_DELAY);
     if ('x' == c) {
         return true;
     }
@@ -310,7 +310,7 @@ CMD_HANDLER_FUNC(catHandler)
                     output.putChar(buffer[i]);
                 }
 
-                output.getChar(&c, portMAX_DELAY);
+                //output.getChar(&c, portMAX_DELAY);
                 if ('x' == c) {
                     break;
                 }

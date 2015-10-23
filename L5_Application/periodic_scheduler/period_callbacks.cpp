@@ -31,30 +31,36 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
-
+#include "SensorDataType.h"
+#include "tasks.hpp"
+#include "stdio.h"
+#include "printf_lib.h"
 
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-
-
 void period_1Hz(void)
 {
-    LE.toggle(1);
+    static QueueHandle_t sensor_data_q = scheduler_task::getSharedObject("sonic_queue");
+    SonicSensors_t sensor_data;
+    if(xQueueReceive(sensor_data_q, &sensor_data, 0))
+    {
+        u0_dbg_printf("Sensors data: \n1)%u\n2)%u\n3)%u\n", sensor_data.SonicSensor1, sensor_data.SonicSensor2, sensor_data.SonicSensor3);
+    }
 }
 
 void period_10Hz(void)
 {
-    LE.toggle(2);
+
 }
 
 void period_100Hz(void)
 {
-    LE.toggle(3);
+
 }
 
 void period_1000Hz(void)
 {
-    LE.toggle(4);
+
 }

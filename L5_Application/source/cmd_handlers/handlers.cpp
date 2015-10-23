@@ -45,7 +45,9 @@
 #include "c_tlm_stream.h"
 #include "c_tlm_var.h"
 
+#include "lpc_pwm.hpp"
 
+#include "motor.hpp"
 
 CMD_HANDLER_FUNC(taskListHandler)
 {
@@ -606,6 +608,65 @@ CMD_HANDLER_FUNC(rebootHandler)
     return true;
 }
 
+CMD_HANDLER_FUNC(speedHandler)
+{
+    SpeedCtrl * ctrl = SpeedCtrl::getInstance();
+
+    if(cmdParams.beginsWithIgnoreCase("init")) {
+        ctrl->initESC();
+    }
+    else if(cmdParams.beginsWithIgnoreCase("incr")) {
+        printf("incr\n");
+        ctrl->incrSpeedPWM();
+    }
+    else if(cmdParams.beginsWithIgnoreCase("descr")) {
+        printf("descr\n");
+        ctrl->descrSpeedPWM();
+    }
+    else if(cmdParams.beginsWithIgnoreCase("set")) {
+        char *value = NULL;
+        if (2 == cmdParams.tokenize(" ", 2, NULL, &value)) {
+            printf("set %f\n", (float)atof(value));
+            ctrl->setSpeedPWM((float)atof(value));
+        }
+    }
+    return true;
+}
+
+CMD_HANDLER_FUNC(directionHandler)
+{
+    DirectionCtrl* direction = DirectionCtrl::getInstance();
+    printf("Set Direction to %s", cmdParams.c_str());
+    if (cmdParams == "farRight")
+    {
+        direction->setDirection(DirectionCtrl::dirFarRight);
+    }
+    else if (cmdParams == "right")
+    {
+        direction->setDirection(DirectionCtrl::dirRight);
+    }
+    else if (cmdParams == "center")
+    {
+        direction->setDirection(DirectionCtrl::dirCenter);
+    }
+    else if (cmdParams == "left")
+    {
+        direction->setDirection(DirectionCtrl::dirLeft);
+    }
+    else if (cmdParams == "farLeft")
+    {
+        direction->setDirection(DirectionCtrl::dirFarLeft);
+    }
+    return true;
+}
+CMD_HANDLER_FUNC(speedMonHandler)
+{
+    SpeedMonitor * monitor = SpeedMonitor::getInstance();
+    float rpm, speed;
+    monitor->getSpeed(&rpm, &speed);
+    printf("RPM: %.2f  Speed: %.2f\n", rpm, speed);
+    return true;
+}
 #if (SYS_CFG_ENABLE_TLM)
 static void stream_tlm(const char *s, void *arg)
 {

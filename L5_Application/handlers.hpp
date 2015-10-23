@@ -84,6 +84,12 @@ CMD_HANDLER_FUNC(learnIrHandler);
 /// Send a packet over the air
 CMD_HANDLER_FUNC(wirelessHandler);
 
+CMD_HANDLER_FUNC(speedHandler);
+
+CMD_HANDLER_FUNC(speedMonHandler);
+
+CMD_HANDLER_FUNC(directionHandler);
+
 
 
 #endif /* HANDLERS_HPP_ */

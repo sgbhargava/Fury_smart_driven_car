@@ -110,7 +110,9 @@ bool terminalTask::taskEntry()
                                                );
     cp.addHandler(learnIrHandler,  "learn",    "Begin to learn IR codes for numbers 0-9");
     cp.addHandler(wirelessHandler, "wireless", "Use 'wireless' to see the nested commands");
-
+    cp.addHandler(speedHandler, "speed", "Set speed pwm");
+    cp.addHandler(speedMonHandler, "getSpeed", "Get speed");
+    cp.addHandler(directionHandler, "direction", "Set direction pwm");
     /* Firmware upgrade handlers
      * Please read "netload_readme.txt" at ref_and_datasheets directory.
      */

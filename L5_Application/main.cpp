@@ -25,10 +25,12 @@
  */
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include "lpc_pwm.hpp"
 #include "io.hpp"
+#include <cstdio>
+#include "uart0.hpp"
+#include "eint.h"
+#include "motor.hpp"
 
-#include <stdio.h>
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.
@@ -43,63 +45,7 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
-class directionTask: public scheduler_task
-{
-    private:
-        PWM directionPWM;
-        float percent;
-        enum {
-            sw1 = (1 << 0),
-            sw2 = (1 << 1),
-            sw3 = (1 << 2),
-            sw4 = (1 << 3),
-        };
-    public:
-        directionTask(uint8_t priority) :
-            scheduler_task("direction", 1024, priority),
-            directionPWM(PWM(PWM::pwm1, 100))
-        {
-            percent = 10;
-            directionPWM.set(10);
-            LD.setNumber(percent);
-        }
 
-        bool run(void *p)
-        {
-            const uint8_t switches = SW.getSwitchValues();
-            switch (switches){
-                case sw1:
-                    percent += 1;
-                    printf("Write: %f\n", percent);
-                    LD.setNumber((int)percent);
-                    directionPWM.set(percent);
-                    vTaskDelay(50);
-                    break;
-                case sw2:
-                    percent -= 1;
-                    printf("Write: %f\n", percent);
-                    LD.setNumber((int)percent);
-                    directionPWM.set(percent);
-                    vTaskDelay(50);
-                    break;
-                case sw3:
-                    percent += 0.1;
-                    printf("Write: %f\n", percent);
-                    LD.setNumber((int)percent);
-                    directionPWM.set(percent);
-                    vTaskDelay(50);
-                    break;
-                case sw4:
-                    percent -= 0.1;
-                    printf("Write: %f\n", percent);
-                    LD.setNumber((int)percent);
-                    directionPWM.set(percent);
-                    vTaskDelay(50);
-                    break;
-            }
-            return true;
-        }
-};
 int main(void)
 {
     /**
@@ -114,10 +60,14 @@ int main(void)
      */
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
+    //eint3_enable_port2(port2_5, eint_falling_edge, speed_pulse_end);
+
+    SpeedMonitor::getInstance();
+
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
-    scheduler_add_task(new directionTask(PRIORITY_HIGH));
+    //scheduler_add_task(new speedReportTask(PRIORITY_HIGH));
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 0
     scheduler_add_task(new periodicSchedulerTask());

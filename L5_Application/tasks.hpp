@@ -28,6 +28,8 @@
 #include "command_handler.hpp"
 #include "wireless.h"
 #include "char_dev.hpp"
+#include "gpio.hpp"
+#include "lpc_pwm.hpp"
 
 #include "FreeRTOS.h"
 #include "semphr.h"

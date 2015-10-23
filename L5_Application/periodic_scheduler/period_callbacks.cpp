@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
+#include "motor.hpp"
 
 
 
@@ -38,10 +39,13 @@
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 
-
 void period_1Hz(void)
 {
+    float rpm, speed;
+
+    SpeedMonitor * monitor = SpeedMonitor::getInstance();
     LE.toggle(1);
+    monitor->getSpeed(&rpm, &speed);
 }
 
 void period_10Hz(void)

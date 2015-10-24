@@ -28,6 +28,7 @@
 #include "command_handler.hpp"
 #include "wireless.h"
 #include "char_dev.hpp"
+#include "gps_data.hpp"
 
 #include "FreeRTOS.h"
 #include "semphr.h"

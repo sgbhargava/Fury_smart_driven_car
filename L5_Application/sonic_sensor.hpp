@@ -14,6 +14,7 @@
 #include "tasks.hpp"
 #include "SensorDataType.h"
 #include "lpc_timers.h"
+#include "printf_lib.h"
 
 
 uint32_t timerValue1, timerValue2, timerValue3;
@@ -95,21 +96,21 @@ class SonicSensorTask : public scheduler_task
             SensorTrig1.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig1.setLow();
-            sensor_data.SonicSensor1 = timerValue1;
+            simple_filter(sensor_data.SonicSensor1, timerValue1);
             delay_ms(DelayForSensor_ms);
 
             //Sensor 2
             SensorTrig2.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig2.setLow();
-            sensor_data.SonicSensor2 = timerValue2;
+            simple_filter(sensor_data.SonicSensor2, timerValue2);
             delay_ms(DelayForSensor_ms);
 
             //Sensor 3
             SensorTrig3.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig3.setLow();
-            sensor_data.SonicSensor3 = timerValue3;
+            simple_filter(sensor_data.SonicSensor3, timerValue3);
             delay_ms(DelayForSensor_ms);
 
             xQueueSend(sensor_data_q, &sensor_data, 0);
@@ -122,7 +123,20 @@ class SonicSensorTask : public scheduler_task
         GPIO SensorTrig1, SensorTrig2, SensorTrig3;
         QueueHandle_t sensor_data_q;
         static const int TriggerDelay_us = 25;
-        static const int DelayForSensor_ms = 70;
+        static const int DelayForSensor_ms = 50;
+
+        void simple_filter(uint16_t &data, uint32_t distance_inches)
+        {
+            if(distance_inches < 240 && distance_inches > 6)
+            {
+                    data = distance_inches;
+            }
+            else
+            {
+                //Do nothing and keep previous value
+                //u0_dbg_printf("Bad Value\n");
+            }
+        }
 };
 
 #endif /* L5_APPLICATION_SONIC_SENSOR_HPP_ */

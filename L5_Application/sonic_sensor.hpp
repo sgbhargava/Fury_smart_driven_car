@@ -13,18 +13,39 @@
 #include "stdio.h"
 #include "tasks.hpp"
 #include "SensorDataType.h"
+#include "lpc_timers.h"
 
 
-uint32_t rise_time, diff_time;
+uint32_t timerValue1, timerValue2, timerValue3;
 
-void StartTime_isr(void)
+void StartTimeSensor1_isr(void)
 {
-    rise_time = sys_get_uptime_us();
+    lpc_timer_set_value(lpc_timer0, 0);
 }
 
-void EndTime_isr(void)
+void EndTimeSensor1_isr(void)
 {
-    diff_time = (sys_get_uptime_us() - rise_time)/147;
+    timerValue1 = (lpc_timer_get_value(lpc_timer0)/147);
+}
+
+void StartTimeSensor2_isr(void)
+{
+    lpc_timer_set_value(lpc_timer2, 0);
+}
+
+void EndTimeSensor2_isr(void)
+{
+    timerValue2 = (lpc_timer_get_value(lpc_timer2)/147);
+}
+
+void StartTimeSensor3_isr(void)
+{
+    lpc_timer_set_value(lpc_timer3, 0);
+}
+
+void EndTimeSensor3_isr(void)
+{
+    timerValue3 = (lpc_timer_get_value(lpc_timer3)/147);
 }
 
 class SonicSensorTask : public scheduler_task
@@ -41,6 +62,10 @@ class SonicSensorTask : public scheduler_task
 
         bool init(void)
         {
+            lpc_timer_enable(lpc_timer0, 1);
+            lpc_timer_enable(lpc_timer2, 1);
+            lpc_timer_enable(lpc_timer3, 1);
+
             pwmSensor1.setAsInput();
             pwmSensor2.setAsInput();
             pwmSensor3.setAsInput();
@@ -51,12 +76,15 @@ class SonicSensorTask : public scheduler_task
             sensor_data_q = xQueueCreate(2, sizeof(sensor_data));
             addSharedObject("sonic_queue", sensor_data_q);
 
-            eint3_enable_port2(0, eint_rising_edge, StartTime_isr);
-            eint3_enable_port2(0, eint_falling_edge, EndTime_isr);
-            eint3_enable_port2(2, eint_rising_edge, StartTime_isr);
-            eint3_enable_port2(2, eint_falling_edge, EndTime_isr);
-            eint3_enable_port2(4, eint_rising_edge, StartTime_isr);
-            eint3_enable_port2(4, eint_falling_edge, EndTime_isr);
+            //Interrupt for Sensor 1
+            eint3_enable_port2(0, eint_rising_edge, StartTimeSensor1_isr);
+            eint3_enable_port2(0, eint_falling_edge, EndTimeSensor1_isr);
+            //Interrupt for Sensor 2
+            eint3_enable_port2(2, eint_rising_edge, StartTimeSensor2_isr);
+            eint3_enable_port2(2, eint_falling_edge, EndTimeSensor2_isr);
+            //Interrupt for Sensor 3
+            eint3_enable_port2(4, eint_rising_edge, StartTimeSensor3_isr);
+            eint3_enable_port2(4, eint_falling_edge, EndTimeSensor3_isr);
 
             return true;
         }
@@ -67,21 +95,21 @@ class SonicSensorTask : public scheduler_task
             SensorTrig1.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig1.setLow();
-            sensor_data.SonicSensor1 = diff_time;
+            sensor_data.SonicSensor1 = timerValue1;
             delay_ms(DelayForSensor_ms);
 
             //Sensor 2
             SensorTrig2.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig2.setLow();
-            sensor_data.SonicSensor2 = diff_time;
+            sensor_data.SonicSensor2 = timerValue2;
             delay_ms(DelayForSensor_ms);
 
             //Sensor 3
             SensorTrig3.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig3.setLow();
-            sensor_data.SonicSensor3 = diff_time;
+            sensor_data.SonicSensor3 = timerValue3;
             delay_ms(DelayForSensor_ms);
 
             xQueueSend(sensor_data_q, &sensor_data, 0);

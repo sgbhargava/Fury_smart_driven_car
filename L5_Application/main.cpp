@@ -25,6 +25,7 @@
  */
 #include "tasks.hpp"
 #include "examples/examples.hpp"
+#include "gps_data.hpp"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -56,6 +57,9 @@ int main(void)
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
+
+    /*  */
+    scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 0

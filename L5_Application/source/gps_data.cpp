@@ -4,10 +4,11 @@
 /*
  * initialize all the buffers and queues that are used.
  */
-void gps_data::initializeGPSBuffers()
+bool gps_data::initializeGPSBuffers()
 {
     gpsDataBuffer_q = xQueueCreate(10, sizeof(uint32_t));
     addSharedObject("gps_queue", gpsDataBuffer_q);
+    return (NULL != gpsDataBuffer_q);
 }
 
 /*
@@ -21,9 +22,19 @@ void gps_data::initializeGPSComm()
 /*
  * Read the data from gps
  */
-void gps_data::readGPSData()
+void gps_data::readRawGPSData()
 {
-    gpsComm.gets(arr, 60, 10);
-    printf("%s\n", arr);
+    gpsComm.gets(gpsRawData, 70, 10);
+    printf("%s\n", gpsRawData);
+}
 
+void gps_data::formatGPSData()
+{
+    sscanf(gpsRawData, "%s %f %f %c %f %c %d, %d", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
+            &gpsFormattedData.latitude, &gpsFormattedData.nsIndicator, &gpsFormattedData.longitude,
+            &gpsFormattedData.ewIndicator, &gpsFormattedData.gpsIndicator, &gpsFormattedData.satInUse);
+    //printf("%s %f %f %c %f %c %d, %d\n", gpsFormattedData.formatNMEA, gpsFormattedData.timeUTC,
+    //        gpsFormattedData.latitude, gpsFormattedData.nsIndicator, gpsFormattedData.longitude,
+    //        gpsFormattedData.ewIndicator, gpsFormattedData.gpsIndicator, gpsFormattedData.satInUse);
+    //xQueueReceive(gpsDataBuffer_q, &gpsFormattedData, 10);
 }

@@ -54,6 +54,8 @@ int main(void)
         delay_ms(500);
         compassbearingreading_highlowbytes();
         delay_ms(500);
+        pitchangle();
+        delay_ms(500);
     }
     /**
      * A few basic tasks for this bare-bone system :

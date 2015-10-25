@@ -32,9 +32,17 @@ void compassbearingreading_highlowbytes()
     shiftreg1 = compass.readReg(0xC0,3);
 
     compassangle = (shiftreg1<<0) + (shiftreg<<8);
-    //compassangle = shiftreg<<8;
-    printf("compassbearingreading_highlowbytes:%f\n",(compassangle/10));
+    printf("compassreadings_inangles:%f\n",(compassangle/10));
 }
 
+void pitchangle()
+{
+    float pitchangle,pitchangle1;
+    pitchangle = compass.readReg(0xC0,4);
+    pitchangle1 = compass.readReg(0xC0,26);
+
+    printf("pitchangle:%f\n",pitchangle);
+    printf("pitchangle_withoutfilter:%f\n",pitchangle1);
+}
 
 #endif /* L5_APPLICATION_COMPASS_H_ */

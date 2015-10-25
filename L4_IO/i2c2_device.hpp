@@ -30,7 +30,7 @@
 /**
  * I2C Device Base Class
  * This class can be inherited by an I2C Device to be able to read and write registers
- * more easily as this class will puts an abstraction layer on I2C and provides simple
+ * more easily as this class will put an abstraction layer on I2C and provides simple
  * functionality to read and write registers over I2C Bus.
  *
  * @ingroup BoardIO

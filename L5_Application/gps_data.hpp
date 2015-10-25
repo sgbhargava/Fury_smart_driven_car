@@ -7,7 +7,6 @@
 #include "uart0.hpp"
 
 class gps_data : public scheduler_task{
-
         public:
         gps_data(uint8_t priority) :
             scheduler_task("gps fetch data", 1024, priority),

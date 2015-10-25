@@ -26,6 +26,11 @@
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "gps_data.hpp"
+#include "compass.h"
+#include "i2c2.hpp"
+#include "i2c2_device.hpp"
+#include "i2c_base.hpp"
+#include "utilities.h"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -43,6 +48,13 @@
  */
 int main(void)
 {
+    while(1)
+    {
+        compassbearing_reading();
+        delay_ms(500);
+        compassbearingreading_highlowbytes();
+        delay_ms(500);
+    }
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.

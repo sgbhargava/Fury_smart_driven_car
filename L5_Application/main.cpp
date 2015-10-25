@@ -32,6 +32,8 @@
 #include "i2c_base.hpp"
 #include "utilities.h"
 
+#define GPSMODULE   1
+
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.
@@ -48,7 +50,7 @@
  */
 int main(void)
 {
-    while(1)
+    while(0)
     {
         compassbearing_reading();
         delay_ms(500);
@@ -73,7 +75,9 @@ int main(void)
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
     /* Used to calculate the present location. connect the GPS module to UART2 */
+#if GPSMODULE
     scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
+#endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 0

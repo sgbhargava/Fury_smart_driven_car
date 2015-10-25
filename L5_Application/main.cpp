@@ -70,7 +70,7 @@ int main(void)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
-    /*  */
+    /* Used to calculate the present location. connect the GPS module to UART2 */
     scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */

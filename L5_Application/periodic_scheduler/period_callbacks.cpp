@@ -31,8 +31,8 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
-
-
+#include "can.h"
+#include "stdio.h"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -41,7 +41,18 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 void period_1Hz(void)
 {
-    LE.toggle(1);
+	static uint64_t x = 0;
+	can_msg_t mess;
+	mess.msg_id = 0x123;
+	mess.frame_fields.is_29bit = 0;
+	mess.frame_fields.data_len = 8;
+	mess.data.qword = x;
+	if(CAN_tx(can1, &mess, portMAX_DELAY))
+			LE.toggle(1);
+	else
+		printf("not sent\n");
+	x++;
+
 }
 
 void period_10Hz(void)

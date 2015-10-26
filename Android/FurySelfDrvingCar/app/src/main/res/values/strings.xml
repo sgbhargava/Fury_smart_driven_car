@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Fury:SelfDrivingCar</string>
+    <string name="title_activity_maps">Fury</string>
+    <string name="BlueTooth">BLUETOOTH</string>
+    <string name="AZ">Start</string>
+    <string name="Start">START</string>
+    <string name="InitLoc">CAR LOCATION</string>
+</resources>

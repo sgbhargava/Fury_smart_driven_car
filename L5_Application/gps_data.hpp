@@ -5,14 +5,16 @@
 #include "scheduler_task.hpp"
 
 typedef struct {
-    float timeUTC;
-    float latitude;
-    float longitude;
-    char formatNMEA[6];
-    char nsIndicator;
-    char ewIndicator;
-    uint8_t gpsIndicator;
-    uint8_t satInUse;
+    float   timeUTC;
+    float   latitude;
+    float   longitude;
+    float   speed;
+    float   courseDeg;
+    int     dateUTC;
+    char    formatNMEA[6];
+    char    gpsStatus;
+    char    nsIndicator;
+    char    ewIndicator;
 }gpsData_t;
 
 /*
@@ -24,7 +26,7 @@ class gps_data : public scheduler_task{
         public:
 
         gps_data(uint8_t priority) :
-            scheduler_task("gps fetch data", 1024, priority),
+            scheduler_task("gps fetch data", 2048, priority),
             gpsComm(Uart2::getInstance()),
             gpsDataBuffer_q(NULL)
         {
@@ -43,7 +45,7 @@ class gps_data : public scheduler_task{
             readRawGPSData();
             formatGPSData();
 
-            vTaskDelay(500);
+            vTaskDelay(1000);
             return true;
         }
 

@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "gps_data.hpp"
+#include "string.h"
 
 /*
  * initialize all the buffers and queues that are used.
@@ -25,16 +26,20 @@ void gps_data::initializeGPSComm()
 void gps_data::readRawGPSData()
 {
     gpsComm.gets(gpsRawData, 70, 10);
-    printf("%s\n", gpsRawData);
+    printf("%s\n\n", gpsRawData);
 }
 
 void gps_data::formatGPSData()
 {
-    sscanf(gpsRawData, "%s %f %f %c %f %c %d, %d", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
-            &gpsFormattedData.latitude, &gpsFormattedData.nsIndicator, &gpsFormattedData.longitude,
-            &gpsFormattedData.ewIndicator, &gpsFormattedData.gpsIndicator, &gpsFormattedData.satInUse);
-    //printf("%s %f %f %c %f %c %d, %d\n", gpsFormattedData.formatNMEA, gpsFormattedData.timeUTC,
-    //        gpsFormattedData.latitude, gpsFormattedData.nsIndicator, gpsFormattedData.longitude,
-    //        gpsFormattedData.ewIndicator, gpsFormattedData.gpsIndicator, gpsFormattedData.satInUse);
+    /*sscanf(gpsRawData, "%6s", gpsFormattedData.formatNMEA);
+    if(strcmp(gpsFormattedData.formatNMEA, "$GPRMC") == 0)
+    {
+        sscanf(gpsRawData, "%6s,%[^'.']9f,%c,%[^'.']8f,%c,%[^'.']9f,%c", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
+                    &gpsFormattedData.gpsStatus, &gpsFormattedData.latitude, &gpsFormattedData.nsIndicator,
+                    &gpsFormattedData.longitude, &gpsFormattedData.ewIndicator);
+        printf("latitude - %f%c\n longitude - %f%c\n time - %f\n status - %c\n\n",
+                gpsFormattedData.latitude, gpsFormattedData.nsIndicator, gpsFormattedData.longitude,
+                gpsFormattedData.ewIndicator, gpsFormattedData.timeUTC, gpsFormattedData.gpsStatus);
+    }*/
     //xQueueReceive(gpsDataBuffer_q, &gpsFormattedData, 10);
 }

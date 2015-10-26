@@ -26,7 +26,22 @@
 extern "C" {
 #endif
 
+#include "stdint.h"
 
+typedef struct long_lat_data
+{
+        uint8_t degree;
+        uint8_t minutes;
+        uint8_t seconds;
+};
+typedef struct gps_data{
+
+      long_lat_data latitude;
+      long_lat_data longitude;
+      uint16_t checkpoint;
+      uint16_t bDestination;
+
+} gps_data;
 
 extern const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES;
 void period_1Hz(void);

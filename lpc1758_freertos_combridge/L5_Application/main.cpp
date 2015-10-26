@@ -25,6 +25,8 @@
  */
 #include "tasks.hpp"
 #include "examples/examples.hpp"
+#include "uart2.hpp"
+#include "stdio.h"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -40,8 +42,56 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
+
+// test code
+
+void init_uart2()
+{
+    Uart2 &u2 = Uart2::getInstance();
+
+    u2.init(38400,32,32);
+}
+
+
+// test code
+class UartSend : public scheduler_task
+{
+    private:
+        Uart2 &u2;
+        int i=0;
+    public:
+        UartSend(uint8_t priority) :
+            scheduler_task("uart2", 2000, priority),u2(Uart2::getInstance()),i(0)
+        {
+
+            /* Nothing to init */
+        }
+
+        bool run(void *p)
+        {
+            char data[10];
+
+            getchar();
+            i=0;
+            while((data[i]=getchar())!='\n')
+            {
+                putchar(data[i]);
+                i++;
+            }
+
+            data[i] = 0;
+
+            u2.put(data,0);
+
+            return true;
+        }
+};
+
+
 int main(void)
 {
+
+    init_uart2();
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.
@@ -57,8 +107,10 @@ int main(void)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
+    scheduler_add_task(new UartSend(PRIORITY_MEDIUM));
+
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 0
+    #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 

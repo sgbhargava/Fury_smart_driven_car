@@ -12,28 +12,20 @@
         android:weightSum="1"
         android:id="@+id/linearLayout">
 
-    <Button
-        android:layout_width="57dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/Bn2"
-        android:text="@string/button_name2" />
-
-    <Button
+        <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/Bn3"
-        android:text="@string/button_name3" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:layout_marginTop="80dp">
-        <ListView
-        android:layout_width="372dp"
-        android:layout_height="184dp"
-        android:id="@+id/list"
-            />
+        android:text="@string/button_name3"
+            android:layout_gravity="bottom" />
 
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="send"
+            android:id="@+id/bn2"
+            android:layout_gravity="bottom" />
     </LinearLayout>
+
 </RelativeLayout>

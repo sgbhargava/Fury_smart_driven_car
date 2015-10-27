@@ -239,13 +239,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void handleMessage(Message msg) {
             switch(msg.what)
             {
-                case 2:
+                case 1:
                 {
                     byte[] readBuf = (byte[]) msg.obj;
                     String read = new String(readBuf,0,msg.arg1);
-                    Toast.makeText(getApplicationContext(),read,Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),read,Toast.LENGTH_SHORT).show();
 
                 }
+                break;
+                case 2:
+                {
+                    Toast.makeText(getApplicationContext(),(String)msg.obj,Toast.LENGTH_SHORT).show();
+                }
+                break;
             }
         }
     };
@@ -286,7 +292,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
             catch(IOException e){
-                Toast.makeText(getApplicationContext(),"Device not in range",Toast.LENGTH_SHORT).show();
+             //   Toast.makeText(getApplicationContext(),"Device not in range",Toast.LENGTH_SHORT).show();
                 Log.d("BT", "get socket failed");
             }
 
@@ -305,10 +311,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 else
                     return;
                 Log.d("BT", "Connecting");
+                reciever.obtainMessage(2,"Connected!!").sendToTarget();
             }catch(IOException e )
             {
                 Log.d("BT", "Connecting failed");
-
+                reciever.obtainMessage(2,"Not able to Connect!!").sendToTarget();
                 try{
                     mmSocket.close();
                     return;
@@ -413,7 +420,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             {
                 try{
                     bytes = mmInStream.read(buffer);
-                    reciever.obtainMessage(2,bytes,-1,buffer).sendToTarget();
+                    reciever.obtainMessage(1,bytes,-1,buffer).sendToTarget();
                 }catch (IOException e)
                 {
                     break;

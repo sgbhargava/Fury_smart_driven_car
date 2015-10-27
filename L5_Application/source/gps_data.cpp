@@ -1,23 +1,20 @@
 #include "stdio.h"
 #include "gps_data.hpp"
 #include "string.h"
+#include "lpc_sys.h"
+#include "io.hpp"
 
 /*
  * initialize all the buffers and queues that are used.
  */
-bool gps_data::initializeGPSBuffers()
+void gps_data::initializeGPSBuffers()
 {
     gpsDataBuffer_q = xQueueCreate(10, sizeof(uint32_t));
-    addSharedObject("gps_queue", gpsDataBuffer_q);
-    return (NULL != gpsDataBuffer_q);
-}
-
-/*
- * initialize the UART for gps communication
- */
-void gps_data::initializeGPSComm()
-{
-    gpsComm.init(gpsBaud,gpsRxQSz,gpsTxQSz);
+    if(NULL != gpsDataBuffer_q)
+    {
+        puts("Error creating queue\n");
+        sys_reboot_abnormal();
+    }
 }
 
 /*
@@ -25,21 +22,24 @@ void gps_data::initializeGPSComm()
  */
 void gps_data::readRawGPSData()
 {
-    gpsComm.gets(gpsRawData, 70, 10);
-    printf("%s\n\n", gpsRawData);
+    bool ok;
+    ok = gpsComm.gets(gpsRawData,70,10);
+    if(!ok)
+    {
+        LE.toggle(4); // Toggle the 4th on board led if uart read fails.
+    }
+    //printf("%s\n",gpsRawData);
 }
 
 void gps_data::formatGPSData()
 {
-    /*sscanf(gpsRawData, "%6s", gpsFormattedData.formatNMEA);
+    sscanf(gpsRawData, "%6s", gpsFormattedData.formatNMEA);
     if(strcmp(gpsFormattedData.formatNMEA, "$GPRMC") == 0)
     {
-        sscanf(gpsRawData, "%6s,%[^'.']9f,%c,%[^'.']8f,%c,%[^'.']9f,%c", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
-                    &gpsFormattedData.gpsStatus, &gpsFormattedData.latitude, &gpsFormattedData.nsIndicator,
-                    &gpsFormattedData.longitude, &gpsFormattedData.ewIndicator);
-        printf("latitude - %f%c\n longitude - %f%c\n time - %f\n status - %c\n\n",
-                gpsFormattedData.latitude, gpsFormattedData.nsIndicator, gpsFormattedData.longitude,
-                gpsFormattedData.ewIndicator, gpsFormattedData.timeUTC, gpsFormattedData.gpsStatus);
-    }*/
+        sscanf(gpsRawData, "%6s,%9f,%f,N,%f", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
+                   &gpsFormattedData.latitude, &gpsFormattedData.longitude);
+        /*printf("lat - %f\n long - %f\n tm - %f\n st - %s\n\n",
+                gpsFormattedData.latitude, gpsFormattedData.longitude, gpsFormattedData.timeUTC, gpsFormattedData.gpsStatus);
+    */}
     //xQueueReceive(gpsDataBuffer_q, &gpsFormattedData, 10);
 }

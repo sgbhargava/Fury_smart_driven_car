@@ -3,6 +3,10 @@
 
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
+#include "stdio.h"
+#include "io.hpp"
+
+#define GPSMODULE   1
 
 typedef struct {
     float   timeUTC;
@@ -12,59 +16,33 @@ typedef struct {
     float   courseDeg;
     int     dateUTC;
     char    formatNMEA[6];
-    char    gpsStatus;
+    char    gpsStatus[2];
     char    nsIndicator;
     char    ewIndicator;
 }gpsData_t;
 
 /*
  * GPS data reading task.
- * This task reads the data from the gps connected to UART2 and
- * transmits out the data through CAN1.
+ * This task reads the data from the gps connected to UART2.
  */
-class gps_data : public scheduler_task{
+class gps_data{
         public:
-
-        gps_data(uint8_t priority) :
-            scheduler_task("gps fetch data", 2048, priority),
-            gpsComm(Uart2::getInstance()),
-            gpsDataBuffer_q(NULL)
+        gps_data()
         {
-            initializeGPSComm();
-        }
-
-        bool init(void)
-        {
-            bool ok;
-            ok = initializeGPSBuffers();
-            return ok;
-        }
-
-        bool run(void *p)
-        {
-            readRawGPSData();
-            formatGPSData();
-
-            vTaskDelay(1000);
-            return true;
+            //initializeGPSComm();
         }
 
         void initializeGPSComm();
-        bool initializeGPSBuffers();
+        void initializeGPSBuffers();
         void readRawGPSData();
         void formatGPSData();
 
         private:
         QueueHandle_t gpsDataBuffer_q;
-        Uart2 &gpsComm;
         gpsData_t gpsFormattedData;
+        Uart2 &gpsComm = Uart2::getInstance();
 
         char gpsRawData[70]; // to read the raw data from gps
-
-        static const uint16_t gpsBaud = 38400; // Baud rate at which the GPS communicates
-        static const uint8_t gpsRxQSz = 100; // Queue size of receive buffer of uart2
-        static const uint8_t gpsTxQSz = 1; // Queue size of transmit buffer of uart2
-
 };
 
 #endif  // gps_data.hpp

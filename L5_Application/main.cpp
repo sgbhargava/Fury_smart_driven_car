@@ -26,19 +26,9 @@
 #include "stdio.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include "can.h"
+#include <can_custom_header.hpp>
 #include "file_logger.h"
-#define CAN_BAUD 100
-#define CAN_RX_SIZE 10
-#define CAN_TX_SIZE 10
-can_void_func_t bus_off_cb()
-{
-	printf("can bus entered bus error state\n");
-}
-can_void_func_t data_ovr_cb()
-{
-	printf("can bus entered data-overrun state\n");
-}
+
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.
@@ -53,8 +43,10 @@ can_void_func_t data_ovr_cb()
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
+
 int main(void)
 {
+
 
     /**
      * A few basic tasks for this bare-bone system :
@@ -67,10 +59,8 @@ int main(void)
      * control codes can be learned by typing the "learn" terminal command.
      */
 
-	if(!CAN_init(can1, CAN_BAUD, CAN_RX_SIZE, CAN_TX_SIZE, bus_off_cb(), data_ovr_cb()))
-		printf("CAN INITIALIZATION ERROR\n");
 
-	CAN_reset_bus(can1);
+
 
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 

@@ -22,7 +22,6 @@
  */
 #ifndef HANDLERS_HPP_
 #define HANDLERS_HPP_
-
 #include "command_handler.hpp"
 
 

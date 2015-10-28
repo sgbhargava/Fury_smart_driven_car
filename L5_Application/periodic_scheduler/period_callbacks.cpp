@@ -28,10 +28,10 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include "can_custom_header.hpp"
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
-#include "can.h"
 #include "stdio.h"
 
 /// This is the stack size used for each of the period tasks
@@ -41,7 +41,10 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 void period_1Hz(void)
 {
-	static uint64_t x = 0;
+	can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
+		
+		CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr);
+	/*static uint64_t x = 0;
 	can_msg_t mess;
 	mess.msg_id = 0x123;
 	mess.frame_fields.is_29bit = 0;
@@ -51,7 +54,7 @@ void period_1Hz(void)
 			LE.toggle(1);
 	else
 		printf("not sent\n");
-	x++;
+	x++;*/
 
 }
 

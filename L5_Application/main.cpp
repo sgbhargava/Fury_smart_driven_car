@@ -32,6 +32,7 @@
 #include "i2c_base.hpp"
 #include "utilities.h"
 
+#define GPSMODULE   1
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -66,29 +67,18 @@ int main(void)
      * such that it can save remote control codes to non-volatile memory.  IR remote
      * control codes can be learned by typing the "learn" terminal command.
      */
-
-    //scheduler_add_task(new terminalTask(PRIORITY_HIGH));
-#if GPSMODULE
-    static const uint16_t gpsBaud = 38400; // Baud rate at which the GPS communicates
-    static const uint8_t gpsRxQSz = 100; // Queue size of receive buffer of uart2
-    static const uint8_t gpsTxQSz = 1; // Queue size of transmit buffer of uart2
-
-    bool ok;
-
-    Uart2 &ab = Uart2::getInstance();
-    ok = ab.init(gpsBaud, gpsRxQSz, gpsTxQSz);
-    if(!ok)
-    {
-        puts("Error initializing uart2\n");
-        sys_reboot_abnormal();
-    }
-#endif
+    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
+    /* Used to calculate the present location. connect the GPS module to UART2 */
+#if GPSMODULE
+    scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
+#endif
+
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 1
+    #if 0
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 

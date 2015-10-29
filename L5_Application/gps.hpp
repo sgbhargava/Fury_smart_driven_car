@@ -1,5 +1,16 @@
-#ifndef GPS_DATA_HPP_ // gps_data.hpp
-#define GPS_DATA_HPP_
+/*
+ * gps.hpp
+ *
+ *  Created on: Oct 24, 2015
+ *      Author: Abhishek Gurudutt
+ *
+ *  For CMPE243 project: Self drive car
+ *  GPS data is fetched from this module.
+ */
+
+
+#ifndef L5_APPLICATION_GPS_DATA_HPP_ // gps.hpp
+#define L5_APPLICATION_GPS_DATA_HPP_
 
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
@@ -8,13 +19,7 @@ typedef struct {
     float   timeUTC;
     float   latitude;
     float   longitude;
-    float   speed;
-    float   courseDeg;
-    int     dateUTC;
     char    formatNMEA[6];
-    char    gpsStatus;
-    char    nsIndicator;
-    char    ewIndicator;
 }gpsData_t;
 
 /*
@@ -44,6 +49,7 @@ class gps_data : public scheduler_task{
         {
             readRawGPSData();
             formatGPSData();
+            queueGPSData();
 
             vTaskDelay(1000);
             return true;
@@ -53,6 +59,7 @@ class gps_data : public scheduler_task{
         bool initializeGPSBuffers();
         void readRawGPSData();
         void formatGPSData();
+        void queueGPSData();
 
         private:
         QueueHandle_t gpsDataBuffer_q;
@@ -67,4 +74,4 @@ class gps_data : public scheduler_task{
 
 };
 
-#endif  // gps_data.hpp
+#endif  // gps.hpp

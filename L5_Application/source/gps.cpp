@@ -50,10 +50,10 @@ void gps_data::readRawGPSData()
  */
 void gps_data::formatGPSData()
 {
-    sscanf(gpsRawData, "%6s", gpsFormattedData.formatNMEA);
-    if(strcmp(gpsFormattedData.formatNMEA, "$GPRMC") == 0)
+    sscanf(gpsRawData, "%6s", gpsExtendedData.formatNMEA);
+    if(strcmp(gpsExtendedData.formatNMEA, "$GPRMC") == 0)
     {
-        sscanf(gpsRawData, "%6s,9f,,8f,N,9f,", gpsFormattedData.formatNMEA, &gpsFormattedData.timeUTC,
+        sscanf(gpsRawData, "%6s,9f,,8f,N,9f,", gpsExtendedData.formatNMEA, &gpsExtendedData.timeUTC,
                     &gpsFormattedData.latitude, &gpsFormattedData.longitude);
         /*printf("latitude - %f\n longitude - %f\n time - %f\n\n",
                 gpsFormattedData.latitude, gpsFormattedData.longitude, gpsFormattedData.timeUTC);

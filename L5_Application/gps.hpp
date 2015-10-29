@@ -15,12 +15,18 @@
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
 
+#define GPSMODULE   1
+#define CAN_USAGE   1
+
 typedef struct {
-    float   timeUTC;
     float   latitude;
     float   longitude;
-    char    formatNMEA[6];
 }gpsData_t;
+
+typedef struct {
+    float   timeUTC;
+    char    formatNMEA[6];
+}gpsExtendedData_t;
 
 /*
  * GPS data reading task.
@@ -65,6 +71,7 @@ class gps_data : public scheduler_task{
         QueueHandle_t gpsDataBuffer_q;
         Uart2 &gpsComm;
         gpsData_t gpsFormattedData;
+        gpsExtendedData_t gpsExtendedData;
 
         char gpsRawData[70]; // to read the raw data from gps
 

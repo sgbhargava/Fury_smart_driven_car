@@ -31,8 +31,8 @@
 #include "i2c2_device.hpp"
 #include "i2c_base.hpp"
 #include "utilities.h"
+#include "can.h"
 
-#define GPSMODULE   1
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -72,6 +72,10 @@ int main(void)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
+
+#if CAN_USAGE
+    CAN_init(can1,100,2,2,NULL,NULL);
+#endif
     /* Used to calculate the present location. connect the GPS module to UART2 */
 #if GPSMODULE
     scheduler_add_task(new gps_data(PRIORITY_MEDIUM));

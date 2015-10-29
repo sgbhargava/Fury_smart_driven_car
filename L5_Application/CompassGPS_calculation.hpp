@@ -12,8 +12,8 @@
 #define L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_
 
 
-float calcDistToNxtChkPnt();
-float calcDistToFinalDest();
+float calcDistToNxtChkPnt(float,float,float,float);
+float calcDistToFinalDest(float,float,float,float);
 
 
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

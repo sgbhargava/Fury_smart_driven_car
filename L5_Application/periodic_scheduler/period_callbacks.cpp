@@ -47,8 +47,9 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
+    static QueueHandle_t gpschkPnt_q = scheduler_task::getSharedObject("gps_checkpoint_queue");
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    gpsData_t gpsCurrentData;
+    gpsData_t gpsCurrentData, gpsChkPntData, gpsFinalData;
     float distToDest;
     float distToChkPnt;
 
@@ -58,16 +59,20 @@ void period_10Hz(void)
     }
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
-        distToChkPnt = calcDistToNxtChkPnt();
-        distToDest = calcDistToFinalDest();
+        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude,
+                gpsChkPntData.longitude, gpsChkPntData.latitude);
+        distToDest = calcDistToFinalDest(gpsCurrentData.latitude, gpsCurrentData.longitude,
+                gpsFinalData.latitude, gpsFinalData.longitude);
     }
     //LE.toggle(2);
 }
 
 void period_100Hz(void)
 {
+#if CAN_USAGE
     if(CAN_is_bus_off(can1))
         CAN_reset_bus(can1);
+#endif
     //LE.toggle(3);
 }
 

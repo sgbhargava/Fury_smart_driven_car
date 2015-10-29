@@ -13,7 +13,7 @@
 /*
  * Calculates the distance to next check point
  */
-float calcDistToNxtChkPnt()
+float calcDistToNxtChkPnt(float currentLat, float currentLong, float chkPntLat, float chkPntLong)
 {
 
 }
@@ -21,7 +21,7 @@ float calcDistToNxtChkPnt()
 /*
  * Calculates the distance to final destination
  */
-float calcDistToFinalDest()
+float calcDistToFinalDest(float currentLat, float currentLong, float destLat, float destLong)
 {
 
 }

@@ -23,9 +23,9 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
+#include <gps.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include "gps_data.hpp"
 #include "compass.h"
 #include "i2c2.hpp"
 #include "i2c2_device.hpp"

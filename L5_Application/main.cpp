@@ -27,12 +27,15 @@
 #include "examples/examples.hpp"
 #include "gps_data.hpp"
 #include "compass.h"
-#include "i2c2.hpp"
-#include "i2c2_device.hpp"
-#include "i2c_base.hpp"
+//#include "i2c2.hpp"
+//#include "i2c2_device.hpp"
+//#include "i2c_base.hpp"
 #include "utilities.h"
+#include "io.hpp"
 
-#define GPSMODULE   1
+
+#define GPSMODULE   0
+#define COMPASSMODULE 1
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -50,15 +53,39 @@
  */
 int main(void)
 {
-    while(0)
+
+#if COMPASSMODULE
+while(1)
+{
+    if(SW.getSwitch(1))
     {
+        /*Enter calibration mode*/
+        //calibrate_compass();
+        LE.on(1);
+    }
+    else if(SW.getSwitch(2))
+    {
+        /*To come out of calibration mode*/
+        //headingmode_compass();
+        LE.off(1);
+    }
+    else
+    {
+        /*In heading mode*/
         compassbearing_reading();
         delay_ms(500);
         compassbearingreading_highlowbytes();
         delay_ms(500);
         pitchangle();
+        delay_ms(1000);
+        temperature();
         delay_ms(500);
+        rollangle();
+        delay_ms(1000);
     }
+}
+#endif
+
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.

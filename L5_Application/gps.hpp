@@ -14,18 +14,19 @@
 
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
+#include "math.h"
 
 #define GPSMODULE   1
 #define CAN_USAGE   1
 
 typedef struct {
-    float   latitude;
-    float   longitude;
+    float_t   latitude;
+    float_t   longitude;
 }gpsData_t;
 
 typedef struct {
-    float   timeUTC;
-    char    formatNMEA[6];
+    float_t     timeUTC;            // Time parameter given by GPS
+    char        formatNMEA[6];      // The format in which the GPS data is read
 }gpsExtendedData_t;
 
 /*
@@ -57,7 +58,6 @@ class gps_data : public scheduler_task{
             formatGPSData();
             queueGPSData();
 
-            vTaskDelay(1000);
             return true;
         }
 

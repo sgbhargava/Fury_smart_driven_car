@@ -9,10 +9,9 @@
  */
 
 #include "CompassGPS_calculation.hpp"
-#include "math.h"
 
-#define RADIUS  6371        // This is the radius of earth in km.
-#define PI      3.14159     // value of PI
+#define RADIUS  6371                // This is the radius of earth in km.
+#define TO_RAD  (3.14159 / 180)     // value of PI
 
 /*
  * Calculates the distance to next check point
@@ -27,10 +26,20 @@
  *                          * sin ( (lamda2 - lamda1) / 2 ) * sin ( (lamda2 - lamda1) / 2 )));
  *
  */
-float calcDistToNxtChkPnt(float currentLat, float currentLong, float chkPntLat, float chkPntLong)
+float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong,
+                                        float_t chkPntLat, float_t chkPntLong)
 {
-    float dist;
+    float_t dist;
 
+    double_t phi = (chkPntLat - currentLat) * TO_RAD;
+    double_t phi1 = currentLat * TO_RAD;
+    double_t phi2 = chkPntLat * TO_RAD;
+    double_t lamda = (chkPntLong - currentLong) * TO_RAD;
+
+    dist = (float_t) 2 * RADIUS * asin(sqrt((sin(phi/2) * sin(phi/2))
+                                     + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2))));
+
+    return dist;
 
 }
 
@@ -38,7 +47,8 @@ float calcDistToNxtChkPnt(float currentLat, float currentLong, float chkPntLat, 
  * Calculates the distance to final destination
  * This is the sum of distance of all the checkpoints
  */
-float calcDistToFinalDest(float currentLat, float currentLong, float destLat, float destLong)
+float_t calcDistToFinalDest(float_t currentLat, float_t currentLong,
+                                        float_t destLat, float_t destLong)
 {
 
 }

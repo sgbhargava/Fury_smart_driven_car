@@ -35,7 +35,7 @@
 
 #include "io.hpp"
 
-#define COMPASSMODULE 1
+#define COMPASSMODULE 0
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp

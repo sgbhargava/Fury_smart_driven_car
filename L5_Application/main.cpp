@@ -36,6 +36,11 @@
 #include "io.hpp"
 
 #define COMPASSMODULE 0
+#define TESTCODE 1
+
+#if TESTCODE
+#include "test_code.hpp"
+#endif
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -101,7 +106,7 @@ while(1)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
-
+/* Initialization of can1 */
 #if CAN_USAGE
     CAN_init(can1,100,2,2,NULL,NULL);
 #endif
@@ -109,6 +114,13 @@ while(1)
 #if GPSMODULE
     scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
 #endif
+
+/* Code used for testing purpose. This will intialise all the predefined check points. */
+#if TESTCODE
+    scheduler_add_task(new test_code(PRIORITY_MEDIUM));
+#endif
+
+
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 0

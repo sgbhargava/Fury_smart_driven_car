@@ -61,11 +61,32 @@ class gps_data : public scheduler_task{
             return true;
         }
 
-        void initializeGPSComm();
-        bool initializeGPSBuffers();
-        void readRawGPSData();
-        void formatGPSData();
-        void queueGPSData();
+
+/*
+ * initialize the UART for gps communication
+ */
+void initializeGPSComm();
+
+/*
+ * initialize all the buffers and queues that are used.
+ */
+bool initializeGPSBuffers();
+
+/*
+ * Read the data from gps.
+ */
+void readRawGPSData();
+
+/*
+ * The data read form gps will be in the form of a string.
+ * The string is parsed to fetch the longitude and longitude.
+ */
+void formatGPSData();
+
+/*
+ * The parsed data is put on a queue for further calculations.
+ */
+void queueGPSData();
 
         private:
         QueueHandle_t gpsDataBuffer_q;

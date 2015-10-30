@@ -47,7 +47,6 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
-    static QueueHandle_t gpschkPnt_q = scheduler_task::getSharedObject("gps_checkpoint_queue");
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData, gpsChkPntData, gpsFinalData;
     float_t distToDest;

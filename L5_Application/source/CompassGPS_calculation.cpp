@@ -45,10 +45,14 @@ float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong,
 
 /*
  * Calculates the distance to final destination
- * This is the sum of distance of all the checkpoints
+ * This is the sum of distance of all the checkpoints from the present location
  */
 float_t calcDistToFinalDest(float_t currentLat, float_t currentLong,
                                         float_t destLat, float_t destLong)
 {
 
+    float_t finalDist;
+
+
+    return finalDist;
 }

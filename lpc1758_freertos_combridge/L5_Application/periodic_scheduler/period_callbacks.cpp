@@ -28,46 +28,18 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <periodic_scheduler/periodic_callback.h>
 #include <stdint.h>
 #include "io.hpp"
-#include "periodic_callback.h"
 #include "uart2.hpp"
 #include "stdio.h"
-
+#include "str.hpp"
+#include "gps_data.h"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-gps_data gGpsData;
 
-char gData[10];
-void getData()
-{
-    static Uart2 &u2 = Uart2::getInstance();
-
-    static int i = 0;
-    if( u2.getChar(&gData[i],0))
-    {
-
-        if(gData[i] != 0 )
-        {
-            i =0;
-        }
-        else
-        {
-            i++;
-        }
-            //TO DO parse input and send message over can
-        printf("%s\n",&gData[0]);
-
-
-    }
-    else
-    {
-      //  printf("nodata\n");
-    }
-
-}
 
 void period_1Hz(void)
 {
@@ -76,7 +48,7 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
-    getData();
+    getDataFromBluetooth();
 }
 
 void period_100Hz(void)

@@ -49,7 +49,7 @@ void init_uart2()
 {
     Uart2 &u2 = Uart2::getInstance();
 
-    u2.init(38400,32,32);
+    u2.init(38400,120,120);
 }
 
 

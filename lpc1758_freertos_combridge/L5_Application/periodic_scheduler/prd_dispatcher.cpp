@@ -16,6 +16,7 @@
  *          p r e e t . w i k i @ g m a i l . c o m
  */
 
+#include <periodic_scheduler/periodic_callback.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -24,7 +25,6 @@
 #include "tasks.hpp"
 #include "storage.hpp"
 #include "lpc_sys.h"
-#include "periodic_callback.h"
 
 
 

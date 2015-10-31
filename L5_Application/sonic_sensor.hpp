@@ -16,7 +16,7 @@
 #include "lpc_timers.h"
 #include "printf_lib.h"
 
-
+const int CovertToCm = 58;
 uint32_t timerValue1, timerValue2, timerValue3;
 
 void StartTimeSensor1_isr(void)
@@ -26,7 +26,7 @@ void StartTimeSensor1_isr(void)
 
 void EndTimeSensor1_isr(void)
 {
-    timerValue1 = (lpc_timer_get_value(lpc_timer0)/147);
+    timerValue1 = (lpc_timer_get_value(lpc_timer0) / CovertToCm);
 }
 
 void StartTimeSensor2_isr(void)
@@ -36,7 +36,7 @@ void StartTimeSensor2_isr(void)
 
 void EndTimeSensor2_isr(void)
 {
-    timerValue2 = (lpc_timer_get_value(lpc_timer2)/147);
+    timerValue2 = (lpc_timer_get_value(lpc_timer2) / CovertToCm);
 }
 
 void StartTimeSensor3_isr(void)
@@ -46,7 +46,7 @@ void StartTimeSensor3_isr(void)
 
 void EndTimeSensor3_isr(void)
 {
-    timerValue3 = (lpc_timer_get_value(lpc_timer3)/147);
+    timerValue3 = (lpc_timer_get_value(lpc_timer3) / CovertToCm);
 }
 
 class SonicSensorTask : public scheduler_task
@@ -117,6 +117,7 @@ class SonicSensorTask : public scheduler_task
 
             return true;
         }
+
     private:
         SonicSensors_t sensor_data;
         GPIO pwmSensor1, pwmSensor2, pwmSensor3;
@@ -125,11 +126,11 @@ class SonicSensorTask : public scheduler_task
         static const int TriggerDelay_us = 25;
         static const int DelayForSensor_ms = 50;
 
-        void simple_filter(uint16_t &data, uint32_t distance_inches)
+        void simple_filter(uint16_t &data, uint32_t distance)
         {
-            if(distance_inches < 240 && distance_inches > 6)
+            if(distance < 600 && distance > 6)
             {
-                    data = distance_inches;
+                    data = distance;
             }
             else
             {

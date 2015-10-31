@@ -49,10 +49,10 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
-   /* static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    gpsData_t gpsCurrentData;
-    float distToDest;
-    float distToChkPnt;
+    static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
+    gpsData_t gpsCurrentData, gpsChkPntData, gpsFinalData;
+    float_t distToDest;
+    float_t distToChkPnt;
 
     if(NULL == gpsCurrData_q)
     {
@@ -60,10 +60,11 @@ void period_10Hz(void)
     }
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
-        distToChkPnt = calcDistToNxtChkPnt();
-        distToDest = calcDistToFinalDest();
-    }*/
-//    LE.toggle(2);
+        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude,
+                        gpsChkPntData.longitude, gpsChkPntData.latitude);
+        distToDest = calcDistToFinalDest(gpsCurrentData.latitude, gpsCurrentData.longitude,
+                        gpsFinalData.latitude, gpsFinalData.longitude);
+    }
 
 
     if(0 == var)
@@ -78,12 +79,16 @@ void period_10Hz(void)
     else
         printf("Invalid");
 
+
+    //LE.toggle(2);
 }
 
 void period_100Hz(void)
 {
-//    if(CAN_is_bus_off(can1))
-//        CAN_reset_bus(can1);
+#if CAN_USAGE
+    if(CAN_is_bus_off(can1))
+        CAN_reset_bus(can1);
+#endif
     //LE.toggle(3);
 }
 

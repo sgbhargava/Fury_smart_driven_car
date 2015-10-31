@@ -14,13 +14,20 @@
 
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
+#include "math.h"
+
+#define GPSMODULE   1
+#define CAN_USAGE   1
 
 typedef struct {
-    float   timeUTC;
-    float   latitude;
-    float   longitude;
-    char    formatNMEA[6];
+    float_t   latitude;
+    float_t   longitude;
 }gpsData_t;
+
+typedef struct {
+    float_t     timeUTC;            // Time parameter given by GPS
+    char        formatNMEA[6];      // The format in which the GPS data is read
+}gpsExtendedData_t;
 
 /*
  * GPS data reading task.
@@ -51,20 +58,41 @@ class gps_data : public scheduler_task{
             formatGPSData();
             queueGPSData();
 
-            vTaskDelay(1000);
             return true;
         }
 
-        void initializeGPSComm();
-        bool initializeGPSBuffers();
-        void readRawGPSData();
-        void formatGPSData();
-        void queueGPSData();
+
+/*
+ * initialize the UART for gps communication
+ */
+void initializeGPSComm();
+
+/*
+ * initialize all the buffers and queues that are used.
+ */
+bool initializeGPSBuffers();
+
+/*
+ * Read the data from gps.
+ */
+void readRawGPSData();
+
+/*
+ * The data read form gps will be in the form of a string.
+ * The string is parsed to fetch the longitude and longitude.
+ */
+void formatGPSData();
+
+/*
+ * The parsed data is put on a queue for further calculations.
+ */
+void queueGPSData();
 
         private:
         QueueHandle_t gpsDataBuffer_q;
         Uart2 &gpsComm;
         gpsData_t gpsFormattedData;
+        gpsExtendedData_t gpsExtendedData;
 
         char gpsRawData[70]; // to read the raw data from gps
 

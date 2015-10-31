@@ -32,6 +32,9 @@
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "motor.hpp"
+#include "semphr.h"
+#include "tasks.hpp"
+#include "shared_handles.h"
 
 
 
@@ -46,6 +49,7 @@ void period_1Hz(void)
     SpeedMonitor * monitor = SpeedMonitor::getInstance();
     LE.toggle(1);
     monitor->getSpeed(&rpm, &speed);
+    xSemaphoreGive(scheduler_task::getSharedObject(shared_CANRxmsg));
 }
 
 void period_10Hz(void)

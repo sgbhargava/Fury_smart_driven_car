@@ -27,9 +27,11 @@
 #include "examples/examples.hpp"
 #include "io.hpp"
 #include <cstdio>
+#include "motor.hpp"
 #include "uart0.hpp"
 #include "eint.h"
-#include "motor.hpp"
+#include "CAN.h"
+#include "shared_handles.h"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -45,7 +47,98 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
+#define CAN_MSG_SPEED  0x102
+typedef struct{
+        uint64_t speed:8;
+        uint64_t rpm:8;
+}speed_can_msg_t;
+class CANMsgTxTask: public scheduler_task {
+    private:
+        QueueHandle_t m_CanTxQueueHandler = xQueueCreate(1, sizeof(int));
+    public:
+        CANMsgTxTask(uint8_t priority):
+            scheduler_task("CANMsgTxTask", 2048, priority) {
 
+        }
+        bool init(void) {
+            addSharedObject(shared_CANTxmsg, m_CanTxQueueHandler);
+            m_CanTxQueueHandler = getSharedObject(shared_CANTxmsg);
+            return true;
+        }
+        bool run (void* p){
+            can_msg_t msg;
+            float speed,rpm;
+            msg.msg_id = CAN_MSG_SPEED;
+            msg.frame_fields.is_29bit = 0;
+            msg.frame_fields.data_len = 2;
+            speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
+            SpeedMonitor::getInstance()->getSpeed(&rpm, &speed);
+            pSpeedCanMsg->rpm = (int)rpm;
+            pSpeedCanMsg->speed = (int)speed;
+            if (xQueueReceive(m_CanTxQueueHandler, &msg, portMAX_DELAY))
+            {
+                CAN_tx(can_t::can1, &msg, portMAX_DELAY);
+            }
+            return true;
+        }
+
+};
+#define CAN_MSG_STEER 0x021
+#define CAN_MSG_TROTTLE 0x22 //????
+typedef struct{
+        uint64_t turn:3;
+}dir_can_msg_t;
+typedef struct{
+        uint64_t forward:3;
+        uint64_t backward:3;
+}throttle_can_msg_t;
+#if 0
+enum {
+    dirCenter,
+    dirFarRight,
+    dirRight,
+    dirLeft,
+    dirFarLeft
+};
+#endif
+class CANMsgRxTask: public scheduler_task {
+    private:
+        SemaphoreHandle_t m_CANRxSemaphoreHandler =  xSemaphoreCreateBinary();
+        can_msg_t mMsgRecv;
+        SpeedCtrl* pSpeed = SpeedCtrl::getInstance();
+    public:
+        CANMsgRxTask(uint8_t priority):
+            scheduler_task("CANMsgRxTask", 2048, priority) {
+            addSharedObject(shared_CANRxmsg, m_CANRxSemaphoreHandler);
+
+        }
+        bool init(void) {
+            CAN_init(can_t::can1, 100, 8, 8, NULL, NULL);
+            CAN_reset_bus(can_t::can1);
+
+            return true;
+        }
+        bool run (void* p){
+            if(xSemaphoreTake(m_CANRxSemaphoreHandler, portMAX_DELAY))   {
+                CAN_rx(can_t::can1, &mMsgRecv, portMAX_DELAY);
+                if (mMsgRecv.msg_id == CAN_MSG_STEER)
+                {
+                    dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&mMsgRecv.data.bytes[0];
+                    DirectionCtrl::getInstance()->setDirection(pDirCanMsg->turn);
+                }
+                else if (mMsgRecv.msg_id == CAN_MSG_TROTTLE)
+                {
+                    throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&mMsgRecv.data.bytes[0];
+                    if (pThrottleCanMsg->forward == 0x7)// Hack
+                        pSpeed->setSpeedPWM(8.9);
+                    if (pThrottleCanMsg->backward == 0x7) // Hack
+                        pSpeed->setSpeedPWM(7.9);
+                }
+            }
+            return true;
+        }
+
+};
 int main(void)
 {
     /**
@@ -60,9 +153,9 @@ int main(void)
      */
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
-    //eint3_enable_port2(port2_5, eint_falling_edge, speed_pulse_end);
-
     SpeedMonitor::getInstance();
+    scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
+    scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));

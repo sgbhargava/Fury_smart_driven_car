@@ -9,12 +9,12 @@
 DirectionCtrl * DirectionCtrl::m_pInstance = NULL;
 DirectionCtrl::DirectionCtrl(void) :
         directionPWM(PWM(PWM::pwm1, STANDARD_FREQ)),
-        pin0_0(P0_0), pin0_1(P0_1)
+        pin0_29(P0_29), pin0_30(P0_30)
 {
     dirPWM = basePWM;
     directionPWM.set(dirPWM);
-    pin0_0.setAsOutput();
-    pin0_1.setAsOutput();
+    pin0_29.setAsOutput();
+    pin0_30.setAsOutput();
 }
 DirectionCtrl * DirectionCtrl::getInstance()
 {
@@ -27,28 +27,28 @@ void DirectionCtrl::setDirection(int dir)
     switch (dir){
         case dirFarRight:
             dirPWM = farRight;
-            pin0_0.setHigh();
-            pin0_1.setLow();
+            pin0_29.setHigh();
+            pin0_30.setLow();
             break;
         case dirRight:
             dirPWM = right;
-            pin0_0.setHigh();
-            pin0_1.setLow();
+            pin0_29.setHigh();
+            pin0_30.setLow();
             break;
         case dirCenter:
             dirPWM = basePWM;
-            pin0_0.setLow();
-            pin0_1.setLow();
+            pin0_29.setLow();
+            pin0_30.setLow();
             break;
         case dirLeft:
             dirPWM = left;
-            pin0_1.setHigh();
-            pin0_0.setLow();
+            pin0_29.setHigh();
+            pin0_30.setLow();
             break;
         case dirFarLeft:
             dirPWM = farLeft;
-            pin0_1.setHigh();
-            pin0_0.setLow();
+            pin0_29.setHigh();
+            pin0_30.setLow();
             break;
 
     }
@@ -60,12 +60,12 @@ void DirectionCtrl::setDirection(int dir)
 SpeedCtrl* SpeedCtrl::m_pInstance = NULL;
 SpeedCtrl::SpeedCtrl():
         throttlePWM(PWM(PWM::pwm2, STANDARD_FREQ)),
-        pin1_20(P1_20), pin1_23(P1_23)
+        pin1_22(P1_22), pin1_23(P1_23)
 {
     speedPWM = basePWM;
     throttlePWM.set(basePWM);
     LD.setNumber(speedPWM);
-    pin1_20.setAsOutput();
+    pin1_22.setAsOutput();
     pin1_23.setAsOutput();
 }
 
@@ -96,11 +96,11 @@ bool SpeedCtrl::checkPWM(float pwm)
     //{
         if ( basePWM - pwm > 0.5)
         {
-            pin1_20.setHigh();
+            pin1_22.setHigh();
             pin1_23.setHigh();
         }
         else{
-            pin1_20.setLow();
+            pin1_22.setLow();
             pin1_23.setLow();
         }
         return true;
@@ -176,7 +176,7 @@ SpeedMonitor* SpeedMonitor::getInstance(){
 void SpeedMonitor::setRpm(int rpmVal)
 {
     m_rpm = rpmVal;
-    m_speed = 0.1 *3.1415 *((float)m_rpm* 60); //meter
+    m_speed = DIAMETER *PI *((float)m_rpm* 60); //meter
 }
 void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
@@ -204,7 +204,7 @@ void SpeedMonitor::calSpeed(){
     uint64_t time_diff = cur_time - m_last_time;
 
     m_rpm = 1.0/ ( (float)time_diff * MS_TO_MINS);
-    m_speed_meter = DIAMETER *PI * (m_rpm* 60); // m/hr
+    m_speed_meter = DIAMETER *PI * (m_rpm/ 60); // m/hr
     m_speed = m_speed_meter /1000 * KM_TO_MILES;
     m_last_time = cur_time;
 }

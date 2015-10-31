@@ -28,34 +28,50 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include "can_custom_header.hpp"
+
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "stdio.h"
+#include "can_custom_header.hpp"
+
+#define rx
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
-
-
+/*
+can_std_id_t can_test1;
+ can_std_id_t can_test2;
+ can_fullcan_msg_t *can_ptr;
+ can_fullcan_msg_t *can_test1_ptr;
+*/
 
 void period_1Hz(void)
 {
+#ifdef rx
 	can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
-		
-		CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr);
-	/*static uint64_t x = 0;
-	can_msg_t mess;
-	mess.msg_id = 0x123;
-	mess.frame_fields.is_29bit = 0;
-	mess.frame_fields.data_len = 8;
-	mess.data.qword = x;
-	if(CAN_tx(can1, &mess, portMAX_DELAY))
-			LE.toggle(1);
-	else
-		printf("not sent\n");
-	x++;*/
+	if(CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr))
+	{printf("new message : %d \n", can_test1_ptr->data.bytes);
 
+	}
+	else
+		printf("no message at this time");
+#endif
+
+#ifdef tx
+	static can_msg_t mess;
+
+	mess.msg_id = 0x100;
+	mess.frame_fields.is_29bit = 1;
+	mess.frame_fields.data_len = 8;
+	mess.data.qword = led0on;
+	CAN_tx(can1, &mess, portMAX_DELAY);
+#endifcan_msg_t mess;
+
+	mess.msg_id = 0x123;
+	mess.frame_fields.is_29bit = 1;
+	mess.frame_fields.data_len = 8;
+#endif
 }
 
 void period_10Hz(void)

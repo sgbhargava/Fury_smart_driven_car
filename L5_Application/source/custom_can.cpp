@@ -35,7 +35,7 @@ void data_ovr_cb(uint32_t arg)
 }
 
 //can_std_grp_id_t
-bool can_custom_init()
+int can_custom_init()
 {
 	can_test1.can_num = 0;
 	can_test1.disable = 0;
@@ -59,5 +59,5 @@ if(!CAN_init(can1, CAN_BAUD, CAN_RX_SIZE, CAN_TX_SIZE, bus_off_cb, data_ovr_cb))
 	}
 	//CAN_bypass_filter_accept_all_msgs();
 		CAN_reset_bus(can1);
-
+return 0;
 }

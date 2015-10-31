@@ -23,6 +23,7 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
+#define tx
 #include "stdio.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"
@@ -43,6 +44,11 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
+ can_void_func_t bus_off()
+ {
+	 printf("bus is off/n");
+	 return 0;
+ }
 
 int main(void)
 {
@@ -58,9 +64,14 @@ int main(void)
      * such that it can save remote control codes to non-volatile memory.  IR remote
      * control codes can be learned by typing the "learn" terminal command.
      */
-
-
-
+#ifdef rx
+	can_custom_init();
+#endif
+#ifdef tx
+		if(CAN_init(can1, 100,512,512, bus_off() , NULL) == false) //wait for initialization
+		printf("init failed\n");
+		CAN_reset_bus(can1);
+#endif
 
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 

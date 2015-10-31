@@ -51,11 +51,12 @@ void period_1Hz(void)
 #ifdef rx
 	can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
 	if(CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr))
-	{printf("new message : %d \n", can_test1_ptr->data.bytes);
+	{
+		printf("new message : %d \n", can_test1_ptr->data.bytes);
 
 	}
 	else
-		printf("no message at this time");
+		printf("no message at this time \n");
 #endif
 
 #ifdef tx

@@ -28,6 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <compass.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -39,15 +40,16 @@
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+int var = 0;
 
 void period_1Hz(void)
 {
-    //LE.toggle(1);
+//    LE.toggle(1);
 }
 
 void period_10Hz(void)
 {
-    static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
+   /* static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData;
     float distToDest;
     float distToChkPnt;
@@ -60,18 +62,34 @@ void period_10Hz(void)
     {
         distToChkPnt = calcDistToNxtChkPnt();
         distToDest = calcDistToFinalDest();
-    }
-    //LE.toggle(2);
+    }*/
+//    LE.toggle(2);
+
+
+    if(0 == var)
+        compassbearing_reading();
+
+    else if(1 == var)
+        var = calibrate_compass(var);
+
+    else if(2 == var)
+        var = headingmode_compass();
+
+    else
+        printf("Invalid");
+
 }
 
 void period_100Hz(void)
 {
-    if(CAN_is_bus_off(can1))
-        CAN_reset_bus(can1);
+//    if(CAN_is_bus_off(can1))
+//        CAN_reset_bus(can1);
     //LE.toggle(3);
 }
 
 void period_1000Hz(void)
 {
-    //LE.toggle(4);
+//    LE.toggle(4);
+    if(SW.getSwitch(1))
+        var = 1;
 }

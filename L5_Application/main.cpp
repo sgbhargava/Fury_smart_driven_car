@@ -54,6 +54,7 @@ int main(void)
 {
 
 
+
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.
@@ -66,10 +67,12 @@ int main(void)
      */
 #ifdef rx
 	can_custom_init();
+	CAN_reset_bus(can1);
 #endif
 #ifdef tx
 		if(CAN_init(can1, 100,512,512, bus_off() , NULL) == false) //wait for initialization
 		printf("init failed\n");
+		CAN_bypass_filter_accept_all_msgs();
 		CAN_reset_bus(can1);
 #endif
 

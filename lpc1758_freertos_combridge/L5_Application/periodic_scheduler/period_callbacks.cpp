@@ -39,21 +39,19 @@
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-
-
 void period_1Hz(void)
 {
-    LE.toggle(1);
+    // to send heart beat
 }
 
 void period_10Hz(void)
 {
-    getDataFromBluetooth();
+    bridge_canTx();
 }
 
 void period_100Hz(void)
 {
-    LE.toggle(3);
+    getDataFromBluetooth();
 }
 
 void period_1000Hz(void)

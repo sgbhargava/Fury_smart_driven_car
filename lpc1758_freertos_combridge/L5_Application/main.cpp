@@ -27,6 +27,9 @@
 #include "examples/examples.hpp"
 #include "uart2.hpp"
 #include "stdio.h"
+#include "gps_data.h"
+
+
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -92,6 +95,7 @@ int main(void)
 {
 
     init_uart2();
+    initForGPSData();
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.

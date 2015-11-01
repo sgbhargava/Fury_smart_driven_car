@@ -49,10 +49,13 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
+
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    gpsData_t gpsCurrentData, gpsChkPntData, gpsFinalData;
-    float_t distToDest;
-    float_t distToChkPnt;
+    gpsData_t gpsCurrentData;
+    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon;
+    uint8_t presentChkPnt;
+    static bool finalChkPnt = false;
+    bool chkPntReached = false;
 
     if(NULL == gpsCurrData_q)
     {
@@ -60,10 +63,31 @@ void period_10Hz(void)
     }
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
-        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude,
-                        gpsChkPntData.longitude, gpsChkPntData.latitude);
-        distToDest = calcDistToFinalDest(gpsCurrentData.latitude, gpsCurrentData.longitude,
-                        gpsFinalData.latitude, gpsFinalData.longitude);
+        presentChkPnt = getPresentChkPnt();
+        chkPntLat = getLongitude(presentChkPnt);
+        chkPntLon = getLatitude(presentChkPnt);
+        chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
+
+        if(chkPntReached && !finalChkPnt)
+        {
+            finalChkPnt = updateToNxtChkPnt();
+            presentChkPnt = getPresentChkPnt();
+            chkPntLat = getLongitude(presentChkPnt);
+            chkPntLon = getLatitude(presentChkPnt);
+            // also update master.
+        }
+
+        if(finalChkPnt && chkPntReached)
+        {
+            //update reached
+        }
+
+        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
+        distToDest = calcDistToFinalDest(distToChkPnt);
+    }
+    else
+    {
+
     }
 
 

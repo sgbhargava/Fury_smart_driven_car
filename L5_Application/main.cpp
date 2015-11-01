@@ -23,24 +23,25 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
+#include <compass.hpp>
 #include <gps.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include "compass.h"
+#include "utilities.h"
+#include "compass.hpp"
 //#include "i2c2.hpp"
 //#include "i2c2_device.hpp"
 //#include "i2c_base.hpp"
-#include "utilities.h"
 #include "can.h"
-
 #include "io.hpp"
 
-#define COMPASSMODULE 0
 #define TESTCODE 1
+#define COMPASSMODULE 0
 
 #if TESTCODE
 #include "test_code.hpp"
 #endif
+
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -58,7 +59,6 @@
  */
 int main(void)
 {
-
 #if COMPASSMODULE
 while(1)
 {
@@ -123,7 +123,7 @@ while(1)
 
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 0
+    #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 

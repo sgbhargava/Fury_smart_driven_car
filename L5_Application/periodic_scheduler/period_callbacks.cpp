@@ -28,6 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <compass.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -39,19 +40,22 @@
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+int var = 0;
 
 void period_1Hz(void)
 {
-    //LE.toggle(1);
+//    LE.toggle(1);
 }
 
 void period_10Hz(void)
 {
 
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    gpsData_t gpsCurrentData, gpsChkPntData, gpsFinalData;
-    float_t distToDest;
-    float_t distToChkPnt;
+    gpsData_t gpsCurrentData;
+    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon;
+    uint8_t presentChkPnt;
+    static bool finalChkPnt = false;
+    bool chkPntReached = false;
 
     if(NULL == gpsCurrData_q)
     {
@@ -59,11 +63,47 @@ void period_10Hz(void)
     }
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
-        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude,
-                gpsChkPntData.longitude, gpsChkPntData.latitude);
-        distToDest = calcDistToFinalDest(gpsCurrentData.latitude, gpsCurrentData.longitude,
-                gpsFinalData.latitude, gpsFinalData.longitude);
+        presentChkPnt = getPresentChkPnt();
+        chkPntLat = getLongitude(presentChkPnt);
+        chkPntLon = getLatitude(presentChkPnt);
+        chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
+
+        if(chkPntReached && !finalChkPnt)
+        {
+            finalChkPnt = updateToNxtChkPnt();
+            presentChkPnt = getPresentChkPnt();
+            chkPntLat = getLongitude(presentChkPnt);
+            chkPntLon = getLatitude(presentChkPnt);
+            // also update master.
+        }
+
+        if(finalChkPnt && chkPntReached)
+        {
+            //update reached
+        }
+
+        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
+        distToDest = calcDistToFinalDest(distToChkPnt);
     }
+    else
+    {
+
+    }
+
+
+    if(0 == var)
+        compassbearing_reading();
+
+    else if(1 == var)
+        var = calibrate_compass(var);
+
+    else if(2 == var)
+        var = headingmode_compass();
+
+    else
+        printf("Invalid");
+
+
     //LE.toggle(2);
 }
 
@@ -78,5 +118,7 @@ void period_100Hz(void)
 
 void period_1000Hz(void)
 {
-    //LE.toggle(4);
+//    LE.toggle(4);
+    if(SW.getSwitch(1))
+        var = 1;
 }

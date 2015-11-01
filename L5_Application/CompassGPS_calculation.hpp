@@ -37,12 +37,20 @@ float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chk
 /*
  * Calculates the distance to final destination
  * This is the sum of distance of all the checkpoints from the present location
+ * @distToNxtChkPnt : distance to next checkpoint
+ */
+float_t calcDistToFinalDest(float_t distToNxtChkPnt);
+
+/*
+ * Checks if the checkpoint has reached
  * @currentLat : latitude of current position
  * @currentLong : longitude of current position
- * @destLat : latitude of final destination
- * @destLong : longitude of final destination
+ * @chkPntLat : latitude of the upcoming checkpoint
+ * @chkPntLong : longitude of the upcoming checkpoint
+ *
+ * Returns true if reached.
  */
-float_t calcDistToFinalDest(float_t currentLat, float_t currentLong, float_t destLat, float_t destLong);
+bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong);
 
 
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

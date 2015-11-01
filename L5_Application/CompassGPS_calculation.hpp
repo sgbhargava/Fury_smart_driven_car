@@ -15,6 +15,6 @@
 
 float_t calcDistToNxtChkPnt(float_t,float_t,float_t,float_t);
 float_t calcDistToFinalDest(float_t,float_t,float_t,float_t);
-
+float_t headingdir(float_t,float_t,float_t,float_t);
 
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

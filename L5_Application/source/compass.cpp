@@ -17,6 +17,7 @@
 #include <gps.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
+#include "math.h"
 
 /**Few functions here are just to make sure the I2C is working is fine**/
 I2C2 &compass = I2C2::getInstance();
@@ -25,6 +26,7 @@ void compassbearing_reading()
 {
     /**Calculates the heading
      * Important task**/
+    LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
     printf("compass bearing:%d\n", data);
@@ -106,13 +108,6 @@ int headingmode_compass()
     return mode;
 }
 
-void headingdata(float latitude, float longitude)
-{
-    /**Function to calculate the current direction!!
-     * This function should take care of the direction of the car when it is heading towards destination
-     * or intermediate check points.
-     * Implementing the heading formula to compute traveling direction**/
 
 
-}
 

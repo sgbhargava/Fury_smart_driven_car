@@ -12,6 +12,7 @@
 
 #define RADIUS  6371                // This is the radius of earth in km.
 #define TO_RAD  (3.14159 / 180)     // value of PI
+#define To_DEG  (180/3.14159)
 
 /*
  * Calculates the distance to next check point
@@ -55,4 +56,39 @@ float_t calcDistToFinalDest(float_t currentLat, float_t currentLong,
 
 
     return finalDist;
+}
+
+/*
+ * Function to calculate the current direction!!
+ * This function should take care of the direction of the car when it is heading towards destination
+ * or intermediate check points.
+ * Implementing the heading formula to compute traveling direction
+*/
+
+float_t headingdir(float_t latitude1, float_t longitude1,float_t latitude2,float_t longitude2)
+{
+    double_t delta_longitude,firstterm,secondterm,firstproduct,secondproduct,headingdirection;
+
+    checkPointData_t *getnextcheckpnt = new checkPointData_t;
+    latitude2 = getnextcheckpnt->chkPntLat;
+    longitude2 = getnextcheckpnt->chkPntLong;
+
+    delta_longitude = TO_RAD * (longitude2 - longitude1);
+
+    latitude1 = TO_RAD * (latitude1);
+    latitude2 = TO_RAD * (latitude2);
+
+    longitude1 = TO_RAD * (longitude1);
+    longitude2 = TO_RAD * (longitude2);
+
+    firstterm = sin(delta_longitude)*cos(latitude2);
+    firstproduct = cos(latitude1)*sin(latitude2);
+    secondproduct = (sin(latitude1)*cos(latitude2)*cos(delta_longitude));
+    secondterm = firstproduct - secondproduct;
+
+    headingdirection = atan2(firstterm,secondterm);
+    headingdirection = (float_t) To_DEG * (headingdirection);
+
+    headingdirection = fmodf((headingdirection+360),360);
+    return headingdirection;
 }

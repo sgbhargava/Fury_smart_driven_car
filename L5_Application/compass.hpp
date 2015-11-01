@@ -23,6 +23,6 @@ void rollangle();
 void temperature();
 int calibrate_compass(int mode);
 int headingmode_compass();
-void headingdata(float latitude,float longitude);
+float headingdir(float latitude,float longitude);
 
 #endif /* L5_APPLICATION_COMPASS_HPP_ */

@@ -106,19 +106,19 @@ while(1)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
-/* Initialization of can1 */
-#if CAN_USAGE
-    CAN_init(can1,100,2,2,NULL,NULL);
-#endif
-    /* Used to calculate the present location. connect the GPS module to UART2 */
-#if GPSMODULE
-    scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
-#endif
+    /* Initialization of can1 */
+    #if CAN_USAGE
+        CAN_init(can1,100,2,2,NULL,NULL);
+    #endif
+        /* Used to calculate the present location. connect the GPS module to UART2 */
+    #if GPSMODULE
+        scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
+    #endif
 
-/* Code used for testing purpose. This will intialise all the predefined check points. */
-#if TESTCODE
-    scheduler_add_task(new test_code(PRIORITY_MEDIUM));
-#endif
+    /* Code used for testing purpose. This will intialise all the predefined check points. */
+    #if TESTCODE
+        scheduler_add_task(new test_code(PRIORITY_MEDIUM));
+    #endif
 
 
 

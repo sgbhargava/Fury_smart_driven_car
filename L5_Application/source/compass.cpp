@@ -24,8 +24,6 @@ I2C2 &compass = I2C2::getInstance();
 
 void compassbearing_reading()
 {
-    /**Calculates the heading
-     * Important task**/
     LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
@@ -74,10 +72,10 @@ void temperature()
     printf("temperature:%d\n", temperature);
 }
 
-int calibrate_compass(int mode)
+uint8_t calibrate_compass(int compassMode)
 {
     /**Here register address 0 indicates its a command register**/
-    /*for(i=0;i<10000;i++)
+    /*
      {
          compass.writeReg(0xC0,0,0xF0);
          delay_ms(20);
@@ -92,20 +90,18 @@ int calibrate_compass(int mode)
     {
         /*To come out of calibration mode*/
         //headingmode_compass();
-        mode = 2;
+        compassMode = 2;
         LE.off(1);
     }
-    return mode;
+    return compassMode;
 }
 
-int headingmode_compass()
+uint8_t headingmode_compass()
 {
-/*0xF8 makes compass come out of calibration mode*/
 //compass.writeReg(0xC0,0,0xF8);
-
-    int mode = 0;
+    uint8_t headingMode = 0;
     LE.on(2);
-    return mode;
+    return headingMode;
 }
 
 

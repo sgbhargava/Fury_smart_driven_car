@@ -19,7 +19,7 @@
 static checkPointData_t *prevChkPnt = NULL;
 static checkPointData_t *firstChkPnt = NULL;
 static uint8_t numberOfChkPnts = 0;
-
+static checkPointData_t *giveCheckPoint = NULL;
 
 void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
 {
@@ -39,6 +39,7 @@ void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
             if(NULL == firstChkPnt)
             {
                 firstChkPnt = newChkPnt;
+                giveCheckPoint = firstChkPnt;
             }
 
             if(NULL == prevChkPnt)
@@ -56,4 +57,63 @@ void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
 uint8_t getNumOfChkPnts()
 {
     return numberOfChkPnts;
+}
+
+
+
+
+
+
+
+uint8_t getPresentChkPnt()
+{
+    //giveCheckPoint = firstChkPnt;
+
+   /* while(giveCheckPoint != NULL)
+    {
+        if(giveCheckPoint == prevChkPnt)
+            return giveCheckPoint->chkPntNo;
+        else
+            giveCheckPoint = giveCheckPoint->next;
+    }*/
+    return giveCheckPoint->chkPntNo;
+}
+
+float_t getLongitude(uint8_t longitudeNumber)
+{
+    checkPointData_t *pntToGetLong = NULL;
+    pntToGetLong = firstChkPnt;
+
+    while(pntToGetLong != NULL)
+    {
+        if(pntToGetLong->chkPntNo == longitudeNumber)
+            return pntToGetLong->chkPntLong;
+        else
+            pntToGetLong = pntToGetLong->next;
+    }
+}
+
+float_t getLatitude(uint8_t latitudeNumber)
+{
+    checkPointData_t *pntToGetLat = NULL;
+    pntToGetLat = firstChkPnt;
+
+    while(pntToGetLat != NULL)
+    {
+        if(pntToGetLat->chkPntNo == latitudeNumber)
+            return pntToGetLat->chkPntLat;
+        else
+            pntToGetLat = pntToGetLat->next;
+    }
+}
+
+bool updateToNxtChkPnt()
+{
+    if(giveCheckPoint->next != NULL)
+    {
+        giveCheckPoint = giveCheckPoint->next;
+        return true;
+    }
+    else
+        return false;
 }

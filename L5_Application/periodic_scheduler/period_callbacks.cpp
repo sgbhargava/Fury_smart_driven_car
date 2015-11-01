@@ -52,7 +52,7 @@ void period_10Hz(void)
 
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData;
-    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon;
+    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon,currentheading;
     uint8_t presentChkPnt;
     static bool finalChkPnt = false;
     bool chkPntReached = false;
@@ -82,6 +82,7 @@ void period_10Hz(void)
             //update reached
         }
 
+        currentheading = headingdir(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
         distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
         distToDest = calcDistToFinalDest(distToChkPnt);
     }

@@ -11,14 +11,10 @@
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
 
-<<<<<<< HEAD
-#define RADIUS  6371                // This is the radius of earth in km.
-#define TO_RAD  (3.14159 / 180)     // value of PI
 #define To_DEG  (180/3.14159)
-=======
 #define RADIUS  6371000             // This is the radius of earth in meters.
 #define TO_RAD  (3.14159 / 180)     // value of PI by angle
->>>>>>> b81737edd2a3230b4b0911f8bfd00793256b63ac
+
 
 float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong)
 {

@@ -1,3 +1,6 @@
+
+#ifndef L5_APPLICATION_MOTOR_HPP_
+#define L5_APPLICATION_MOTOR_HPP_
 #include "gpio.hpp"
 #include "lpc_pwm.hpp"
 
@@ -80,3 +83,4 @@ class SpeedMonitor
         float m_speed_meter = 0;
         uint64_t m_last_time = 0;
 };
+#endif

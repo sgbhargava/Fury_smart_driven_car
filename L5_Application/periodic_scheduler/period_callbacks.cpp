@@ -28,38 +28,49 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include <stdint.h>
+#include <stdlib.h>
+#include <cstdio>
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "motor.hpp"
 #include "semphr.h"
 #include "tasks.hpp"
 #include "shared_handles.h"
-
-
+#include "can.h"
+#include "can_msg_process.hpp"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
-
-
+#ifdef CAN_MSG_CLASS
+CANMsg * canMsgHandler = CANMsg::getInstance();
+#endif
 void period_1Hz(void)
 {
-    float rpm, speed;
-
-    SpeedMonitor * monitor = SpeedMonitor::getInstance();
     LE.toggle(1);
-    monitor->getSpeed(&rpm, &speed);
-    xSemaphoreGive(scheduler_task::getSharedObject(shared_CANRxmsg));
+    //sendSpeed();
+
 }
 
 void period_10Hz(void)
 {
     LE.toggle(2);
+#ifdef CAN_MSG_CLASS
+    canMsgHandler->analysisCanMsg();
+#else
+    analysisCanMsg();
+#endif
+
 }
 
 void period_100Hz(void)
 {
     LE.toggle(3);
+#ifdef CAN_MSG_CLASS
+    canMsgHandler->receiveCanMsg();
+#else
+    receiveCanMsg();
+#endif
+
 }
 
 void period_1000Hz(void)

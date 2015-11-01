@@ -24,6 +24,7 @@ DirectionCtrl * DirectionCtrl::getInstance()
 }
 void DirectionCtrl::setDirection(int dir)
 {
+    LD.setNumber(dir);
     switch (dir){
         case dirFarRight:
             dirPWM = farRight;
@@ -64,7 +65,7 @@ SpeedCtrl::SpeedCtrl():
 {
     speedPWM = basePWM;
     throttlePWM.set(basePWM);
-    LD.setNumber(speedPWM);
+    //LD.setNumber(speedPWM);
     pin1_22.setAsOutput();
     pin1_23.setAsOutput();
 }
@@ -79,14 +80,14 @@ void SpeedCtrl::initESC()
 {
 
     printf("INIT\n");
-    throttlePWM.set(SpeedCtrl::frontLimitPWM);
-    vTaskDelay(1000);
     throttlePWM.set(SpeedCtrl::backLimitPWM);
+    vTaskDelay(1000);
+    throttlePWM.set(SpeedCtrl::frontLimitPWM);
     vTaskDelay(1000);
     printf("INIT Done\n");
     throttlePWM.set(SpeedCtrl::basePWM);
     speedPWM = SpeedCtrl::basePWM;
-    LD.setNumber((int)speedPWM);
+    //LD.setNumber((int)speedPWM);
 
 }
 bool SpeedCtrl::checkPWM(float pwm)
@@ -182,7 +183,7 @@ void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
     const uint64_t FIVE_SECOND = 5* 1000;
     uint64_t cur_time = sys_get_uptime_ms();
-    if (cur_time - m_last_time > FIVE_SECOND)
+    if ((m_speed != 0 && m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
     {
         m_speed = 0;
         m_rpm = 0;

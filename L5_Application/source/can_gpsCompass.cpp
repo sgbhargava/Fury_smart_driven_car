@@ -9,13 +9,10 @@
 
 #include "can_gpsCompass.hpp"
 
-#define MASKUPPER_TWO       0xFF000000      // mask upper byte in a 32-bit number
-#define MASKUPPER_THREE     0xFFF00000      // mask upper 12bits in a 32-bit numbber
-#define SHIFTBY_16BIT       16              // to shift a number by 16 bits
-#define SHIFTBY_12BIT       12              // shift a number by 12 bits
+
 #define CONVERT_TOMIN       60              // convert deg to minute
 #define TEN_6               1000000         // 10^6
-#define TEN_5               100000          // 10^5
+#define TEN_2               100             // 10^2
 
 //static checkPointData_t *nextChkPnt = NULL;
 static checkPointData_t *prevChkPnt = NULL;
@@ -29,11 +26,11 @@ void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
     checkPointData_t *newChkPnt = new checkPointData_t;
     if (NULL != newChkPnt)
     {
-        calcLat = (lat & MASKUPPER_TWO) >> SHIFTBY_16BIT ;
-        calcLat = calcLat + (float_t)((lat & ~(MASKUPPER_TWO)) * CONVERT_TOMIN / TEN_6);
+        calcLat = (lat / TEN_6) * TEN_2;
+        calcLat = calcLat + (float_t)((lat / (float_t) TEN_6) - (lat / TEN_6)) * CONVERT_TOMIN;
 
-        calcLong = (lon & MASKUPPER_THREE) >> SHIFTBY_12BIT;
-        calcLong = calcLong + (float_t)((lon & ~(MASKUPPER_THREE)) * CONVERT_TOMIN / TEN_5);
+        calcLong = (lon / TEN_6) * TEN_2;
+        calcLong = calcLong + (float_t)((lon / (float_t) TEN_6) - (lon / TEN_6)) * CONVERT_TOMIN;
 
         newChkPnt->chkPntLat = calcLat;
         newChkPnt->chkPntLong = calcLong;

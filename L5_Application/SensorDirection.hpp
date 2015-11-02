@@ -16,23 +16,23 @@
 
 uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
 {
-    enum direction {farRight, right, straight, left, FarLeft};
+    enum direction {straight, farRight, right, left, FarLeft};
     int correctDirection = straight;
     if(LidarData < 75)
     {
         if(SonicData.SonicSensor1 < SonicData.SonicSensor2)
         {
             correctDirection = right;
-            LE.off(1);
-            LE.off(2);
-            LE.on(3);
+//            LE.off(1);
+//            LE.off(2);
+//            LE.on(3);
         }
         else
         {
             correctDirection = left;
-            LE.on(1);
-            LE.off(2);
-            LE.off(3);
+//            LE.on(1);
+//            LE.off(2);
+//            LE.off(3);
         }
     }
     else if(SonicData.SonicSensor1 < 75)
@@ -40,16 +40,16 @@ uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
         if(LidarData < SonicData.SonicSensor2)
         {
             correctDirection = right;
-            LE.on(3);
-            LE.off(1);
-            LE.off(2);
+//            LE.on(3);
+//            LE.off(1);
+//            LE.off(2);
         }
         else
         {
             correctDirection = straight;
-            LE.on(2);
-            LE.off(1);
-            LE.off(3);
+//            LE.on(2);
+//            LE.off(1);
+//            LE.off(3);
         }
     }
     else if(SonicData.SonicSensor2 < 75)
@@ -57,24 +57,24 @@ uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
         if(LidarData < SonicData.SonicSensor1)
         {
             correctDirection = left;
-            LE.on(1);
-            LE.off(2);
-            LE.off(3);
+//            LE.on(1);
+//            LE.off(2);
+//            LE.off(3);
         }
         else
         {
             correctDirection = straight;
-            LE.on(2);
-            LE.off(1);
-            LE.off(3);
+//            LE.on(2);
+//            LE.off(1);
+//            LE.off(3);
         }
     }
     else
     {
         correctDirection = straight;
-        LE.on(2);
-        LE.off(1);
-        LE.off(3);
+//        LE.on(2);
+//        LE.off(1);
+//        LE.off(3);
     }
     return correctDirection;
 }

@@ -15,6 +15,7 @@
 #include "SensorDataType.h"
 #include "lpc_timers.h"
 #include "printf_lib.h"
+#include "i2c2_device.hpp"
 
 const int CovertToCm = 58;
 uint32_t timerValue1, timerValue2, timerValue3;
@@ -74,7 +75,7 @@ class SonicSensorTask : public scheduler_task
             SensorTrig2.setAsOutput();
             SensorTrig3.setAsOutput();
 
-            sensor_data_q = xQueueCreate(2, sizeof(sensor_data));
+            sensor_data_q = xQueueCreate(1, sizeof(sensor_data));
             addSharedObject("sonic_queue", sensor_data_q);
 
             //Interrupt for Sensor 1
@@ -112,6 +113,17 @@ class SonicSensorTask : public scheduler_task
             SensorTrig3.setLow();
             simple_filter(sensor_data.SonicSensor3, timerValue3);
             delay_ms(DelayForSensor_ms);
+            uint8_t buffer[2] = { 0 };
+
+            if(I2C2::getInstance().writeReg(0xc4, 0x0, 0x4))                    // Set Sensor Reading
+            {
+                delay_ms(DelayForSensor_ms);
+                if (I2C2::getInstance().readRegisters(0xc5, 0x8f, &buffer[0], 2))
+                {// Get reading
+                    sensor_data.LIDAR = (buffer[0] << 8) & 0xff00;
+                    sensor_data.LIDAR = sensor_data.LIDAR | buffer[1];
+                }
+            }
 
             xQueueSend(sensor_data_q, &sensor_data, 0);
 

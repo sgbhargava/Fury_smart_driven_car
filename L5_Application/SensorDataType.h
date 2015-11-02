@@ -10,6 +10,7 @@
 
 
 typedef struct {
+    uint16_t LIDAR;
     uint16_t SonicSensor1;
     uint16_t SonicSensor2;
     uint16_t SonicSensor3;

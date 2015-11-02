@@ -39,91 +39,89 @@
 #include "queue.h"
 #include "can.h"
 #include "i2c2_device.hpp"
-
+#include "SensorDirection.hpp"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-QueueHandle_t my_queue = xQueueCreate(10, sizeof(int));
+QueueHandle_t my_queue = xQueueCreate(1, sizeof(int));
+
 
 // CAN communication
 void period_1Hz(void)
 {
-// LIDAR LASER SENSOR
-#if 1
-            // P0.0 = CAN1.Rx
-            // P0.1 = CAN1.Tx
 
-        uint8_t reading[2] = { 0 };
-        can_msg_t can_tx_data;
-        CAN_init(can1, 100, 10, 10, NULL, NULL);
-             /* Zero out the filtering registers */
-                 LPC_CANAF->SFF_sa     = 0;
-                 LPC_CANAF->SFF_GRP_sa = 0;
-                 LPC_CANAF->EFF_sa     = 0;
-                 LPC_CANAF->EFF_GRP_sa = 0;
-                 LPC_CANAF->ENDofTable = 0;
-                 CAN_bypass_filter_accept_all_msgs();
-                 CAN_reset_bus(can1);
-                 vTaskDelay(10);
+#if 0
+     uint8_t direction;
+     uint16_t LidarData;
+     can_msg_t can_rx_data;
+     LidarData = (reading[0] << 8) & 0xff00;
+     LidarData = (LidarData | reading[1]);
+     u0_dbg_printf("Lidar = %d\n", LidarData);
+     direction = RCdirection(sensor_data, LidarData);
+     can_tx_data.msg_id = 0x021 ;
+     can_tx_data.frame_fields.data_len = 1;
+     can_tx_data.data.bytes[0] = direction;
+     CAN_tx(can1, &can_tx_data, 10);
 
-                 can_tx_data.frame_fields.is_rtr = 0;
-                 can_tx_data.frame_fields.is_29bit = 0; // Using 11-bit Format
-                 can_tx_data.frame_fields.data_len = 2; // Sending 1 byte of data
-
-                 // CAN TX
-                  if (xQueueReceive(my_queue, &reading, 1))
-                         {
-
-                             can_tx_data.msg_id = 0x142 ;
-                             can_tx_data.frame_fields.data_len = 2; // Sending 2 byte of data
-                             can_tx_data.data.bytes[0]= reading[0]; // Distance
-                             can_tx_data.data.bytes[1]= reading[1]; // Distance
-                             CAN_tx(can1, &can_tx_data, 10);
-                         }
-
-
-    						 vTaskDelay(50);
-    						 LE.toggle(1);
-                             // Send heart beat
-                             can_tx_data.msg_id = 0x140 ;
-                             can_tx_data.frame_fields.data_len = 0; // Sending 0 byte of data
-                             CAN_tx(can1, &can_tx_data, 10);
-
-
-#endif
-#if 1
-     static QueueHandle_t sensor_data_q = scheduler_task::getSharedObject("sonic_queue");
-     SonicSensors_t sensor_data;
-     if(xQueueReceive(sensor_data_q, &sensor_data, 0))
-     {
-         u0_dbg_printf("Sensors data: \n1)%u\n2)%u\n3)%u\n", sensor_data.SonicSensor1, sensor_data.SonicSensor2, sensor_data.SonicSensor3);
-         can_tx_data.msg_id = 0x141 ;
-         can_tx_data.frame_fields.data_len = 6; // Sending 2 byte of data
-         can_tx_data.data.bytes[0] = ((sensor_data.SonicSensor1 >> 8) & 0xff);
-         can_tx_data.data.bytes[1] = ((sensor_data.SonicSensor1 >> 0) & 0xff);
-         can_tx_data.data.bytes[2] = ((sensor_data.SonicSensor2 >> 8) & 0xff);
-         can_tx_data.data.bytes[3] = ((sensor_data.SonicSensor2 >> 0) & 0xff);
-         can_tx_data.data.bytes[4] = ((sensor_data.SonicSensor3 >> 8) & 0xff);
-         can_tx_data.data.bytes[5] = ((sensor_data.SonicSensor3 >> 0) & 0xff);
-         CAN_tx(can1, &can_tx_data, 10);
+     if(CAN_rx(can1, &can_rx_data, 10)){
+         u0_dbg_printf("Can received = %x\n", can_rx_data.msg_id);
      }
-}
 #endif
+
+}
+
+
 void period_10Hz(void)
 {
+    // LIDAR LASER SENSOR
+    #if 1
+        // P0.0 = CAN1.Rx
+        // P0.1 = CAN1.Tx
 
-#if 1
-    uint8_t buffer[2] = { 0 };
+        can_msg_t can_tx_data;
+        CAN_init(can1, 100, 10, 10, NULL, NULL);
+        /* Zero out the filtering registers */
+         LPC_CANAF->SFF_sa     = 0;
+         LPC_CANAF->SFF_GRP_sa = 0;
+         LPC_CANAF->EFF_sa     = 0;
+         LPC_CANAF->EFF_GRP_sa = 0;
+         LPC_CANAF->ENDofTable = 0;
+         //const can_ext_id_t elist[] = { CAN_gen_eid(can1, 0x18DAF111), CAN_gen_eid(can1, 0x18DAF11D)};
+         CAN_setup_filter(NULL, 0, NULL, 0, NULL, 0, NULL, 0);
+         //CAN_bypass_filter_accept_all_msgs();
+         CAN_reset_bus(can1);
+         vTaskDelay(10);
 
-    if(I2C2::getInstance().writeReg(0xc4, 0x0, 0x4))					// Set Sensor Reading
-    {
-    vTaskDelay(50);
-    if (I2C2::getInstance().readRegisters(0xc5, 0x8f, &buffer[0], 2))  // Get reading
-        xQueueSend(my_queue, &buffer, 10);
-    }
-//                      int distance = (buffer[0] << 8) + buffer[1];
-#endif
+         can_tx_data.frame_fields.is_rtr = 0;
+         can_tx_data.frame_fields.is_29bit = 0; // Using 11-bit Format
+         can_tx_data.frame_fields.data_len = 1; // Sending 1 byte of data
+
+         //LE.toggle(1);
+         // Send heart beat
+         //can_tx_data.msg_id = 0x140 ;
+         //can_tx_data.frame_fields.data_len = 0; // Sending 0 byte of data
+         //CAN_tx(can1, &can_tx_data, 10);
+    #endif
+    #if 1
+         static QueueHandle_t sensor_data_q = scheduler_task::getSharedObject("sonic_queue");
+         SonicSensors_t sensor_data;
+         if(xQueueReceive(sensor_data_q, &sensor_data, 0))
+          {
+              //u0_dbg_printf("Sensors data: \n1)%x\n2)%x\n3)%x\n", sensor_data.SonicSensor1, sensor_data.SonicSensor2, sensor_data.SonicSensor3);
+              can_tx_data.msg_id = 0x142 ;
+              can_tx_data.frame_fields.data_len = 8; // Sending 6 byte of data
+              can_tx_data.data.bytes[0] = ((sensor_data.LIDAR >> 8) & 0xff);
+              can_tx_data.data.bytes[1] = ((sensor_data.LIDAR >> 0) & 0xff);
+              can_tx_data.data.bytes[2] = ((sensor_data.SonicSensor1 >> 8) & 0xff);
+              can_tx_data.data.bytes[3] = ((sensor_data.SonicSensor1 >> 0) & 0xff);
+              can_tx_data.data.bytes[4] = ((sensor_data.SonicSensor2 >> 8) & 0xff);
+              can_tx_data.data.bytes[5] = ((sensor_data.SonicSensor2 >> 0) & 0xff);
+              can_tx_data.data.bytes[6] = ((sensor_data.SonicSensor3 >> 8) & 0xff);
+              can_tx_data.data.bytes[7] = ((sensor_data.SonicSensor3 >> 0) & 0xff);
+              CAN_tx(can1, &can_tx_data, 10);
+          }
+    #endif
 }
 
 void period_100Hz(void)

@@ -68,18 +68,9 @@ void period_10Hz(void)
         chkPntLon = getLatitude(presentChkPnt);
         chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
 
-        if(chkPntReached && !finalChkPnt)
+        if(chkPntReached)
         {
-            finalChkPnt = updateToNxtChkPnt();
-            presentChkPnt = getPresentChkPnt();
-            chkPntLat = getLongitude(presentChkPnt);
-            chkPntLon = getLatitude(presentChkPnt);
-            // also update master.
-        }
-
-        if(finalChkPnt && chkPntReached)
-        {
-            //update reached
+            updateDestPoints();
         }
 
         currentheading = headingdir(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);

@@ -14,6 +14,8 @@
 #define SHIFTBY_16BIT       16              // to shift a number by 16 bits
 #define SHIFTBY_12BIT       12              // shift a number by 12 bits
 #define CONVERT_TOMIN       60              // convert deg to minute
+#define TEN_6               1000000         // 10^6
+#define TEN_5               100000          // 10^5
 
 //static checkPointData_t *nextChkPnt = NULL;
 static checkPointData_t *prevChkPnt = NULL;
@@ -28,7 +30,11 @@ void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
     if (NULL != newChkPnt)
     {
         calcLat = (lat & MASKUPPER_TWO) >> SHIFTBY_16BIT ;
-        calcLat = calcLat + (float_t)((lat & ~(MASKUPPER_TWO)) * CONVERT_TOMIN /
+        calcLat = calcLat + (float_t)((lat & ~(MASKUPPER_TWO)) * CONVERT_TOMIN / TEN_6);
+
+        calcLong = (lon & MASKUPPER_THREE) >> SHIFTBY_12BIT;
+        calcLong = calcLong + (float_t)((lon & ~(MASKUPPER_THREE)) * CONVERT_TOMIN / TEN_5);
+
         newChkPnt->chkPntLat = calcLat;
         newChkPnt->chkPntLong = calcLong;
         newChkPnt->chkPntNo = num;

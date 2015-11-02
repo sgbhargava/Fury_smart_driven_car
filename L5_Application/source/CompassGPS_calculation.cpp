@@ -97,3 +97,22 @@ bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat,
 
     return false;
 }
+
+bool updateDestPoints(bool isFinal)
+{
+    if(!isFinal)
+    {
+        isFinal = updateToNxtChkPnt();
+        /*presentChkPnt = getPresentChkPnt();
+        chkPntLat = getLongitude(presentChkPnt);
+        chkPntLon = getLatitude(presentChkPnt);
+        */
+        // also update master.
+    }
+    if(isFinal)
+    {
+        //update reached
+    }
+
+    return isFinal;
+}

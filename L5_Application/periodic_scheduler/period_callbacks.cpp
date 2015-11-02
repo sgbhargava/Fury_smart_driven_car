@@ -37,10 +37,13 @@
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
 
+#define bearingmode     0
+#define calibrationmode 1
+#define headingmode     2
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
-int var = 0;
+uint8_t mode = 0;
 
 void period_1Hz(void)
 {
@@ -49,10 +52,9 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
-
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData;
-    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon,currentheading;
+    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon, currentheading;
     uint8_t presentChkPnt;
     static bool finalChkPnt = false;
     bool chkPntReached = false;
@@ -70,7 +72,7 @@ void period_10Hz(void)
 
         if(chkPntReached)
         {
-            updateDestPoints();
+            finalChkPnt = updateDestPoints(finalChkPnt);
         }
 
         currentheading = headingdir(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
@@ -82,20 +84,20 @@ void period_10Hz(void)
 
     }
 
+    if(bearingmode == mode)
+        compassbearing_reading();//bearing mode
 
-    if(0 == var)
-        compassbearing_reading();
+    else if(calibrationmode == mode)
+        mode = calibrate_compass(mode);//calibration mode
 
-    else if(1 == var)
-        var = calibrate_compass(var);
-
-    else if(2 == var)
-        var = headingmode_compass();
+    else if(headingmode == mode)
+        mode = headingmode_compass();//To get back to bearing mode
 
     else
-        printf("Invalid");
-
-
+    {
+        if(SW.getSwitch(2))
+            mode = 0;
+    }
     //LE.toggle(2);
 }
 
@@ -112,5 +114,5 @@ void period_1000Hz(void)
 {
 //    LE.toggle(4);
     if(SW.getSwitch(1))
-        var = 1;
+        mode = 1;
 }

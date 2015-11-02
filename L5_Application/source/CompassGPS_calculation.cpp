@@ -10,8 +10,9 @@
 
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
+#include "stdint.h"
 
-#define To_DEG  (180/3.14159)
+#define TO_DEG  (180/3.14159)
 #define RADIUS  6371000             // This is the radius of earth in meters.
 #define TO_RAD  (3.14159 / 180)     // value of PI by angle
 
@@ -37,11 +38,13 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 {
     static float_t finalDist;
     uint8_t chkPnt = getPresentChkPnt();
-    uint8_t totalChkPnts = getNumOfChkPnts();
+    uint8_t totalChkPnts;
     static uint8_t prevChkPnt;
 
+    totalChkPnts = getNumOfChkPnts();
+
     if(prevChkPnt != chkPnt){
-        for (int i = chkPnt; i < totalChkPnts; i++)
+        for (uint8_t i = chkPnt; i < totalChkPnts; i++)
         {
             finalDist = calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
         }
@@ -57,10 +60,6 @@ float_t headingdir(float_t latitude1, float_t longitude1,float_t latitude2,float
 {
     double_t delta_longitude,firstterm,secondterm,firstproduct,secondproduct,headingdirection;
 
-    checkPointData_t *getnextcheckpnt = new checkPointData_t;
-    latitude2 = getnextcheckpnt->chkPntLat;
-    longitude2 = getnextcheckpnt->chkPntLong;
-
     delta_longitude = TO_RAD * (longitude2 - longitude1);
 
     latitude1 = TO_RAD * (latitude1);
@@ -75,7 +74,7 @@ float_t headingdir(float_t latitude1, float_t longitude1,float_t latitude2,float
     secondterm = firstproduct - secondproduct;
 
     headingdirection = atan2(firstterm,secondterm);
-    headingdirection = (float_t) To_DEG * (headingdirection);
+    headingdirection = (float_t) TO_DEG * (headingdirection);
 
     headingdirection = fmodf((headingdirection+360),360);
     return headingdirection;

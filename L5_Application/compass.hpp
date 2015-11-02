@@ -15,6 +15,7 @@
 #include "stdio.h"
 #include "io.hpp"
 #include "utilities.h"
+#include "math.h"
 
 /*Calculates heading direction for a full circle*/
 void compassbearing_reading();
@@ -32,12 +33,10 @@ void rollangle();
 void temperature();
 
 /*Compasss enters into calibration when this function is called*/
-int calibrate_compass(int mode);
+uint8_t calibrate_compass(uint8_t mode);
 
 /*Compass enters into heading mode when this function is called*/
 uint8_t headingmode_compass();
 
-/*This function calculates the current heading direction*/
-float headingdir(float latitude,float longitude);
 
 #endif /* L5_APPLICATION_COMPASS_HPP_ */

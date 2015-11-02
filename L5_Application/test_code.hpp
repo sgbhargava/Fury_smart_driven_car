@@ -24,21 +24,23 @@ class test_code : public scheduler_task{
 
     bool init(void)
     {
-        addChkPnts(32.89, 121.45, 1);
-        addChkPnts(32.89, 121.45, 2);
-        addChkPnts(32.89, 121.45, 3);
-        addChkPnts(32.89, 121.45, 4);
-        addChkPnts(32.89, 121.45, 5);
+        addChkPnts(3289, 12145, 1);
+        addChkPnts(3289, 12145, 2);
+        addChkPnts(3289, 12145, 3);
+        addChkPnts(3289, 12145, 4);
+        addChkPnts(3289, 12145, 5);
         return true;
     }
 
     bool run(void *p)
     {
+
         vTaskDelay(1000);
+
         return true;
     }
 
-    private:
+    //private:
 
 };
 

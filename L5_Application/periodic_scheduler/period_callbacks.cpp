@@ -28,7 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include <compass.hpp>
+#include "compass.hpp"
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -84,6 +84,7 @@ void period_10Hz(void)
 
     }
 
+
     if(bearingmode == mode)
         compassbearing_reading();//bearing mode
 
@@ -97,6 +98,7 @@ void period_10Hz(void)
     {
         if(SW.getSwitch(2))
             mode = 0;
+
     }
     //LE.toggle(2);
 }

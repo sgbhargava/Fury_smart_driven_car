@@ -37,12 +37,33 @@
 #include "utilities.h"
 #include "file_logger.h"
 #include "queue.h"
+#include "can.h"
 #define rx
+#define lidar_threshold 100
+#define sonic_threshold 75
+
+#define forward 0xF0
+#define reverse 0x00
+enum direction {straight, far_right, right, left, far_left};
+
 typedef struct{
 	 uint16_t SonicSensor1;
 	    uint16_t SonicSensor2;
 	    uint16_t SonicSensor3;
 }SonicSensor_t;
+
+can_msg_t motor_throttle;
+can_msg_t motor_steer;
+
+
+
+	int correctDirection = straight;
+	int previousDirection = straight;
+
+
+	int correctSpeed = forward;
+	int previousSpeed = reverse;
+
 
 SonicSensor_t SonicData;
 uint16_t lidar = 0;
@@ -59,7 +80,7 @@ can_std_id_t can_test1;
 */
 can_fullcan_msg_t can_ptr;
 
-QueueHandle_t can_queue = xQueueCreate(100,sizeof(can_msg_t));
+QueueHandle_t can_queue = xQueueCreate(10,sizeof(can_msg_t));
 void period_1Hz(void)
 {
 
@@ -97,131 +118,134 @@ void period_10Hz(void)
 {
    // LE.toggle(2);
 	can_msg_t temp;
+	CAN_rx(can1, &temp,0);
+		/*printf("address %ld \t %d\n", temp.msg_id, temp.data);*/
 
+    motor_throttle.msg_id = 0x022;
+    motor_throttle.frame_fields.is_29bit = 0;
+    motor_throttle.frame_fields.data_len = 1;       // Send 8 bytes
 
+    motor_steer.msg_id = 0x021;
+    motor_steer.frame_fields.is_29bit = 0;
+    motor_steer.frame_fields.data_len = 1;       // Send 8 bytes
+/*
 	if(!xQueueReceive(can_queue, &temp, 0))
 	{
+printf("not abe to receive\n");
+	}*/
 
-	}
-	//printf("address %ld \t %d\n", temp.msg_id, temp.data);
 
 	switch (temp.msg_id)
 		{
-//	sonic sensor data
-		case 0x141:
-uint16_t  temp3, temp2;
-
-		temp2 = (temp.data.words[0]>> 8);
-		temp3 = (temp.data.words[0] << 8);
-		SonicData.SonicSensor1 = 0;
-		SonicData.SonicSensor1 = temp2 | temp3;
-
-		temp2 = (temp.data.words[1]>> 8);
-		temp3 = (temp.data.words[1] << 8);
-		SonicData.SonicSensor2 = 0;
-		SonicData.SonicSensor2 = temp2 | temp3;
-
-		temp2 = (temp.data.words[2]>> 8);
-		temp3 = (temp.data.words[2] << 8);
-		SonicData.SonicSensor3 = 0;
-		SonicData.SonicSensor3 = temp2 | temp3;
-
-
-		//printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
-
-
-
-		break;
-
 		case 0x142:
+			uint16_t  temp3, temp2;
 
+					temp2 = (temp.data.words[1]>> 8);
+					temp3 = (temp.data.words[1] << 8);
+					SonicData.SonicSensor1 = 0;
+					SonicData.SonicSensor1 = temp2 | temp3;
+
+					temp2 = (temp.data.words[2]>> 8);
+					temp3 = (temp.data.words[2] << 8);
+					SonicData.SonicSensor2 = 0;
+					SonicData.SonicSensor2 = temp2 | temp3;
+
+					temp2 = (temp.data.words[3]>> 8);
+					temp3 = (temp.data.words[3] << 8);
+					SonicData.SonicSensor3 = 0;
+					SonicData.SonicSensor3 = temp2 | temp3;
 
 					temp2 = (temp.data.words[0]>> 8);
 					temp3 = (temp.data.words[0] << 8);
 					lidar = 0;
 					lidar = temp2 | temp3;
 		//printf("lidar is %x\n", lidar);
+		//printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
 		break;
+
 		//default:
 			//printf("default\n");
 	}
-
-
-	enum direction {farRight, right, straight, left, FarLeft};
-	    int correctDirection = straight;
-	 if(lidar < 75)
+//Obstruction avoidance algorithm
+	 if(lidar < lidar_threshold)
 	    {
 	        if(SonicData.SonicSensor1 < SonicData.SonicSensor2)
 	        {
 	            correctDirection = right;
-	            LE.off(1);
-	            LE.off(2);
-	            LE.on(3);
+
 	        }
 	        else
 	        {
 	            correctDirection = left;
-	            LE.on(1);
-	            LE.off(2);
-	            LE.off(3);
+
 	        }
 	    }
-	    else if(SonicData.SonicSensor1 < 75)
+	    else if(SonicData.SonicSensor1 < sonic_threshold)
 	    {
 	        if(lidar < SonicData.SonicSensor2)
 	        {
 	            correctDirection = right;
-	            LE.on(3);
-	            LE.off(1);
-	            LE.off(2);
+
 	        }
 	        else
 	        {
 	            correctDirection = straight;
-	            LE.on(2);
-	            LE.off(1);
-	            LE.off(3);
+
 	        }
 	    }
-	    else if(SonicData.SonicSensor2 < 75)
+	    else if(SonicData.SonicSensor2 < sonic_threshold)
 	    {
 	        if(lidar < SonicData.SonicSensor1)
 	        {
 	            correctDirection = left;
-	            LE.on(1);
+	          /*  LE.on(1);
 	            LE.off(2);
-	            LE.off(3);
+	            LE.off(3);*/
 	        }
 	        else
 	        {
 	            correctDirection = straight;
-	            LE.on(2);
+	           /* LE.on(2);
 	            LE.off(1);
-	            LE.off(3);
+	            LE.off(3);*/
 	        }
 	    }
 	    else
 	    {
 	        correctDirection = straight;
-	        LE.on(2);
+	        /*LE.on(2);
 	        LE.off(1);
-	        LE.off(3);
+	        LE.off(3);*/
 	    }
 	    printf("head =%d \n",correctDirection);
+    	motor_steer.data.bytes[0]=correctDirection;
+		 //previousDirection=correctDirection;
+		CAN_tx(can1, &motor_steer, 0);
+		 //printf("correctDirection =%d \n",correctDirection);
+	 //}
 
+	/* if(previousSpeed!=correctSpeed)
+		 {
+			 motor_throttle.data.bytes[0]=correctSpeed;
+			 previousSpeed=correctSpeed;
+			 CAN_tx(can1, &motor_throttle, 0);
+			// printf("correctSpeed =%d \n",correctSpeed);
+
+		 }
+*/
 }
 
 void period_100Hz(void)
 {
-	can_msg_t msg;
+	/*can_msg_t msg;
 	if(CAN_rx(can1, &msg,0))
 	{
 		if(!xQueueSend(can_queue, &msg, 0))
 		{
-			//couldnt log
+			printf("couldnt send to queue\n");
 		}
 	}
-
+*/
 }
 
 void period_1000Hz(void)

@@ -40,7 +40,7 @@
 #include "can.h"
 #define rx
 #define lidar_threshold 100
-#define sonic_threshold 75
+#define sonic_threshold 50
 
 #define forward 0xF0
 #define reverse 0x00
@@ -168,56 +168,47 @@ printf("not abe to receive\n");
 	}
 //Obstruction avoidance algorithm
 	 if(lidar < lidar_threshold)
+
 	    {
-	        if(SonicData.SonicSensor1 < SonicData.SonicSensor2)
+		/* printf("%d\n", lidar);
+		 printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
+	       */ if(SonicData.SonicSensor1 < sonic_threshold)
 	        {
+	        	//printf("right\n");
 	            correctDirection = right;
 
 	        }
 	        else
 	        {
+	        	//printf("left\n");
 	            correctDirection = left;
 
 	        }
 	    }
-	    else if(SonicData.SonicSensor1 < sonic_threshold)
-	    {
-	        if(lidar < SonicData.SonicSensor2)
-	        {
+	   else
+		   {
+		   if
+		   (SonicData.SonicSensor1 < sonic_threshold)
+
+		   	   {
+
 	            correctDirection = right;
 
-	        }
-	        else
-	        {
-	            correctDirection = straight;
 
-	        }
-	    }
+		   	   }
 	    else if(SonicData.SonicSensor2 < sonic_threshold)
-	    {
-	        if(lidar < SonicData.SonicSensor1)
-	        {
+	    		{
+
 	            correctDirection = left;
-	          /*  LE.on(1);
-	            LE.off(2);
-	            LE.off(3);*/
-	        }
-	        else
-	        {
-	            correctDirection = straight;
-	           /* LE.on(2);
-	            LE.off(1);
-	            LE.off(3);*/
-	        }
-	    }
+
+	    		}
 	    else
-	    {
+	    		{
 	        correctDirection = straight;
-	        /*LE.on(2);
-	        LE.off(1);
-	        LE.off(3);*/
-	    }
-	    printf("head =%d \n",correctDirection);
+
+	    		}
+		   }
+	  //  printf("head =%d \n",correctDirection);
     	motor_steer.data.bytes[0]=correctDirection;
 		 //previousDirection=correctDirection;
 		CAN_tx(can1, &motor_steer, 0);
@@ -233,6 +224,8 @@ printf("not abe to receive\n");
 
 		 }
 */
+
+
 }
 
 void period_100Hz(void)

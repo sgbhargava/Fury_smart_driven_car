@@ -15,12 +15,7 @@ can_std_id_t can_test1;
 can_std_id_t can_test2;
 
 can_fullcan_msg_t *can_test1_ptr;
-const can_std_id_t slist[]  = { CAN_gen_sid(can1, 0x100), CAN_gen_sid(can1, 0x102),
-								CAN_gen_sid(can1, 0x140), CAN_gen_sid(can1, 0x144)
-							  };
-const can_std_grp_id_t sglist[] { {CAN_gen_sid(can1, 0x100), CAN_gen_sid(can1, 0x10F)},
-								 // {CAN_gen_sid(can1, 0x140), CAN_gen_sid(can1, 0x14F)}
-};
+
 const can_ext_id_t *elist = NULL;
 //const can_ext_grp_id_t eglist[] = NULL;can
 
@@ -49,6 +44,12 @@ int can_custom_init()
 	can_test2.fc_intr = 1;
 	can_test2.id = 0x102;
 
+	const can_std_id_t slist[]  = { CAN_gen_sid(can1, 0x100), CAN_gen_sid(can1, 0x102),
+									CAN_gen_sid(can1, 0x140), CAN_gen_sid(can1, 0x144)
+								  };
+	const can_std_grp_id_t sglist[] { {CAN_gen_sid(can1, 0x100), CAN_gen_sid(can1, 0x10F)},
+									 // {CAN_gen_sid(can1, 0x140), CAN_gen_sid(can1, 0x14F)}
+	};
 
 	if(CAN_init(can1, CAN_BAUD, CAN_RX_SIZE, CAN_TX_SIZE, bus_off_cb, data_ovr_cb) == false)
 		printf("CAN INITIALIZATION ERROR\n");

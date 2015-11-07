@@ -16,7 +16,6 @@
  *          p r e e t . w i k i @ g m a i l . c o m
  */
 
-#include <periodic_scheduler/periodic_callback.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -25,6 +24,7 @@
 #include "tasks.hpp"
 #include "storage.hpp"
 #include "lpc_sys.h"
+#include "periodic_callback.h"
 
 
 
@@ -64,6 +64,17 @@ periodicSchedulerTask::periodicSchedulerTask(void) :
     xTaskCreate(period_task_100Hz, "100Hz", PERIOD_TASKS_STACK_SIZE_BYTES/4, NULL, PRIORITY_CRITICAL + 3, NULL);
     xTaskCreate(period_task_1000Hz, "1000Hz", PERIOD_TASKS_STACK_SIZE_BYTES/4, NULL, PRIORITY_CRITICAL + 4, NULL);
 }
+
+bool periodicSchedulerTask::init(void)
+{
+    return period_init();
+}
+
+bool periodicSchedulerTask::regTlm(void)
+{
+    return period_reg_tlm();
+}
+
 
 bool periodicSchedulerTask::run(void *p)
 {

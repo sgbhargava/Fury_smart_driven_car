@@ -129,6 +129,8 @@ class periodicSchedulerTask : public scheduler_task
 {
     public:
         periodicSchedulerTask(void);
+        bool init(void);
+        bool regTlm(void);
         bool run(void *p);
 
     private:
@@ -136,3 +138,4 @@ class periodicSchedulerTask : public scheduler_task
 };
 
 #endif /* TASKS_HPP_ */
+

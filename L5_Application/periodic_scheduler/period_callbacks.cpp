@@ -78,16 +78,32 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 can_fullcan_msg_t can_ptr;
 
 QueueHandle_t can_queue = xQueueCreate(10, sizeof(can_msg_t));
+
+
+
+/// Called once before the RTOS is started, this is a good place to initialize things once
+bool period_init(void)
+{
+    return true; // Must return true upon success
+}
+
+/// Register any telemetry variables
+bool period_reg_tlm(void)
+{
+    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+    return true; // Must return true upon success
+}
+
+
+
 void period_1Hz(void) {
-
 	/*
-	 #ifdef rx
-	 can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
-	 if(CAN_fullcan_read_msg_copy(&can_ptr,can_test1_ptr) == true)
-	 {
-	 printf("new message : %d \n", can_ptr.data.bytes);
+		 #ifdef rx
+		 can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
+		 if(CAN_fullcan_read_msg_copy(&can_ptr,can_test1_ptr) == true)
+		 {
+		 printf("new message : %d \n", can_ptr.data.bytes);
 
-	 }
 	 else
 	 printf("no message at this time \n");
 	 #endif

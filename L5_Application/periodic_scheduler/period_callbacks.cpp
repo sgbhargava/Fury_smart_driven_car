@@ -87,7 +87,7 @@ bool period_init(void)
     return true; // Must return true upon success
 }
 
-/// Register any telemetry variables
+//Register any telemetry variables
 bool period_reg_tlm(void)
 {
     // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry

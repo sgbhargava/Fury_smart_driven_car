@@ -64,7 +64,7 @@ class UartSend : public scheduler_task
         int i=0;
     public:
         UartSend(uint8_t priority) :
-            scheduler_task("uart2", 2000, priority),u2(Uart2::getInstance()),i(0)
+            scheduler_task("uart2", 2000, priority),u2(Uart2::getInstance())
         {
 
             /* Nothing to init */

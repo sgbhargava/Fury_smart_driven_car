@@ -90,6 +90,7 @@ float_t getLongitude(uint8_t longitudeNumber)
         else
             pntToGetLong = pntToGetLong->next;
     }
+    return 0;
 }
 
 float_t getLatitude(uint8_t latitudeNumber)
@@ -104,6 +105,7 @@ float_t getLatitude(uint8_t latitudeNumber)
         else
             pntToGetLat = pntToGetLat->next;
     }
+    return 0;
 }
 
 bool updateToNxtChkPnt()

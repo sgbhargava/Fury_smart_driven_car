@@ -24,8 +24,8 @@ void initForGPSData(void)
     GPSdataTxQueue = xQueueCreate(10,sizeof(uint8_t));
     /* Queue to Reciev data from GPS module */
     GPSdataRxQueue = xQueueCreate(10,sizeof(uint8_t));
-    /* init can*/
-    if( CAN_init(can1,100,10,10,NULL,NULL))
+    /* init Can */
+    if( CAN_init(can1,100,32,32,NULL,NULL))
     {
         LOG_DEBUG("can initialized\n");
     }
@@ -34,51 +34,38 @@ void initForGPSData(void)
 
 bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
 {
-    int b1,b2,b3,b4,b5;
+    int b1;
+    uint32_t b2;
 
     switch(count)
     {
         case 0:
         {
-            sscanf(cmdParams,"%u.%2d%2d%2d%2d",&b1,&b2,&b3,&b4,&b5);
+            sscanf(cmdParams,"%u.%6d",&b1,(int *)&b2);
+            b1= abs(b1);
 
-            pGps->latitude[0] =  abs(b1);
-            pGps->latitude[1] =  b2;
-            pGps->latitude[2] =  b3;
-            pGps->latitude[3] =  b4;
-            pGps->latitude[4] =  b5;
-           /* printf("lat: %d %d %d %d %d\n",
-                    pGps->latitude[0],
-                    pGps->latitude[1],
-                    pGps->latitude[2],
-                    pGps->latitude[3],
-                    pGps->latitude[4]);*/
+            pGps->longLatdata.lattitude_dec=  *(uint64_t *)&b1;
+            pGps->longLatdata.lattitude_float = *(uint64_t *)&b2;
 
         }
         break;
 
         case 1:
         {
-            sscanf(cmdParams,"%u.%2d%2d%2d%2d",&b1,&b2,&b3,&b4,&b5);
 
-            pGps->longitude[0] = abs(b1);
-            pGps->longitude[1] = b2;
-            pGps->longitude[2] = b3;
-            pGps->longitude[3] = b4;
-            pGps->longitude[4] = b5;
-        /*    printf("long: %d %d %d %d %d\n",pGps->longitude[0],
-                    pGps->longitude[1],
-                    pGps->longitude[2],
-                    pGps->longitude[3],
-                    pGps->longitude[4]);*/
+            sscanf(cmdParams,"%u.%6d",&b1,&b2);
+
+            b1= abs(b1);
+            pGps->longLatdata.longitude_dec=  b1;
+            pGps->longLatdata.longitude_float = b2;;
+
         }
         break;
 
         case 2:
         {
             sscanf(cmdParams,"%d",&b1);
-            pGps->checkpoint = b1;
-      //      printf(" checkpoint:%d\n",pGps->checkpoint);
+            pGps->longLatdata.checkpoint = b1;
         }
        break;
 
@@ -86,13 +73,15 @@ bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
         {
            sscanf(cmdParams,"%d",&b1);
            pGps->bDestination = b1;
-       //    printf("bdest:%d\n",pGps->bDestination);
-           if( pGps->checkpoint == (count +1) )
+
+           /* checks if the checkpoints are in order and no data is missing  */
+           if( pGps->longLatdata.checkpoint == (count +1) )
            {
                return 1;
            }
            else
            {
+               /* send message to retransmit the data */
                return 2;
            }
         }
@@ -152,7 +141,8 @@ bool ProcessDataAndSend(char * pData)
            }
            else if(bSendMsg == 2) // data not in order
            {
-               printf("bSendMsg:%d",bSendMsg);
+               count =0;
+              // printf("bSendMsg:%d",bSendMsg);
                //TODO:Request a retransmit to the android app
                return 1;
            }
@@ -196,6 +186,8 @@ void bridge_canTx()
     can_msg_t canData = {0};
     uint8_t nCmd;
     int i=0;
+    long_lat_data temp ={0};
+    uint64_t t = 0;
 
     if( xQueueReceive(GPSdataTxQueue,&nCmd,0) )
     {
@@ -206,28 +198,10 @@ void bridge_canTx()
                 do
                 {
                     canData.frame_fields.data_len = 8;
-                    canData.msg_id = latitude ; // sending latitude  to to master
-                    canData.data.bytes[0] = gGpsData[i].latitude[0];
-                    canData.data.bytes[1] = gGpsData[i].latitude[1];
-                    canData.data.bytes[2] = gGpsData[i].latitude[2];
-                    canData.data.bytes[3] = gGpsData[i].latitude[3];
-                    canData.data.bytes[4] = (gGpsData[i].distance & 0xff00) >>8;
-                    canData.data.bytes[5] = (gGpsData[i].distance & 0xff);
-                    canData.data.bytes[6] = gGpsData[i].checkpoint;
-                    canData.data.bytes[7] = gGpsData[i].bDestination;
+                    canData.msg_id = location ; // sending latitude  to to master
 
-                    CAN_tx(can1,&canData,0);
+                    canData.data.qword =  *(uint64_t *)(&gGpsData[i].longLatdata);
 
-                    canData.frame_fields.data_len = 8;
-                    canData.msg_id = longitude; // sending longitude  to to master
-                    canData.data.bytes[0] = gGpsData[i].longitude[0];
-                    canData.data.bytes[1] = gGpsData[i].longitude[1];
-                    canData.data.bytes[2] = gGpsData[i].longitude[2];
-                    canData.data.bytes[3] = gGpsData[i].longitude[3];
-                    canData.data.bytes[4] = (gGpsData[i].distance & 0xff00) >>8;
-                    canData.data.bytes[5] = (gGpsData[i].distance & 0xff);
-                    canData.data.bytes[6] = gGpsData[i].checkpoint;
-                    canData.data.bytes[7] = gGpsData[i].bDestination;
                     CAN_tx(can1,&canData,0);
 
                 }while(!(gGpsData[i++].bDestination)); //send out all checkpoint data
@@ -247,14 +221,14 @@ void bridge_canTx()
                 //TODO
                 printf("can msg to get initial car location");
             }
-           break;
+            break;
 
             case heartbeat:
             {
                 //TODO
                 printf("send heartbeat");
             }
-           break;
+            break;
         }
     }
 }

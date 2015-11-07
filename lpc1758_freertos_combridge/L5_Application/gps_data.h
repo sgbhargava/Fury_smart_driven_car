@@ -16,16 +16,22 @@ typedef enum {
 typedef enum{
     heartbeat= 0x180,
     drive_mode = 0x181,
-    latitude = 0x182,
-    longitude = 0x183,
+    location = 0x182,
+
 } CAN_MSG_ID_T;
+
+typedef struct {
+        uint32_t lattitude_dec :8;
+        uint32_t lattitude_float :20;
+        uint32_t longitude_dec :8;
+        uint32_t longitude_float :20;
+        uint32_t checkpoint:8;
+} __attribute__((packed)) long_lat_data ;
 
 typedef struct gps_data{
 
       uint8_t cmd;
-      uint8_t latitude[5];
-      uint8_t longitude[5];
-      uint8_t checkpoint;
+      long_lat_data longLatdata;
       uint8_t bDestination;
       uint16_t distance;
 

@@ -6,6 +6,9 @@ import re
 """
 ALPHA VERSION!  NOT TESTED!
 This parses the Vector DBC file to generate code to marshal and unmarshal DBC defined messages
+
+Use Python (3.5 was tested to work)
+python dbc_parse.py -i 243.dbc -self=MOTOR
 """
 
 class Signal(object):
@@ -64,23 +67,23 @@ class Message(object):
 
 def main(argv):
     dbcfile = ''
-    outputfile = ''
+    self_node = ''
 
     try:
-        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+        opts, args = getopt.getopt(argv, "hi:s:", ["ifile=", "self="])
     except getopt.GetoptError:
-        print 'dbc_parse.py -i <dbcfile> -o <outputfile>'
+        print ('dbc_parse.py -i <dbcfile> -s <self_node>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'test.py -i <dbcfile> -o <outputfile>'
+            print ('dbc_parse.py -i <dbcfile> -s <self_node>')
             sys.exit()
         elif opt in ("-i", "--ifile"):
             dbcfile = arg
-        elif opt in ("-o", "--ofile"):
-            outputfile = arg
+        elif opt in ("-s", "--self"):
+            self_node = arg
 
-    print "/// DBC file: %s    Generated file: %s" % (dbcfile, outputfile)
+    print ("/// DBC file: %s    Self node: %s" % (dbcfile, self_node))
 
     messages = []
     f = open(dbcfile, "r")
@@ -123,39 +126,43 @@ def main(argv):
 
     # Generate converted struct types for each message
     for m in messages:
-        print "\n/// From '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid
-        print "typedef struct {"
+        print ("\n/// From '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid)
+        print ("typedef struct {")
         for s in m.signals:
-            print get_signal_code(s)
-        print "} " + m.get_struct_name() + ";"
+            print (get_signal_code(s))
+        print ("} " + m.get_struct_name() + ";")
 
     # Generate marshal methods
     for m in messages:
-        print "\nstatic inline void marshal_" + m.get_struct_name()[:-2] + "(uint64_t *to, " + m.get_struct_name() + " *from)"
-        print "{"
-        print "    uint64_t tmp = 0;"
-        print "    *to = 0; ///< Default the entire destination data with zeroes"
+        if m.sender != self_node:
+            print ("\r\n\\\ Not generating code for marshal_" + m.get_struct_name()[:-2] + "() since the sender is " + m.sender + " and we are " + self_node)
+            continue
+
+        print ("\nstatic inline void marshal_" + m.get_struct_name()[:-2] + "(uint64_t *to, " + m.get_struct_name() + " *from)")
+        print ("{")
+        print ("    uint64_t tmp = 0;")
+        print ("    *to = 0; ///< Default the entire destination data with zeroes")
         for s in m.signals:
-            print "\n    // Set: " + s.name
+            print ("\n    // Set: " + s.name)
             # Min/Max check
             if s.min_val != 0 or s.max_val != 0:
-                print "    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }"
-                print "    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }"
+                print ("    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
+                print ("    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }")
 
             # Compute binary value
-            print "    tmp = (uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5);"
-            print "    *to |= (tmp << " + str(s.bit_start) + ");"
-        print "}"
+            print ("    tmp = (uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5);")
+            print ("    *to |= (tmp << " + str(s.bit_start) + ");")
+        print ("}")
 
     # Generate unmarshal methods
     for m in messages:
-        print "\nstatic inline void unmarshal_" + m.get_struct_name()[:-2] + "(" + m.get_struct_name() + " *to, const uint64_t *from)"
-        print "{"
+        print ("\nstatic inline void unmarshal_" + m.get_struct_name()[:-2] + "(" + m.get_struct_name() + " *to, const uint64_t *from)")
+        print ("{")
         for s in m.signals:
-            print "    to->" + s.name + " =",
-            print " (((*from >> " + str(s.bit_start) + ") & 0x" + format(2 ** s.bit_size - 1, '02x') + ")",
-            print " * " + str(s.scale) + ") + (" + s.offset_str + ");"
-        print "}"
+            print ("    to->" + s.name + " =", end='')
+            print (" (((*from >> " + str(s.bit_start) + ") & 0x" + format(2 ** s.bit_size - 1, '02x') + ")", end='')
+            print (" * " + str(s.scale) + ") + (" + s.offset_str + ");")
+        print ("}")
 
 
 def get_signal_code(s):

@@ -10,6 +10,7 @@
 
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
+#include "stdint.h"
 
 #define TO_DEG  (180/3.14159)
 #define RADIUS  6371000             // This is the radius of earth in meters.
@@ -37,11 +38,13 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 {
     static float_t finalDist;
     uint8_t chkPnt = getPresentChkPnt();
-    uint8_t totalChkPnts = getNumOfChkPnts();
+    uint8_t totalChkPnts;
     static uint8_t prevChkPnt;
 
+    totalChkPnts = getNumOfChkPnts();
+
     if(prevChkPnt != chkPnt){
-        for (int i = chkPnt; i < totalChkPnts; i++)
+        for (uint8_t i = chkPnt; i < totalChkPnts; i++)
         {
             finalDist = calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
         }
@@ -94,4 +97,21 @@ bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat,
     return false;
 }
 
+bool updateDestPoints(bool isFinal)
+{
+    if(!isFinal)
+    {
+        isFinal = updateToNxtChkPnt();
+        /*presentChkPnt = getPresentChkPnt();
+        chkPntLat = getLongitude(presentChkPnt);
+        chkPntLon = getLatitude(presentChkPnt);
+        */
+        // also update master.
+    }
+    if(isFinal)
+    {
+        //update reached
+    }
 
+    return isFinal;
+}

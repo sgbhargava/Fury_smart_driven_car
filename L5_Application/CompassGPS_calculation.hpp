@@ -59,4 +59,9 @@ float_t calcDistToFinalDest(float_t distToNxtChkPnt);
  */
 bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong);
 
+/*
+ * This updates the checkpoint number
+ */
+bool updateDestPoints(bool isFinal);
+
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

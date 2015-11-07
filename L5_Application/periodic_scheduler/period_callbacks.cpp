@@ -28,7 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include <compass.hpp>
+#include "compass.hpp"
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -54,7 +54,7 @@ void period_10Hz(void)
 {
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData;
-    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon,currentheading;
+    float_t distToDest, distToChkPnt, chkPntLat, chkPntLon, currentheading;
     uint8_t presentChkPnt;
     static bool finalChkPnt = false;
     bool chkPntReached = false;
@@ -70,18 +70,9 @@ void period_10Hz(void)
         chkPntLon = getLatitude(presentChkPnt);
         chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
 
-        if(chkPntReached && !finalChkPnt)
+        if(chkPntReached)
         {
-            finalChkPnt = updateToNxtChkPnt();
-            presentChkPnt = getPresentChkPnt();
-            chkPntLat = getLongitude(presentChkPnt);
-            chkPntLon = getLatitude(presentChkPnt);
-            // also update master.
-        }
-
-        if(finalChkPnt && chkPntReached)
-        {
-            //update reached
+            finalChkPnt = updateDestPoints(finalChkPnt);
         }
 
         currentheading = headingdir(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
@@ -92,6 +83,7 @@ void period_10Hz(void)
     {
 
     }
+
 
     if(bearingmode == mode)
         compassbearing_reading();//bearing mode
@@ -106,6 +98,7 @@ void period_10Hz(void)
     {
         if(SW.getSwitch(2))
             mode = 0;
+
     }
     //LE.toggle(2);
 }

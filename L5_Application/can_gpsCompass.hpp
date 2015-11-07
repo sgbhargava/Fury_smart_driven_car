@@ -8,8 +8,8 @@
 #ifndef L5_APPLICATION_CAN_GPSCOMPASS_HPP_
 #define L5_APPLICATION_CAN_GPSCOMPASS_HPP_
 
-#include "math.h"
 #include "stdint.h"
+#include "math.h"
 
 typedef struct checkPointData{
         float_t chkPntLat;          // latitude of checkpoint
@@ -25,7 +25,7 @@ typedef struct checkPointData{
  * @lon : longitude
  * @num : checkpoint number
  */
-void addChkPnts(float_t lat, float_t lon, uint8_t num);
+void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num);
 
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();

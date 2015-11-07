@@ -72,7 +72,7 @@ void temperature()
     printf("temperature:%d\n", temperature);
 }
 
-uint8_t calibrate_compass(int compassMode)
+uint8_t calibrate_compass(uint8_t compassMode)
 {
     /**Here register address 0 indicates its a command register**/
     /*

@@ -11,6 +11,7 @@
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
 #include "stdint.h"
+#include "stdio.h"
 
 #define TO_DEG  (180/3.14159)
 #define RADIUS  6371000             // This is the radius of earth in meters.
@@ -21,13 +22,14 @@ float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t 
 {
     float_t dist;
 
-    double_t phi = (chkPntLat - currentLat) * TO_RAD;
     double_t phi1 = currentLat * TO_RAD;
     double_t phi2 = chkPntLat * TO_RAD;
+    double_t phi = phi2 - phi1;
     double_t lamda = (chkPntLong - currentLong) * TO_RAD;
+    double_t a;
 
-    dist = (float_t) (2 * RADIUS * asin(sqrt((sin(phi/2) * sin(phi/2))
-                                     + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2)))));
+    a = (sin(phi/2) * sin(phi/2)) + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2));
+    dist = (float_t) (2 * RADIUS * atan2(sqrt(a), sqrt(1-a)));
 
     return dist;
 
@@ -36,11 +38,11 @@ float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t 
 
 float_t calcDistToFinalDest(float_t distToChkPnt)
 {
-    static float_t distOfChkPnts = 0.0;
+    float_t distOfChkPnts = 0.0;
     float_t finalDist;
-    uint8_t chkPnt = getPresentChkPnt();
+    uint8_t chkPnt = getPresentChkPnt() + 1;
     uint8_t totalChkPnts = getNumOfChkPnts();
-    static uint8_t prevChkPnt = 0;
+    static uint8_t prevChkPnt = getPresentChkPnt();
 
     // Calculating the total distance of the rest of checkpoints.
     if(prevChkPnt != chkPnt){

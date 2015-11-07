@@ -43,4 +43,7 @@ double_t getLatitude(uint8_t latitudeNumber);
 
 /* Updates to next checkpoint */
 bool updateToNxtChkPnt();
+
+/* Updates to previous checkpoint */
+bool updateToPrevChkPnt();
 #endif /* L5_APPLICATION_CAN_GPSCOMPASS_HPP_ */

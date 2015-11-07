@@ -27,11 +27,11 @@ void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
     if (NULL != newChkPnt)
     {
         // Calculating the floating part and concatenating in the form lat: DDMM.MMMM, long: DDDMM.MMMM
-        calcLat = (latFloat / (float_t)TEN_6) * CONVERT_TOMIN;
-        calcLat = (latDec * (float_t)TEN_2) + calcLat;
+        calcLat = (latFloat / (float_t)TEN_6);
+        calcLat = (latDec) + calcLat;
 
-        calcLong = (lonFloat / (float_t)TEN_6) * CONVERT_TOMIN;
-        calcLong = ((float_t)lonDec * TEN_2) + calcLong;
+        calcLong = (lonFloat / (float_t)TEN_6);
+        calcLong = ((float_t)lonDec) + calcLong;
 
         // Storing the values in a structure.
         newChkPnt->chkPntLat = calcLat;
@@ -113,6 +113,17 @@ bool updateToNxtChkPnt()
     if(giveCheckPoint->next != NULL)
     {
         giveCheckPoint = giveCheckPoint->next;
+        return true;
+    }
+    else
+        return false;
+}
+
+bool updateToPrevChkPnt()
+{
+    if (giveCheckPoint->prev != NULL)
+    {
+        giveCheckPoint = giveCheckPoint->prev;
         return true;
     }
     else

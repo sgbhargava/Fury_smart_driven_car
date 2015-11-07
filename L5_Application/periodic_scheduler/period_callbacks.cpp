@@ -37,6 +37,7 @@
 #include "file_logger.h"
 #include "queue.h"
 #include "can.h"
+#include "printf_lib.h"
 #define rx
 #define lidar_threshold 100
 #define sonic_threshold 50
@@ -66,24 +67,23 @@ SonicSensor_t SonicData;
 uint16_t lidar = 0;
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
-/*
- *
- *
- *
- can_std_id_t can_test1;
- can_std_id_t can_test2;
- can_fullcan_msg_t *can_ptr;
- can_fullcan_msg_t *can_test1_ptr;
- */
-can_fullcan_msg_t can_ptr;
 
-QueueHandle_t can_queue = xQueueCreate(10, sizeof(can_msg_t));
+
+
+
 
 
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+
+	if(can_custom_init() == 0)
+	{
+		uint8_t number = CAN_fullcan_get_num_entries();
+		u0_dbg_printf("no of entries : %x\n",number);
+	}
+		//u0_dbg_printf("initialized\n");
     return true; // Must return true upon success
 }
 
@@ -94,18 +94,21 @@ bool period_reg_tlm(void)
     return true; // Must return true upon success
 }
 
-
-
 void period_1Hz(void) {
-	/*
+	can_std_id_t can_test2;
+	 can_fullcan_msg_t *can_ptr = NULL;
+	 can_fullcan_msg_t *can_test1_ptr = NULL;
+	 can_std_id_t can_test1 =  CAN_gen_sid(can1, 0x142);
 		 #ifdef rx
+
 		 can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
-		 if(CAN_fullcan_read_msg_copy(&can_ptr,can_test1_ptr) == true)
-		 {
-		 printf("new message : %d \n", can_ptr.data.bytes);
+         printf("pointer %x\n",can_test1_ptr);
+		 if(CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr) == true)
+			 u0_dbg_printf("new message : %x \n", can_ptr->data.qword) ;
 
 	 else
-	 printf("no message at this time \n");
+		 u0_dbg_printf("no message at this time \n");
+
 	 #endif
 
 	 #ifdef tx
@@ -121,16 +124,16 @@ void period_1Hz(void) {
 	 else
 	 printf("not sent\n");
 	 #endif
-	 */
+
 
 }
 
 void period_10Hz(void) {
-	// LE.toggle(2);
+	/*// LE.toggle(2);
 	can_msg_t temp = { 0 };
 
 	CAN_rx(can1, &temp, 0);
-	/*printf("address %ld \t %d\n", temp.msg_id, temp.data);*/
+	printf("address %ld \t %d\n", temp.msg_id, temp.data);
 
 	motor_throttle.msg_id = 0x022;
 	motor_throttle.frame_fields.is_29bit = 0;
@@ -139,11 +142,11 @@ void period_10Hz(void) {
 	motor_steer.msg_id = 0x021;
 	motor_steer.frame_fields.is_29bit = 0;
 	motor_steer.frame_fields.data_len = 1;       // Send 8 bytes
-			/*
+
 			 if(!xQueueReceive(can_queue, &temp, 0))
 			 {
 			 printf("not abe to receive\n");
-			 }*/
+			 }
 
 	switch (temp.msg_id) {
 	case 0x142:
@@ -179,9 +182,9 @@ void period_10Hz(void) {
 	if (lidar < lidar_threshold)
 
 	{
-		/* printf("%d\n", lidar);
+		 printf("%d\n", lidar);
 		 printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
-		 */if (SonicData.SonicSensor1 < sonic_threshold) {
+		 if (SonicData.SonicSensor1 < sonic_threshold) {
 			//printf("right\n");
 			correctDirection = right;
 
@@ -213,7 +216,7 @@ void period_10Hz(void) {
 	//printf("correctDirection =%d \n",correctDirection);
 	//}
 
-	/* if(previousSpeed!=correctSpeed)
+	 if(previousSpeed!=correctSpeed)
 	 {
 	 motor_throttle.data.bytes[0]=correctSpeed;
 	 previousSpeed=correctSpeed;
@@ -221,8 +224,8 @@ void period_10Hz(void) {
 	 // printf("correctSpeed =%d \n",correctSpeed);
 
 	 }
-	 */
 
+*/
 }
 
 void period_100Hz(void) {

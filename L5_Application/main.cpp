@@ -23,7 +23,7 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
-#define tx
+#define rx
 #include "stdio.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"
@@ -65,10 +65,14 @@ int main(void)
      * such that it can save remote control codes to non-volatile memory.  IR remote
      * control codes can be learned by typing the "learn" terminal command.
      */
+
+	//can_custom_init();
+	/*
 #ifdef rx
 	can_custom_init();
 	CAN_reset_bus(can1);
 #endif
+*/
 #ifdef tx
 		if(CAN_init(can1, 100,512,512, bus_off() , NULL) == false) //wait for initialization
 		printf("init failed\n");

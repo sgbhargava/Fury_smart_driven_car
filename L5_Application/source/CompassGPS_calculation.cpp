@@ -17,7 +17,7 @@
 #define TO_RAD  (3.14159 / 180)     // value of PI by angle
 
 
-float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong)
+float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
     float_t dist;
 
@@ -26,8 +26,8 @@ float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chk
     double_t phi2 = chkPntLat * TO_RAD;
     double_t lamda = (chkPntLong - currentLong) * TO_RAD;
 
-    dist = (float_t) 2 * RADIUS * asin(sqrt((sin(phi/2) * sin(phi/2))
-                                     + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2))));
+    dist = (float_t) (2 * RADIUS * asin(sqrt((sin(phi/2) * sin(phi/2))
+                                     + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2)))));
 
     return dist;
 
@@ -59,7 +59,7 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 }
 
 
-float_t headingdir(float_t latitude1, float_t longitude1,float_t latitude2,float_t longitude2)
+double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2, double_t longitude2)
 {
     double_t delta_longitude,firstterm,secondterm,firstproduct,secondproduct,headingdirection;
 
@@ -77,13 +77,13 @@ float_t headingdir(float_t latitude1, float_t longitude1,float_t latitude2,float
     secondterm = firstproduct - secondproduct;
 
     headingdirection = atan2(firstterm,secondterm);
-    headingdirection = (float_t) TO_DEG * (headingdirection);
+    headingdirection = (double_t) TO_DEG * (headingdirection);
 
     headingdirection = fmodf((headingdirection+360),360);
     return headingdirection;
 }
 
-bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong)
+bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
     const float_t vicinity = 0.001;
     bool latInUpperBound, latInLowerBound, longInUpperBound, longInLowerBound;

@@ -39,7 +39,7 @@
 #define COMPASSMODULE 0
 
 #if TESTCODE
-#include "test_code.hpp"
+#include "can_gpsCompass.hpp"
 #endif
 
 
@@ -115,17 +115,36 @@ while(1)
         scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
     #endif
 
-    /* Code used for testing purpose. This will intialise all the predefined check points. */
-    #if TESTCODE
-        scheduler_add_task(new test_code(PRIORITY_MEDIUM));
-    #endif
-
-
-
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
+
+#if TESTCODE
+    /*
+     * Testing purpose
+     */
+
+    addChkPnts(37, 334352, 121, 883424, 1);
+    addChkPnts(37, 334424, 121, 883008, 2);
+    addChkPnts(37, 334571, 121, 882960, 3);
+    addChkPnts(37, 334814, 121, 882382, 4);
+    addChkPnts(37, 335109, 121, 881657, 5);
+
+    uint8_t num;
+
+    while(1)
+    {
+        if(SW.getSwitch(1))
+        {
+            num = getPresentChkPnt();
+            printf("checkpoint no: %d\n", num);
+            printf("Latitude: %f\t Longitude: %f\n\n", getLatitude(num), getLongitude(num));
+        }
+        delay_ms(1000);
+    }
+
+#endif
 
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));

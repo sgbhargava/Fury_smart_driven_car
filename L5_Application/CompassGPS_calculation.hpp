@@ -19,7 +19,7 @@
  * or intermediate check points.
  * Implementing the heading formula to compute traveling direction
 */
-float_t headingdir(float_t,float_t,float_t,float_t);
+double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2, double_t longitude2);
 
 /*
  * Calculates the distance to next check point
@@ -39,7 +39,7 @@ float_t headingdir(float_t,float_t,float_t,float_t);
  * @chkPntLong : longitude of the upcoming checkpoint
  */
 
-float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong);
+float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong);
 
 /*
  * Calculates the distance to final destination
@@ -57,7 +57,7 @@ float_t calcDistToFinalDest(float_t distToNxtChkPnt);
  *
  * Returns true if reached.
  */
-bool checkPntReached(float_t currentLat, float_t currentLong, float_t chkPntLat, float_t chkPntLong);
+bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong);
 
 /*
  * This updates the checkpoint number

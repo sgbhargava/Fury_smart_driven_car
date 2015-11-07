@@ -22,16 +22,16 @@ static checkPointData_t *giveCheckPoint = NULL;
 
 void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
 {
-    float_t calcLat, calcLong;
+    double_t calcLat, calcLong;
     checkPointData_t *newChkPnt = new checkPointData_t;
     if (NULL != newChkPnt)
     {
         // Calculating the floating part and concatenating in the form lat: DDMM.MMMM, long: DDDMM.MMMM
-        calcLat = (latFloat / TEN_6) * CONVERT_TOMIN;
-        calcLat = (latDec * TEN_2) + calcLat;
+        calcLat = (latFloat / (float_t)TEN_6) * CONVERT_TOMIN;
+        calcLat = (latDec * (float_t)TEN_2) + calcLat;
 
-        calcLong = (lonFloat / TEN_6) * CONVERT_TOMIN;
-        calcLong = (lonDec * TEN_2) + calcLong;
+        calcLong = (lonFloat / (float_t)TEN_6) * CONVERT_TOMIN;
+        calcLong = ((float_t)lonDec * TEN_2) + calcLong;
 
         // Storing the values in a structure.
         newChkPnt->chkPntLat = calcLat;
@@ -78,7 +78,7 @@ uint8_t getPresentChkPnt()
     return giveCheckPoint->chkPntNo;
 }
 
-float_t getLongitude(uint8_t longitudeNumber)
+double_t getLongitude(uint8_t longitudeNumber)
 {
     checkPointData_t *pntToGetLong = NULL;
     pntToGetLong = firstChkPnt;
@@ -93,13 +93,14 @@ float_t getLongitude(uint8_t longitudeNumber)
     return 0;
 }
 
-float_t getLatitude(uint8_t latitudeNumber)
+double_t getLatitude(uint8_t latitudeNumber)
 {
     checkPointData_t *pntToGetLat = NULL;
     pntToGetLat = firstChkPnt;
 
     while(pntToGetLat != NULL)
     {
+        return pntToGetLat->chkPntLat;
         if(pntToGetLat->chkPntNo == latitudeNumber)
             return pntToGetLat->chkPntLat;
         else

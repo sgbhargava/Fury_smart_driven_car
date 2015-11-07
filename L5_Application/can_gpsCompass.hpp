@@ -12,8 +12,8 @@
 #include "math.h"
 
 typedef struct checkPointData{
-        float_t chkPntLat;          // latitude of checkpoint
-        float_t chkPntLong;         // longitude of checkpoint
+        double_t chkPntLat;          // latitude of checkpoint
+        double_t chkPntLong;         // longitude of checkpoint
         uint8_t chkPntNo;           // checkpoint number
         checkPointData *next;       // pointing to next node
         checkPointData *prev;       // pointing to previous node
@@ -36,10 +36,10 @@ uint8_t getNumOfChkPnts();
 uint8_t getPresentChkPnt();
 
 /*returns the present longitude value*/
-float_t getLongitude(uint8_t longitudeNumber);
+double_t getLongitude(uint8_t longitudeNumber);
 
 /*returns the present latitude value*/
-float_t getLatitude(uint8_t latitudeNumber);
+double_t getLatitude(uint8_t latitudeNumber);
 
 /**/
 bool updateToNxtChkPnt();

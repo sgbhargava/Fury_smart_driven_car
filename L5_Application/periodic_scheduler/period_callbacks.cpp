@@ -49,6 +49,19 @@ QueueHandle_t my_queue = xQueueCreate(1, sizeof(int));
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+
+    CAN_init(can1, 100, 10, 10, NULL, NULL);
+    /* Zero out the filtering registers */
+     LPC_CANAF->SFF_sa     = 0;
+     LPC_CANAF->SFF_GRP_sa = 0;
+     LPC_CANAF->EFF_sa     = 0;
+     LPC_CANAF->EFF_GRP_sa = 0;
+     LPC_CANAF->ENDofTable = 0;
+     //const can_ext_id_t elist[] = { CAN_gen_eid(can1, 0x18DAF111), CAN_gen_eid(can1, 0x18DAF11D)};
+     CAN_setup_filter(NULL, 0, NULL, 0, NULL, 0, NULL, 0);
+     //CAN_bypass_filter_accept_all_msgs();
+     CAN_reset_bus(can1);
+
     return true; // Must return true upon success
 }
 
@@ -93,18 +106,7 @@ void period_10Hz(void)
         // P0.1 = CAN1.Tx
 
         can_msg_t can_tx_data;
-        CAN_init(can1, 100, 10, 10, NULL, NULL);
-        /* Zero out the filtering registers */
-         LPC_CANAF->SFF_sa     = 0;
-         LPC_CANAF->SFF_GRP_sa = 0;
-         LPC_CANAF->EFF_sa     = 0;
-         LPC_CANAF->EFF_GRP_sa = 0;
-         LPC_CANAF->ENDofTable = 0;
-         //const can_ext_id_t elist[] = { CAN_gen_eid(can1, 0x18DAF111), CAN_gen_eid(can1, 0x18DAF11D)};
-         CAN_setup_filter(NULL, 0, NULL, 0, NULL, 0, NULL, 0);
-         //CAN_bypass_filter_accept_all_msgs();
-         CAN_reset_bus(can1);
-         vTaskDelay(10);
+  //       vTaskDelay(10);
 
          can_tx_data.frame_fields.is_rtr = 0;
          can_tx_data.frame_fields.is_29bit = 0; // Using 11-bit Format

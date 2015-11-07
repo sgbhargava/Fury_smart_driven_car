@@ -93,37 +93,27 @@ class SonicSensorTask : public scheduler_task
 
         bool run(void *p)
         {
-            //Sensor 1
+            //Sensors
             SensorTrig1.setHigh();
-            delay_us(TriggerDelay_us);
-            SensorTrig1.setLow();
-            simple_filter(sensor_data.SonicSensor1, timerValue1);
-            delay_ms(DelayForSensor_ms);
-
-            //Sensor 2
             SensorTrig2.setHigh();
-            delay_us(TriggerDelay_us);
-            SensorTrig2.setLow();
-            simple_filter(sensor_data.SonicSensor2, timerValue2);
-            delay_ms(DelayForSensor_ms);
-
-            //Sensor 3
             SensorTrig3.setHigh();
             delay_us(TriggerDelay_us);
+            SensorTrig1.setLow();
+            SensorTrig2.setLow();
             SensorTrig3.setLow();
-            simple_filter(sensor_data.SonicSensor3, timerValue3);
-            delay_ms(DelayForSensor_ms);
-            uint8_t buffer[2] = { 0 };
 
-            if(I2C2::getInstance().writeReg(0xc4, 0x0, 0x4))                    // Set Sensor Reading
-            {
-                delay_ms(DelayForSensor_ms);
-                if (I2C2::getInstance().readRegisters(0xc5, 0x8f, &buffer[0], 2))
-                {// Get reading
-                    sensor_data.LIDAR = (buffer[0] << 8) & 0xff00;
-                    sensor_data.LIDAR = sensor_data.LIDAR | buffer[1];
-                }
+            uint8_t buffer[2] = { 0 };
+            I2C2::getInstance().writeReg(0xc4, 0x0, 0x4);  // Set Sensor Reading
+            delay_ms(DelayForSensor_ms);
+            if (I2C2::getInstance().readRegisters(0xc5, 0x8f, &buffer[0], 2))
+            {// Get reading
+                sensor_data.LIDAR = (buffer[0] << 8) & 0xff00;
+                sensor_data.LIDAR = sensor_data.LIDAR | buffer[1];
             }
+
+            simple_filter(sensor_data.SonicSensor1, timerValue1);
+            simple_filter(sensor_data.SonicSensor2, timerValue2);
+            simple_filter(sensor_data.SonicSensor3, timerValue3);
 
             xQueueSend(sensor_data_q, &sensor_data, 0);
 

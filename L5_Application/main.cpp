@@ -49,105 +49,38 @@
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
 #if 0
-#define CAN_MSG_SPEED  0x102
-typedef struct{
-        uint64_t speed:8;
-        uint64_t rpm:8;
-}speed_can_msg_t;
-
-class CANMsgTxTask: public scheduler_task {
-    private:
-        QueueHandle_t m_CanTxQueueHandler = xQueueCreate(1, sizeof(int));
+QueueHandle_t queueHandler = xQueueCreate(1, sizeof(bool));
+void initESCa()
+{
+    bool init_f = true;
+    xQueueSend(queueHandler, &init_f, 0);
+}
+class initMotorTask: public scheduler_task {
     public:
-        CANMsgTxTask(uint8_t priority):
-            scheduler_task("CANMsgTxTask", 2048, priority) {
-
+        initMotorTask(uint8_t priority):
+            scheduler_task("initMotorTask", 2048, priority) {
         }
         bool init(void) {
-            addSharedObject(shared_CANTxmsg, m_CanTxQueueHandler);
-            m_CanTxQueueHandler = getSharedObject(shared_CANTxmsg);
+            int port2_7 = 7;
+            eint3_enable_port2(port2_7, eint_rising_edge, initESCa);
             return true;
         }
         bool run (void* p){
-            can_msg_t msg;
-            float speed,rpm;
-            msg.msg_id = CAN_MSG_SPEED;
-            msg.frame_fields.is_29bit = 0;
-            msg.frame_fields.data_len = 2;
-            speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
-            SpeedMonitor::getInstance()->getSpeed(&rpm, &speed);
-            pSpeedCanMsg->rpm = (int)rpm;
-            pSpeedCanMsg->speed = (int)speed;
-            if (xQueueReceive(m_CanTxQueueHandler, &msg, portMAX_DELAY))
-            {
-                CAN_tx(can_t::can1, &msg, portMAX_DELAY);
+            bool init_f = false;
+            if (xQueueReceive(queueHandler,&init_f, 1)){
+                if (init_f)
+                {
+                    SpeedCtrl* speed = SpeedCtrl::getInstance();
+                    speed->initESC();
+                    vTaskDelay(3000);
+                    speed->setSpeedPWM(FORWARD_SPEED);
+                }
+
             }
             return true;
         }
-
 };
-#define CAN_MSG_STEER 0x021
-#define CAN_MSG_TROTTLE 0x22 //????
-typedef struct{
-        uint64_t turn:3;
-}dir_can_msg_t;
-typedef struct{
-        uint64_t forward:3;
-        uint64_t backward:3;
-}throttle_can_msg_t;
-#if 0
-enum {
-    dirCenter,
-    dirFarRight,
-    dirRight,
-    dirLeft,
-    dirFarLeft
-};
-#endif
-class CANMsgRxTask: public scheduler_task {
-    private:
-        QueueHandle_t m_CANRxQueueHandler =  xQueueCreate(1, sizeof(int));
-        can_msg_t mMsgRecv;
-        SpeedCtrl* pSpeed = SpeedCtrl::getInstance();
-    public:
-        CANMsgRxTask(uint8_t priority):
-            scheduler_task("CANMsgRxTask", 2048, priority) {
-            addSharedObject(shared_CANRxmsg, m_CANRxQueueHandler);
-            m_CANRxQueueHandler = getSharedObject(shared_CANRxmsg);
-        }
-        bool init(void) {
-            CAN_init(can_t::can1, 100, 8, 8, NULL, NULL);
-            CAN_bypass_filter_accept_all_msgs();
-            CAN_reset_bus(can_t::can1);
-
-            return true;
-        }
-        bool run (void* p){
-
-            if (xQueueReceive(m_CANRxQueueHandler, &mMsgRecv, portMAX_DELAY))
-            {
-                printf("Enter Semaphore\n");
-                CAN_rx(can_t::can1, &mMsgRecv, portMAX_DELAY);
-                printf("MSG RECV: %x %x\n", mMsgRecv.msg_id, mMsgRecv.data.bytes[0]);
-                if (mMsgRecv.msg_id == CAN_MSG_STEER)
-                {
-                    dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&mMsgRecv.data.bytes[0];
-                    DirectionCtrl::getInstance()->setDirection(pDirCanMsg->turn);
-                }
-                else if (mMsgRecv.msg_id == CAN_MSG_TROTTLE)
-                {
-                    throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&mMsgRecv.data.bytes[0];
-                    if (pThrottleCanMsg->forward == 0xf)// Hack
-                        pSpeed->setSpeedPWM(8.6);
-                    if (pThrottleCanMsg->backward == 0xf) // Hack
-                        pSpeed->setSpeedPWM(7.9);
-                }
-            }
-            return true;
-        }
-
-};
-#endif
+#else
 class initMotorTask: public scheduler_task {
     public:
         initMotorTask(uint8_t priority):
@@ -157,17 +90,17 @@ class initMotorTask: public scheduler_task {
             return true;
         }
         bool run (void* p){
-
-            if (SW.getSwitch(1)){
-                SpeedCtrl * speed = SpeedCtrl::getInstance();
+            if (SW.getSwitch(1))
+            {
+                SpeedCtrl* speed = SpeedCtrl::getInstance();
                 speed->initESC();
                 vTaskDelay(3000);
                 speed->setSpeedPWM(FORWARD_SPEED);
             }
             return true;
         }
-
 };
+#endif
 int main(void)
 {
     /**
@@ -180,22 +113,21 @@ int main(void)
      * such that it can save remote control codes to non-volatile memory.  IR remote
      * control codes can be learned by typing the "learn" terminal command.
      */
-    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
     //Initialization
 #ifndef CAN_MSG_CLASS
-    if (CAN_init(can_t::can1, 100, 512, 512, NULL, NULL)){
+    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
         printf("CAN initialization is done\n");
     }
     CAN_bypass_filter_accept_all_msgs();
     CAN_reset_bus(can_t::can1);
 #endif
-    SpeedMonitor::getInstance();
 
 
     //scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
     //scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));
 
+    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
@@ -204,7 +136,6 @@ int main(void)
     #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
-    scheduler_add_task(new initMotorTask  (PRIORITY_HIGH));
 
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));
@@ -266,6 +197,7 @@ int main(void)
         u3.init(WIFI_BAUD_RATE, WIFI_RXQ_SIZE, WIFI_TXQ_SIZE);
         scheduler_add_task(new wifiTask(Uart3::getInstance(), PRIORITY_LOW));
     #endif
+    scheduler_add_task(new initMotorTask  (PRIORITY_LOW));
 
     scheduler_start(); ///< This shouldn't return
     return -1;

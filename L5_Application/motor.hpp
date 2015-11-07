@@ -78,9 +78,8 @@ class SpeedMonitor
     private:
         SpeedMonitor();
         static SpeedMonitor * m_pInstance;
-        float m_speed;
-        float m_rpm;
-        float m_speed_meter = 0;
+        float m_speed = 0;
+        float m_rpm = 0;
         uint64_t m_last_time = 0;
 };
 #endif

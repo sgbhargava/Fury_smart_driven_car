@@ -8,18 +8,35 @@
 
 
 #ifdef CAN_MSG_CLASS
-CANMsg::CANMsg(void){
-    if (CAN_init(can_t::can1, 100, 512, 512, NULL, NULL)){
+
+CANMsg * CANMsg::m_pInstance = NULL;
+
+const int can_ids[] = {0x021, 0x321, 0x421};
+CANMsg::CANMsg(void)
+{
+    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
         printf("CAN initialization is done\n");
     }
-    CAN_bypass_filter_accept_all_msgs();
-    CAN_reset_bus(can_t::can1);
+#ifdef FULLCAN
 
-    m_CANRxQueueHandler = xQueueCreate(1, sizeof(can_msg_t));
-    m_CANTxQueueHandler = xQueueCreate(1, sizeof(can_msg_t));
+    can_id_len = sizeof(can_ids)/sizeof(int);
+    for (int i = 0; i < can_id_len; i++){
+        if (i < can_id_len)
+            CAN_fullcan_add_entry(can1, CAN_gen_sid(can1,can_ids[i]), CAN_gen_sid(can1,can_ids[i+1]));
+        else
+            CAN_fullcan_add_entry(can1, CAN_gen_sid(can1,can_ids[i]), CAN_gen_sid(can1, 0xffff));
+    }
+#else
+    CAN_bypass_filter_accept_all_msgs();
+#endif
+    CAN_reset_bus(can_t::can1);
+    vTaskDelay(10);
 
     m_pSpeed = SpeedCtrl::getInstance();
     m_pDir = DirectionCtrl::getInstance();
+    m_pSpeedMonitor = SpeedMonitor::getInstance();
+
+    m_heartbeatCnt = 0;
 }
 
 CANMsg* CANMsg::getInstance(void){
@@ -29,57 +46,92 @@ CANMsg* CANMsg::getInstance(void){
     return m_pInstance;
 }
 
-void CANMsg::analysisCanMsg(void)
+void CANMsg::recvAndAnalysisCanMsg(void)
 {
     can_msg_t mMsgRecv;
-    if (xQueueReceive(m_CANRxQueueHandler, &mMsgRecv, 0 )){
 
-        printf("Enter Semaphore\n");
+    while (CAN_rx(can1, &mMsgRecv, 0))
+    {
         if (mMsgRecv.msg_id == CAN_MSG_ID_STEER)
         {
             dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&mMsgRecv.data.bytes[0];
             m_pDir->setDirection(pDirCanMsg->turn);
+            printf("Dir REV MSG %x %x\n", mMsgRecv.msg_id , mMsgRecv.data.bytes[0]);
         }
         else if (mMsgRecv.msg_id == CAN_MSG_ID_THROTTLE)
         {
+            m_pSpeed = SpeedCtrl::getInstance();
             throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&mMsgRecv.data.bytes[0];
             if (pThrottleCanMsg->forward == 0xf)// Hack
+            {
+                printf("Go Forward\n");
                 m_pSpeed->setSpeedPWM(FORWARD_SPEED);
+            }
             if (pThrottleCanMsg->backward == 0xf) // Hack
+            {
+                printf("Go Backward\n");
                 m_pSpeed->setSpeedPWM(BACKWARD_SPEED);
+            }
+            printf("Speed REV MSG %x %x\n", mMsgRecv.msg_id , mMsgRecv.data.bytes[0]);
         }
     }
-
 }
-void CANMsg::receiveCanMsg(){
 
-    can_msg_t mMsgRecv;
-    if (CAN_rx(can1, &mMsgRecv, 0)){
-        xQueueSend( m_CANRxQueueHandler, &mMsgRecv, 0 );    //m_CANRxQueueHandler;
-    }
+void CANMsg::sendSpeed(void)
+{
+    int rpm =0 , speed = 0;
+    //m_pSpeedMonitor->getSpeed((float *)&rpm, (float *)&speed);
+    printf("Speed RPM: %d, Speed:%d \n", rpm, speed);
 
+    can_msg_t msg;
+    msg.msg_id = CAN_MSG_ID_SPEED;
+    msg.frame_fields.is_29bit = 0;
+    msg.frame_fields.data_len = 1;
+    speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
+    pSpeedCanMsg->rpm = (int)rpm;
+    pSpeedCanMsg->speed = (int)speed;
+    CAN_tx(can1, &msg, 1);
 }
+
+void CANMsg::sendHeartBeat(void)
+{
+    can_msg_t msg;
+    msg.msg_id = CAN_MSG_ID_HEARTBEAT;
+    msg.frame_fields.is_29bit = 0;
+    msg.frame_fields.data_len = 1;
+    msg.data.bytes[0] = m_heartbeatCnt ++;
+    CAN_tx(can1, &msg, 0);
+}
+
+void CANMsg::sendTxCanMsg(void)
+{
+    int rpm, speed;
+    m_pSpeedMonitor->getSpeed((float *)&rpm, (float *)&speed);
+    printf("Speed RPM: %d, Speed:%d \n", rpm, speed);
+
+    can_msg_t msg;
+    msg.msg_id = CAN_MSG_ID_SPEED;
+    msg.frame_fields.is_29bit = 0;
+    msg.frame_fields.data_len = 1;
+    speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
+    pSpeedCanMsg->rpm = (int)rpm;
+    pSpeedCanMsg->speed = (int)speed;
+    CAN_tx(can1, &msg, 0);
+
+    msg.msg_id = CAN_MSG_ID_HEARTBEAT;
+    msg.data.bytes[0] = m_heartbeatCnt ++;
+    CAN_tx(can1, &msg, 0);
+}
+
 
 #else
-
-QueueHandle_t m_CANRxQueueHandler =  xQueueCreate(1, sizeof(can_msg_t));
-QueueHandle_t m_CanTxQueueHandler = xQueueCreate(1, sizeof(int));
-
-void receiveCanMsg(){
-
-    can_msg_t mMsgRecv;
-    if (CAN_rx(can1, &mMsgRecv, 0)){
-        xQueueSend( m_CANRxQueueHandler, &mMsgRecv, 0 );    //m_CANRxQueueHandler;
-    }
-
-}
-
-void analysisCanMsg(void)
+static int cheartbeatCnt = 0;
+void recvAndAnalysisCanMsg(void)
 {
     can_msg_t mMsgRecv;
-    if (xQueueReceive( m_CANRxQueueHandler, &mMsgRecv, 0 ))
-    {
 
+    while (CAN_rx(can1, &mMsgRecv, 0))
+    {
         if (mMsgRecv.msg_id == CAN_MSG_ID_STEER)
         {
             dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&mMsgRecv.data.bytes[0];
@@ -107,10 +159,10 @@ void analysisCanMsg(void)
 
 void sendSpeed(void)
 {
-    float rpm, speed;
+    float rpm= 0 , speed= 0;
     SpeedMonitor* speedMonitor = SpeedMonitor::getInstance();
     speedMonitor->getSpeed(&rpm, &speed);
-    printf("Speed RPM: %f, Speed:%f \n", rpm, speed);
+    //printf("Speed RPM: %f, Speed:%f \n", rpm, speed);
 
     can_msg_t msg;
     msg.msg_id = CAN_MSG_ID_SPEED;
@@ -119,6 +171,16 @@ void sendSpeed(void)
     speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
     pSpeedCanMsg->rpm = (int)rpm;
     pSpeedCanMsg->speed = (int)speed;
-    //CAN_tx(can_t::can1, &msg, 0);
+    CAN_tx(can_t::can1, &msg, 0);
+}
+
+void sendHeartBeat(void)
+{
+    can_msg_t msg;
+    msg.msg_id = CAN_MSG_ID_HEARTBEAT;
+    msg.frame_fields.is_29bit = 0;
+    msg.frame_fields.data_len = 1;
+    msg.data.bytes[0] = 1; //cheartbeatCnt++;
+    CAN_tx(can_t::can1, &msg, 0);
 }
 #endif

@@ -16,6 +16,7 @@
 #define CAN_MSG_ID_STEER 0x021
 #define CAN_MSG_ID_THROTTLE 0x22
 #define CAN_MSG_ID_SPEED  0x102
+#define CAN_MSG_ID_HEARTBEAT 0x100
 
 #define FORWARD_SPEED 8.68
 #define BACKWARD_SPEED 8.0
@@ -40,20 +41,23 @@ class CANMsg
 {
     public:
         static CANMsg * getInstance();
-        void analysisCanMsg(void);
-        void receiveCanMsg(void);
+        void recvAndAnalysisCanMsg(void);
+        void sendSpeed(void);
+        void sendHeartBeat(void);
+        void sendTxCanMsg(void);
 
     private:
         CANMsg();
         static CANMsg * m_pInstance;
+
         SpeedCtrl *m_pSpeed;
         DirectionCtrl *m_pDir;
-        QueueHandle_t m_CANRxQueueHandler;
-        QueueHandle_t m_CANTxQueueHandler;
+        SpeedMonitor *m_pSpeedMonitor;
+        int m_heartbeatCnt;
 };
 #else
-void receiveCanMsg(void);
-void analysisCanMsg(void);
 void sendSpeed(void);
+void sendHeartBeat(void);
+void recvAndAnalysisCanMsg(void);
 #endif
 #endif /* L5_APPLICATION_CAN_MSG_PROCESS_HPP_ */

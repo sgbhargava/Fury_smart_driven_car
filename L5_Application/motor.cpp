@@ -68,6 +68,7 @@ SpeedCtrl::SpeedCtrl():
     //LD.setNumber(speedPWM);
     pin1_22.setAsOutput();
     pin1_23.setAsOutput();
+
 }
 
 SpeedCtrl* SpeedCtrl::getInstance(){
@@ -87,6 +88,7 @@ void SpeedCtrl::initESC()
     printf("INIT Done\n");
     throttlePWM.set(SpeedCtrl::basePWM);
     speedPWM = SpeedCtrl::basePWM;
+    LE.on(1);
     //LD.setNumber((int)speedPWM);
 
 }
@@ -161,8 +163,6 @@ void speed_pulse_start(void)
 
 SpeedMonitor::SpeedMonitor()
 {
-    m_rpm = 0;
-    m_speed = 0;
     //Singleton
     int port2_5 = 5;
     eint3_enable_port2(port2_5, eint_rising_edge, speed_pulse_start);
@@ -182,22 +182,18 @@ void SpeedMonitor::setRpm(int rpmVal)
 void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
     const uint64_t FIVE_SECOND = 5* 1000;
-    uint64_t cur_time = sys_get_uptime_ms();
-    if ((m_speed != 0 && m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
+    uint64_t cur_time = 0;//sys_get_uptime_ms();
+    if ((m_speed != 0.0 && m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
     {
         m_speed = 0;
         m_rpm = 0;
     }
     *rpm = m_rpm;
-    *speed = m_speed_meter;
+    *speed = m_speed;
 }
 int SpeedMonitor::getRpm()
 {
     return m_rpm;
-}
-float SpeedMonitor::getSpeedMeter()
-{
-    return m_speed_meter;
 }
 
 void SpeedMonitor::calSpeed(){
@@ -205,8 +201,8 @@ void SpeedMonitor::calSpeed(){
     uint64_t time_diff = cur_time - m_last_time;
 
     m_rpm = 1.0/ ( (float)time_diff * MS_TO_MINS);
-    m_speed_meter = DIAMETER *PI * (m_rpm/ 60); // m/hr
-    m_speed = m_speed_meter /1000 * KM_TO_MILES;
+    m_speed = DIAMETER *PI * (m_rpm/ 60); // m/hr
+    //m_speed = m_speed_meter /1000 * KM_TO_MILES;
     m_last_time = cur_time;
 }
 

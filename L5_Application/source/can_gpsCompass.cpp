@@ -100,7 +100,6 @@ double_t getLatitude(uint8_t latitudeNumber)
 
     while(pntToGetLat != NULL)
     {
-        return pntToGetLat->chkPntLat;
         if(pntToGetLat->chkPntNo == latitudeNumber)
             return pntToGetLat->chkPntLat;
         else

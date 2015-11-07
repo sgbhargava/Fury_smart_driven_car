@@ -32,15 +32,15 @@ void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();
 
-/*returns the present check point*/
+/* returns the present check point */
 uint8_t getPresentChkPnt();
 
-/*returns the present longitude value*/
+/* returns the present longitude value */
 double_t getLongitude(uint8_t longitudeNumber);
 
-/*returns the present latitude value*/
+/* returns the present latitude value */
 double_t getLatitude(uint8_t latitudeNumber);
 
-/**/
+/* Updates to next checkpoint */
 bool updateToNxtChkPnt();
 #endif /* L5_APPLICATION_CAN_GPSCOMPASS_HPP_ */

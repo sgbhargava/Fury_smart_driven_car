@@ -141,6 +141,7 @@ while(1)
             printf("checkpoint no: %d\n", num);
             printf("Latitude: %f\t Longitude: %f\n\n", getLatitude(num), getLongitude(num));
         }
+
         delay_ms(1000);
     }
 

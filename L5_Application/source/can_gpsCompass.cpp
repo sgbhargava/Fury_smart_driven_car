@@ -20,18 +20,20 @@ static checkPointData_t *firstChkPnt = NULL;
 static uint8_t numberOfChkPnts = 0;
 static checkPointData_t *giveCheckPoint = NULL;
 
-void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num)
+void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
 {
     float_t calcLat, calcLong;
     checkPointData_t *newChkPnt = new checkPointData_t;
     if (NULL != newChkPnt)
     {
-        calcLat = (lat / TEN_6) * TEN_2;
-        calcLat = calcLat + (float_t)((lat / (float_t) TEN_6) - (lat / TEN_6)) * CONVERT_TOMIN;
+        // Calculating the floating part and concatenating in the form lat: DDMM.MMMM, long: DDDMM.MMMM
+        calcLat = (latFloat / TEN_6) * CONVERT_TOMIN;
+        calcLat = (latDec * TEN_2) + calcLat;
 
-        calcLong = (lon / TEN_6) * TEN_2;
-        calcLong = calcLong + (float_t)((lon / (float_t) TEN_6) - (lon / TEN_6)) * CONVERT_TOMIN;
+        calcLong = (lonFloat / TEN_6) * CONVERT_TOMIN;
+        calcLong = (lonDec * TEN_2) + calcLong;
 
+        // Storing the values in a structure.
         newChkPnt->chkPntLat = calcLat;
         newChkPnt->chkPntLong = calcLong;
         newChkPnt->chkPntNo = num;

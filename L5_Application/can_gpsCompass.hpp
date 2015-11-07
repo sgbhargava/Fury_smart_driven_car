@@ -21,11 +21,13 @@ typedef struct checkPointData{
 
 /*
  * Adds checkpoint data
- * @lat : latitude
- * @lon : longitude
- * @num : checkpoint number
+ * @latDec      : Decimal part of latitude
+ * @latFloat    : Floating part of latitude
+ * @lonDec      : Decimal part of longitude
+ * @lonFloat    : Floating part of longitude
+ * @num         : checkpoint number
  */
-void addChkPnts(uint32_t lat, uint32_t lon, uint8_t num);
+void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num);
 
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();

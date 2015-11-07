@@ -36,20 +36,22 @@ float_t calcDistToNxtChkPnt(float_t currentLat, float_t currentLong, float_t chk
 
 float_t calcDistToFinalDest(float_t distToChkPnt)
 {
-    static float_t finalDist;
+    static float_t finalDist = 0.0;
     uint8_t chkPnt = getPresentChkPnt();
-    uint8_t totalChkPnts;
-    static uint8_t prevChkPnt;
+    uint8_t totalChkPnts = getNumOfChkPnts();
+    static uint8_t prevChkPnt = 0;
 
-    totalChkPnts = getNumOfChkPnts();
-
+    // Calculating the total distance of the rest of checkpoints.
     if(prevChkPnt != chkPnt){
         for (uint8_t i = chkPnt; i < totalChkPnts; i++)
         {
-            finalDist = calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
+            finalDist += calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
         }
     }
+
+    // adding the present distance to checkpoint with the rest of the checkpoint distance
     finalDist = finalDist + distToChkPnt;
+
     prevChkPnt = chkPnt;
 
     return finalDist;

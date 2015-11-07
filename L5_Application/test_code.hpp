@@ -24,11 +24,11 @@ class test_code : public scheduler_task{
 
     bool init(void)
     {
-        addChkPnts(3289, 12145, 1);
-        addChkPnts(3289, 12145, 2);
-        addChkPnts(3289, 12145, 3);
-        addChkPnts(3289, 12145, 4);
-        addChkPnts(3289, 12145, 5);
+        addChkPnts(37, 334352, 121, 883424, 1);
+        addChkPnts(37, 334424, 121, 883008, 2);
+        addChkPnts(37, 334571, 121, 882960, 3);
+        addChkPnts(37, 334814, 121, 882382, 4);
+        addChkPnts(37, 335109, 121, 881657, 5);
         return true;
     }
 

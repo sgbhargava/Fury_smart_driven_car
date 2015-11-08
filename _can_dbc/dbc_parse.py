@@ -137,6 +137,17 @@ def main(argv):
             sig = Signal(t[2], bit_start, bit_size, is_unsigned, scale, offset, min_val, max_val, recipients)
             messages[-1].add_signal(sig)
         
+    # Generate message IDs
+    for m in messages:
+        print ("static const uint32_t " + m.get_struct_name()[:-2] + "_MID = " + m.mid + ";")
+    print ("")
+    
+    # Generate MIA struct
+    print ("typedef struct { ")
+    print ("    uint32_t is_mia : 1;          ///< Missing in action flag")
+    print ("    uint32_t mia_counter_ms : 31; ///< Missing in action counter")
+    print ("} mia_info_t;")
+        
     # Generate converted struct types for each message
     for m in messages:
         print ("\n/// Message: " + m.name + " from '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid)
@@ -145,8 +156,7 @@ def main(argv):
             print (get_signal_code(s))
         
         print ("")
-        print ("    uint32_t __is_mia : 1;          ///< Missing in action flag")
-        print ("    uint32_t __mia_counter_ms : 31; ///< Missing in action counter")
+        print ("    mia_info_t mia_info;")
         print ("} " + m.get_struct_name() + ";")
 
     # Generate MIA handler "externs"
@@ -154,7 +164,7 @@ def main(argv):
     for m in messages:
         if m.is_recipient_of_at_least_one_sig(self_node):
             print ("extern const uint32_t " + m.name + "__MIA_MS;")
-            print ("extern const " + m.get_struct_name() + " " + m.name + "__MIA_VALUE;")
+            print ("extern const " + m.get_struct_name() + " " + m.name + "__MIA_MSG;")
             
     # Generate marshal methods
     for m in messages:
@@ -193,12 +203,12 @@ def main(argv):
             print (" (((*from >> " + str(s.bit_start) + ") & 0x" + format(2 ** s.bit_size - 1, '02x') + ")", end='')
             print (" * " + str(s.scale) + ") + (" + s.offset_str + ");")
         print ("")
-        print ("    to->__mia_counter_ms = 0; ///< Reset the MIA counter")
+        print ("    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter")
         print ("}")
 
-    # Generate MIA handler
+    # Generate MIA handler for the messages we are a recipient of
     for m in messages:
-        if m.sender == self_node:
+        if not m.is_recipient_of_at_least_one_sig(self_node):
             continue
 
         print ("\n/// Handle MIA for " + m.sender + "'s '" + m.name + "' message")
@@ -206,18 +216,20 @@ def main(argv):
         print ("/// @post If the MIA counter is not reset, and goes beyond the MIA value, the MIA flag is set")
         print ("static inline void " + m.get_struct_name()[:-2] + "_handle_mia(" + m.get_struct_name() + " *msg, uint32_t time_incr_ms)")
         print ("{")
-        print ("    const bool was_mia = msg->__is_mia;")
-        print ("    const uint32_t mia_value_copy = msg->__mia_counter_ms;")
-        print ("    msg->__is_mia = (msg->__mia_counter_ms >= " + m.name + "__MIA_MS);")
+        print ("    const mia_info_t old_mia = msg->mia_info;")
+        print ("    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= " + m.name + "__MIA_MS);")
         print ("")
-        print ("    if (!msg->__is_mia) { msg->__mia_counter_ms += time_incr_ms; }")
-        print ("    else if(!was_mia)   { ")
-        print ("        // Copy MIA value, and then restore counter value and MIA flag")
-        print ("        *msg = " + m.name + "__MIA_VALUE;")
-        print ("        msg->__mia_counter_ms = mia_value_copy;")
-        print ("        msg->__is_mia = true;")
+        print ("    if (!msg->mia_info.is_mia) { ")
+        print ("        msg->mia_info.mia_counter_ms += time_incr_ms;")
+        print ("    }")
+        print ("    else if(!old_mia.is_mia)   { ")
+        print ("        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten")
+        print ("        *msg = " + m.name + "__MIA_MSG;")
+        print ("        msg->mia_info.mia_counter_ms = " + m.name + "__MIA_MS;")
+        print ("        msg->mia_info.is_mia = true;")
         print ("    }")
         print ("}")       
+        
         
 def get_signal_code(s):
     code = ""

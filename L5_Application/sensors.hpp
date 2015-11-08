@@ -20,6 +20,7 @@ public:
 	uint16_t lidar = 0;
 	uint16_t back = 0;
 	bool get_sensor_reading();
+	bool sensor_class_init();
 };
 
 

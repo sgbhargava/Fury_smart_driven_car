@@ -33,5 +33,42 @@ uint16_t CAN_base_class::getword(uint64_t data, uint8_t n_word)
 	returned_data = temp2_16 | temp3_16;
 	return returned_data;
 }
+void bus_off_cb(uint32_t arg)
+{
 
+	printf("bus off\n");
+	CAN_reset_bus(can1);
 
+}
+
+void data_ovr_cb(uint32_t arg)
+{
+	printf("data_ovr_cb\n");
+	CAN_reset_bus(can1);
+
+}
+
+CAN_base_class::CAN_base_class()
+{
+
+	printf("can constructor\n");
+
+	if(CAN_init(can1, 100, 5, 5, bus_off_cb,data_ovr_cb))
+		printf("can intialised\n");
+	CAN_reset_bus(can1);
+}
+
+bool CAN_base_class::add_can_id(uint16_t id1, uint16_t id2){
+
+	CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, id1), CAN_gen_sid(can1, id2));
+		    //(2 == CAN_fullcan_get_num_entries());
+		    //(LPC_CANAF->SFF_sa     == 4);
+		    //(LPC_CANAF->SFF_GRP_sa == 4);
+		    //(LPC_CANAF->EFF_sa     == 4);
+		    //(LPC_CANAF->EFF_GRP_sa == 4);
+		    //(LPC_CANAF->ENDofTable == 4);
+
+		    //(4 == CAN_fullcan_get_num_entries());
+		    //(LPC_CANAF->SFF_sa     == 8);
+
+}

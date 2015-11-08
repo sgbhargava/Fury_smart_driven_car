@@ -27,7 +27,6 @@
 #include "stdio.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include <can_custom_header.hpp>
 #include "file_logger.h"
 
 /**
@@ -44,11 +43,6 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
- can_void_func_t bus_off()
- {
-	 printf("bus is off/n");
-	 return 0;
- }
 
 int main(void)
 {

@@ -20,5 +20,12 @@ bool sensor_class::get_sensor_reading()
 	return false;
 }
 
+bool sensor_class::sensor_class_init()
+{
+	add_can_id(heart_beat,sensors);
+	add_can_id(battery, 0xFF);
+	return true;
+}
+
 
 

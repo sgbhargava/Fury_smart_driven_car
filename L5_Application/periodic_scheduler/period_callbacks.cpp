@@ -32,7 +32,6 @@
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "stdio.h"
-#include "can_custom_header.hpp"
 #include "utilities.h"
 #include "file_logger.h"
 #include "queue.h"
@@ -68,6 +67,7 @@ int correctSpeed = forward;
 int previousSpeed = reverse;
 
 SonicSensor_t SonicData;
+
 uint16_t lidar = 0;
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -133,16 +133,8 @@ void Obstruction_avoidance_algorithm(void)
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-
-
-	if(can_custom_init() == 0)
-	{
-		uint8_t number = CAN_fullcan_get_num_entries();
-		u0_dbg_printf("no of entries : %x\n",number);
-	}
-		//u0_dbg_printf("initialized\n");
-
-	motor_throttle.msg_id = 0x022;
+	CAN_base_class my_can;
+	/*motor_throttle.msg_id = 0x022;
 	motor_throttle.frame_fields.is_29bit = 0;
 	motor_throttle.frame_fields.data_len = 1;       // Send 8 bytes
 
@@ -152,7 +144,9 @@ bool period_init(void)
 
 	heart_beat.msg_id = 0x221;
 	heart_beat.frame_fields.is_29bit = 0;
-	heart_beat.frame_fields.data_len = 1;       // Send 8 bytes
+	heart_beat.frame_fields.data_len = 1;       // Send 8 bytes*/
+
+	sensor.sensor_class_init();
 
     return true; // Must return true upon success
 }

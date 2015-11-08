@@ -59,6 +59,7 @@ typedef struct {
 
 can_msg_t motor_throttle;
 can_msg_t motor_steer;
+can_msg_t heart_beat;
 
 int correctDirection = straight;
 int previousDirection = straight;
@@ -71,124 +72,37 @@ uint16_t lidar = 0;
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-
-
-
-
-
-
-/// Called once before the RTOS is started, this is a good place to initialize things once
-bool period_init(void)
+/*
+void Obstruction_avoidance_algorithm(void)
 {
-
-	if(can_custom_init() == 0)
-	{
-		uint8_t number = CAN_fullcan_get_num_entries();
-		u0_dbg_printf("no of entries : %x\n",number);
-	}
-		//u0_dbg_printf("initialized\n");
-    return true; // Must return true upon success
-}
-
-//Register any telemetry variables
-bool period_reg_tlm(void)
-{
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
-}
-
-void period_1Hz(void) {
-
-	if(sensor.get_sensor_reading())
-			u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
-		else
-			u0_dbg_printf("no sensor\n");
-
-
-}
-
-void period_10Hz(void) {
-
-
-	/*// LE.toggle(2);
-	can_msg_t temp = { 0 };
-
-	CAN_rx(can1, &temp, 0);
-	printf("address %ld \t %d\n", temp.msg_id, temp.data);
-
-	motor_throttle.msg_id = 0x022;
-	motor_throttle.frame_fields.is_29bit = 0;
-	motor_throttle.frame_fields.data_len = 1;       // Send 8 bytes
-
-	motor_steer.msg_id = 0x021;
-	motor_steer.frame_fields.is_29bit = 0;
-	motor_steer.frame_fields.data_len = 1;       // Send 8 bytes
-
-			 if(!xQueueReceive(can_queue, &temp, 0))
+	if (lidar < lidar_threshold)
+		{
+			 if (SonicData.SonicSensor1 < sonic_threshold)
 			 {
-			 printf("not abe to receive\n");
+				correctDirection = right;
+			 }
+			 else
+			 {
+				correctDirection = left;
 			 }
 
-	switch (temp.msg_id) {
-	case 0x142:
-		uint16_t temp3, temp2;
-
-		temp2 = (temp.data.words[1] >> 8);
-		temp3 = (temp.data.words[1] << 8);
-		SonicData.SonicSensor1 = 0;
-		SonicData.SonicSensor1 = temp2 | temp3;
-
-		temp2 = (temp.data.words[2] >> 8);
-		temp3 = (temp.data.words[2] << 8);
-		SonicData.SonicSensor2 = 0;
-		SonicData.SonicSensor2 = temp2 | temp3;
-
-		temp2 = (temp.data.words[3] >> 8);
-		temp3 = (temp.data.words[3] << 8);
-		SonicData.SonicSensor3 = 0;
-		SonicData.SonicSensor3 = temp2 | temp3;
-
-		temp2 = (temp.data.words[0] >> 8);
-		temp3 = (temp.data.words[0] << 8);
-		lidar = 0;
-		lidar = temp2 | temp3;
-		//printf("lidar is %x\n", lidar);
-		//printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
-		break;
-
-		//default:
-		//printf("default\n");
-	}
-//Obstruction avoidance algorithm
-	if (lidar < lidar_threshold)
-
-	{
-		 printf("%d\n", lidar);
-		 printf("%x\t %x\t %x\n",SonicData.SonicSensor1, SonicData.SonicSensor2, SonicData.SonicSensor3);
-		 if (SonicData.SonicSensor1 < sonic_threshold) {
-			//printf("right\n");
-			correctDirection = right;
-
-		} else {
-			//printf("left\n");
-			correctDirection = left;
-
 		}
-	} else {
-		if (SonicData.SonicSensor1 < sonic_threshold)
-
+		else
 		{
-
-			correctDirection = right;
-
-		} else if (SonicData.SonicSensor2 < sonic_threshold) {
-
-			correctDirection = left;
-
-		} else {
-			correctDirection = straight;
-
+			if (SonicData.SonicSensor1 < sonic_threshold)
+			{
+				correctDirection = right;
+			}
+			else if (SonicData.SonicSensor2 < sonic_threshold)
+			{
+				correctDirection = left;
+			}
+			else
+			{
+				correctDirection = straight;
+			}
 		}
+
 	}
 	//  printf("head =%d \n",correctDirection);
 	motor_steer.data.bytes[0] = correctDirection;
@@ -206,8 +120,70 @@ void period_10Hz(void) {
 
 	 }
 
-*/
+
+
+		motor_steer.data.bytes[0] = correctDirection;
+		CAN_tx(can1, &motor_steer, 0);
 }
+*/
+
+
+
+
+/// Called once before the RTOS is started, this is a good place to initialize things once
+bool period_init(void)
+{
+
+
+	if(can_custom_init() == 0)
+	{
+		uint8_t number = CAN_fullcan_get_num_entries();
+		u0_dbg_printf("no of entries : %x\n",number);
+	}
+		//u0_dbg_printf("initialized\n");
+
+	motor_throttle.msg_id = 0x022;
+	motor_throttle.frame_fields.is_29bit = 0;
+	motor_throttle.frame_fields.data_len = 1;       // Send 8 bytes
+
+	motor_steer.msg_id = 0x021;
+	motor_steer.frame_fields.is_29bit = 0;
+	motor_steer.frame_fields.data_len = 1;       // Send 8 bytes
+
+	heart_beat.msg_id = 0x221;
+	heart_beat.frame_fields.is_29bit = 0;
+	heart_beat.frame_fields.data_len = 1;       // Send 8 bytes
+
+    return true; // Must return true upon success
+}
+
+//Register any telemetry variables
+bool period_reg_tlm(void)
+{
+    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+    return true; // Must return true upon success
+}
+
+
+void period_1Hz(void) {
+
+	if(sensor.get_sensor_reading())
+			u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
+		else
+			u0_dbg_printf("no sensor\n");
+
+
+}
+
+
+void period_10Hz(void) {
+
+
+	// LE.toggle(2);
+
+
+}
+
 
 void period_100Hz(void) {
 	/*can_msg_t msg;

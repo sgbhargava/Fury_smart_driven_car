@@ -644,7 +644,8 @@ bool CAN_fullcan_read_msg_copy(can_fullcan_msg_t *pMsg, can_fullcan_msg_t *pMsgC
      */
     const uint8_t *ptr = (uint8_t*) pMsg;
     if (ptr < start || ptr >= end || !pMsgCopy) {
-        return false;
+
+    	return false;
     }
 
     /* If semaphore bits change, then HW has updated the message so read it again.

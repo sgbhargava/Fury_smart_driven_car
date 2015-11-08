@@ -38,12 +38,15 @@
 #include "queue.h"
 #include "can.h"
 #include "printf_lib.h"
+#include "sensors.hpp"
 #define rx
 #define lidar_threshold 100
 #define sonic_threshold 50
 
 #define forward 0xF0
 #define reverse 0x00
+sensor_class sensor;
+
 enum direction {
 	straight, far_right, right, left, far_left
 };
@@ -95,40 +98,18 @@ bool period_reg_tlm(void)
 }
 
 void period_1Hz(void) {
-	can_std_id_t can_test2;
-	 can_fullcan_msg_t *can_ptr = NULL;
-	 can_fullcan_msg_t *can_test1_ptr = NULL;
-	 can_std_id_t can_test1 =  CAN_gen_sid(can1, 0x142);
-		 #ifdef rx
 
-		 can_test1_ptr = CAN_fullcan_get_entry_ptr(can_test1);
-         printf("pointer %x\n",can_test1_ptr);
-		 if(CAN_fullcan_read_msg_copy(can_ptr,can_test1_ptr) == true)
-			 u0_dbg_printf("new message : %x \n", can_ptr->data.qword) ;
-
-	 else
-		 u0_dbg_printf("no message at this time \n");
-
-	 #endif
-
-	 #ifdef tx
-	 static can_msg_t mess;
-
-	 mess.msg_id = 0x100;
-	 mess.frame_fields.is_29bit = 1;
-	 mess.frame_fields.data_len = 8;
-	 mess.data.qword = 10;
-	 if(CAN_tx(can1, &mess, portMAX_DELAY) == true)
-	 printf("sent \n");
-
-	 else
-	 printf("not sent\n");
-	 #endif
+	if(sensor.get_sensor_reading())
+			u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
+		else
+			u0_dbg_printf("no sensor\n");
 
 
 }
 
 void period_10Hz(void) {
+
+
 	/*// LE.toggle(2);
 	can_msg_t temp = { 0 };
 

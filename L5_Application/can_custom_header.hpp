@@ -4,12 +4,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*extern can_std_id_t can_test1;
-extern can_std_id_t can_test2;
-extern can_fullcan_msg_t *can_test1_ptr;
-extern const can_std_id_t slist[2];
-const can_std_grp_id_t sglist[2];*/
-//can_std_grp_id_t
 #ifdef __cplusplus
 }
 int can_custom_init();

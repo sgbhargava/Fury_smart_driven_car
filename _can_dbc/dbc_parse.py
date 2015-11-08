@@ -8,7 +8,7 @@ ALPHA VERSION!  NOT TESTED!
 This parses the Vector DBC file to generate code to marshal and unmarshal DBC defined messages
 
 Use Python (3.5 was tested to work)
-python dbc_parse.py -i 243.dbc -self=MOTOR
+python dbc_parse.py -i 243.dbc -s MOTOR > generated_code.c
 """
 
 class Signal(object):
@@ -175,18 +175,15 @@ def main(argv):
         print ("\n/// Encode " + m.sender + "'s '" + m.name + "' message")
         print ("static inline void " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
         print ("{")
-        print ("    uint64_t tmp = 0;")
         print ("    *to = 0; ///< Default the entire destination data with zeroes")
         for s in m.signals:
-            print ("\n    // Set: " + s.name)
             # Min/Max check
             if s.min_val != 0 or s.max_val != 0:
                 print ("    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
                 print ("    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }")
 
             # Compute binary value
-            print ("    tmp = (uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5);")
-            print ("    *to |= (tmp << " + str(s.bit_start) + ");")
+            print ("    *to |= ((uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5)) << " + str(s.bit_start) + ";")
         print ("}")
 
     # Generate unmarshal methods

@@ -10,13 +10,14 @@ typedef enum {
     check,
     start,
     init,
-
+    gps_init_loc
 } CMD_CAN;
 
 typedef enum{
     heartbeat= 0x180,
     drive_mode = 0x181,
     location = 0x182,
+    rx_init = 0x162
 
 } CAN_MSG_ID_T;
 

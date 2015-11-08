@@ -56,41 +56,6 @@ void init_uart2()
 }
 
 
-// test code
-class UartSend : public scheduler_task
-{
-    private:
-        Uart2 &u2;
-        int i=0;
-    public:
-        UartSend(uint8_t priority) :
-            scheduler_task("uart2", 2000, priority),u2(Uart2::getInstance())
-        {
-
-            /* Nothing to init */
-        }
-
-        bool run(void *p)
-        {
-            char data[10];
-
-            getchar();
-            i=0;
-            while((data[i]=getchar())!='\n')
-            {
-                putchar(data[i]);
-                i++;
-            }
-
-            data[i] = 0;
-
-            u2.put(data,0);
-
-            return true;
-        }
-};
-
-
 int main(void)
 {
 

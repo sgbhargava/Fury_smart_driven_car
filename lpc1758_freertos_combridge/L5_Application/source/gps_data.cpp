@@ -13,13 +13,16 @@
 
 gps_data gGpsData[20];
 char gData[60];
+char rxData[60];
 QueueHandle_t GPSdataTxQueue =0;
 QueueHandle_t GPSdataRxQueue =0;
 bool sendStatusFlag = 0;/* flag to control GPS checkpoint data overwritten before being sent*/
+bool initStatusFlag = 0;
 
 void initForGPSData(void)
 {
-
+    const can_std_id_t slist[] = { CAN_gen_sid(can1,rx_init)};
+    int count_slist = sizeof(slist);
     /* queue to transmit GPS data from Bridge module to GPS module */
     GPSdataTxQueue = xQueueCreate(10,sizeof(uint8_t));
     /* Queue to Reciev data from GPS module */
@@ -30,6 +33,10 @@ void initForGPSData(void)
         LOG_DEBUG("can initialized\n");
     }
 
+    if( CAN_setup_filter(slist,count_slist,0,0,0,0,0,0))
+    {
+        LOG_DEBUG("filter initialized\n");
+    }
 }
 
 bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
@@ -44,8 +51,8 @@ bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
             sscanf(cmdParams,"%u.%6d",&b1,(int *)&b2);
             b1= abs(b1);
 
-            pGps->longLatdata.lattitude_dec=  *(uint64_t *)&b1;
-            pGps->longLatdata.lattitude_float = *(uint64_t *)&b2;
+            pGps->longLatdata.lattitude_dec=  b1;
+            pGps->longLatdata.lattitude_float = b2;
 
         }
         break;
@@ -67,7 +74,7 @@ bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
             sscanf(cmdParams,"%d",&b1);
             pGps->longLatdata.checkpoint = b1;
         }
-       break;
+        break;
 
         case 3:
         {
@@ -186,8 +193,6 @@ void bridge_canTx()
     can_msg_t canData = {0};
     uint8_t nCmd;
     int i=0;
-    long_lat_data temp ={0};
-    uint64_t t = 0;
 
     if( xQueueReceive(GPSdataTxQueue,&nCmd,0) )
     {
@@ -233,4 +238,56 @@ void bridge_canTx()
     }
 }
 
+bool SendDataOverBluetooth(void)
+{
+    uint8_t nCmd = 0;
+    char *p = rxData;
 
+    if(xQueueReceive(GPSdataRxQueue,&nCmd,0)){
+        Uart2::getInstance().put(p,0);
+        Uart2::getInstance().putChar('$',0);// to mark the end of transmission
+    }
+    else
+    {
+        return 0;
+    }
+
+}
+
+void bridge_canRx()
+{
+   can_msg_t msg ={0};
+   uint8_t nCmd = 0;
+   long_lat_data data = {0};
+
+   if( CAN_rx(can1,&msg,0))
+   {
+       switch(msg.msg_id)
+       {
+           case rx_init:
+           {
+               data = *(long_lat_data *)(&msg.data.qword);
+               nCmd = gps_init_loc;
+               sprintf(rxData,"init %u.%6d -%u.%6d",data.lattitude_dec,data.lattitude_float,
+                       data.longitude_dec,data.longitude_float);
+
+               if(!sendStatusFlag)
+              {
+                  sendStatusFlag =1;
+              }
+              else
+              {
+                  //already data tranmission in progress
+                  break;
+              }
+
+               if(xQueueReceive(GPSdataRxQueue,&nCmd,0))
+               {
+                   printf("Sending msg to Uart Transmit ");
+               }
+           }
+           break;
+       }
+   }
+
+}

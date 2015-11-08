@@ -95,11 +95,11 @@ class SonicSensorTask : public scheduler_task
         {
             //Sensors
             SensorTrig1.setHigh();
-            SensorTrig2.setHigh();
-            SensorTrig3.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig1.setLow();
-            SensorTrig2.setLow();
+
+            SensorTrig3.setHigh();
+            delay_us(TriggerDelay_us);
             SensorTrig3.setLow();
 
             uint8_t buffer[2] = { 0 };
@@ -110,6 +110,10 @@ class SonicSensorTask : public scheduler_task
                 sensor_data.LIDAR = (buffer[0] << 8) & 0xff00;
                 sensor_data.LIDAR = sensor_data.LIDAR | buffer[1];
             }
+            SensorTrig2.setHigh();
+            delay_us(TriggerDelay_us);
+            SensorTrig2.setLow();
+            delay_ms(DelayForSensor_ms);
 
             simple_filter(sensor_data.SonicSensor1, timerValue1);
             simple_filter(sensor_data.SonicSensor2, timerValue2);
@@ -126,7 +130,7 @@ class SonicSensorTask : public scheduler_task
         GPIO SensorTrig1, SensorTrig2, SensorTrig3;
         QueueHandle_t sensor_data_q;
         static const int TriggerDelay_us = 25;
-        static const int DelayForSensor_ms = 50;
+        static const int DelayForSensor_ms = 40;
 
         void simple_filter(uint16_t &data, uint32_t distance)
         {

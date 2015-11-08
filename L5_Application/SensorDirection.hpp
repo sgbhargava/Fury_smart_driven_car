@@ -10,15 +10,23 @@
 #include "SensorDataType.h"
 #include "io.hpp"
 
+namespace
+{
+
+const int LidarThreshold = 125;
+const int SonicThreshold = 75;
+
+}
+
 //SonicSensor 1 -> left
 //SonicSensor 2 -> right
 //Lidar Sensor -> middle
 
-uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
+uint8_t RCdirection(SonicSensors_t SonicData)
 {
     enum direction {straight, farRight, right, left, FarLeft};
     int correctDirection = straight;
-    if(LidarData < 75)
+    if (SonicData.LIDAR < LidarThreshold)
     {
         if(SonicData.SonicSensor1 < SonicData.SonicSensor2)
         {
@@ -35,9 +43,9 @@ uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
 //            LE.off(3);
         }
     }
-    else if(SonicData.SonicSensor1 < 75)
+    else if (SonicData.SonicSensor1 < SonicThreshold)
     {
-        if(LidarData < SonicData.SonicSensor2)
+        if(SonicData.LIDAR < SonicData.SonicSensor2)
         {
             correctDirection = right;
 //            LE.on(3);
@@ -52,9 +60,9 @@ uint8_t RCdirection(SonicSensors_t SonicData, uint16_t LidarData)
 //            LE.off(3);
         }
     }
-    else if(SonicData.SonicSensor2 < 75)
+    else if (SonicData.SonicSensor2 < SonicThreshold)
     {
-        if(LidarData < SonicData.SonicSensor1)
+        if(SonicData.LIDAR < SonicData.SonicSensor1)
         {
             correctDirection = left;
 //            LE.on(1);

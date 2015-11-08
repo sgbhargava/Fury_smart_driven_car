@@ -18,6 +18,10 @@
  * This function should take care of the direction of the car when it is heading towards destination
  * or intermediate check points.
  * Implementing the heading formula to compute traveling direction
+ * @latitude1  : latitude of current position
+ * @longitude1 : longitude of current position
+ * @latitude2  : latitude of upcoming checkpoint
+ * @longitude2 : longitude of upcoming checkpoint
 */
 double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2, double_t longitude2);
 
@@ -38,7 +42,6 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
  * @chkPntLat : latitude of the upcoming checkpoint
  * @chkPntLong : longitude of the upcoming checkpoint
  */
-
 float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong);
 
 /*

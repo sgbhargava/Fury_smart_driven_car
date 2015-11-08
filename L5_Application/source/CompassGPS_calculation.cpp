@@ -12,24 +12,32 @@
 #include "can_gpsCompass.hpp"
 #include "stdint.h"
 #include "stdio.h"
+#include "stdlib.h"
 
-#define TO_DEG  (180/3.14159)
+#define TO_DEG  (180 / 3.14159)
 #define RADIUS  6371000             // This is the radius of earth in meters.
 #define TO_RAD  (3.14159 / 180)     // value of PI by angle
 
 
 float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
-    float_t dist;
+    // If checkpoints are not defined then return with 0.
+    if(!chkPntLat || !chkPntLong)
+        return 0;
 
+    float_t dist;
+    double_t intrmdtCalc;
+
+    // coverting to radians
     double_t phi1 = currentLat * TO_RAD;
     double_t phi2 = chkPntLat * TO_RAD;
-    double_t phi = phi2 - phi1;
     double_t lamda = (chkPntLong - currentLong) * TO_RAD;
-    double_t a;
 
-    a = (sin(phi/2) * sin(phi/2)) + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2));
-    dist = (float_t) (2 * RADIUS * atan2(sqrt(a), sqrt(1-a)));
+    double_t phi = phi2 - phi1;
+
+    // calculation of distance.
+    intrmdtCalc = (sin(phi/2) * sin(phi/2)) + (cos(phi1) * cos(phi2) * sin(lamda/2) * sin(lamda/2));
+    dist = (float_t) (2 * RADIUS * atan2(sqrt(intrmdtCalc), sqrt(1 - intrmdtCalc)));
 
     return dist;
 
@@ -38,7 +46,7 @@ float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t 
 
 float_t calcDistToFinalDest(float_t distToChkPnt)
 {
-    float_t distOfChkPnts = 0.0;
+    static float_t restOfChkPntDist;
     float_t finalDist;
     uint8_t chkPnt = getPresentChkPnt() + 1;
     uint8_t totalChkPnts = getNumOfChkPnts();
@@ -46,16 +54,16 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 
     // Calculating the total distance of the rest of checkpoints.
     if(prevChkPnt != chkPnt){
+        restOfChkPntDist = 0.0;
+        prevChkPnt = chkPnt;
         for (uint8_t i = chkPnt; i < totalChkPnts; i++)
         {
-            distOfChkPnts += calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
+            restOfChkPntDist += calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
         }
     }
 
     // adding the present distance to checkpoint with the rest of the checkpoint distance
-    finalDist = distOfChkPnts + distToChkPnt;
-
-    prevChkPnt = chkPnt;
+    finalDist = restOfChkPntDist + distToChkPnt;
 
     return finalDist;
 }
@@ -63,26 +71,29 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 
 double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2, double_t longitude2)
 {
+    if(!latitude2 || !longitude2)
+        return 0;
+
     double_t delta_longitude,firstterm,secondterm,firstproduct,secondproduct,headingdirection;
 
-    delta_longitude = TO_RAD * (longitude2 - longitude1);
-
+    // convert to radians
     latitude1 = TO_RAD * (latitude1);
     latitude2 = TO_RAD * (latitude2);
 
     longitude1 = TO_RAD * (longitude1);
     longitude2 = TO_RAD * (longitude2);
 
-    firstterm = sin(delta_longitude)*cos(latitude2);
-    firstproduct = cos(latitude1)*sin(latitude2);
-    secondproduct = (sin(latitude1)*cos(latitude2)*cos(delta_longitude));
+    // heading angle calculation
+    delta_longitude = fabs(longitude2 - longitude1);
+
+    firstterm = sin(delta_longitude) * cos(latitude2);
+    firstproduct = cos(latitude1) * sin(latitude2);
+    secondproduct = (sin(latitude1)*cos(latitude2) * cos(delta_longitude));
     secondterm = firstproduct - secondproduct;
 
-    headingdirection = atan2(firstterm,secondterm);
-    headingdirection = (double_t) TO_DEG * (headingdirection);
+    headingdirection = atan2(firstterm,secondterm) * TO_DEG;
 
-    headingdirection = fmodf((headingdirection+360),360);
-    return headingdirection;
+    return fmodf((headingdirection+360),360);
 }
 
 bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
@@ -100,23 +111,4 @@ bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntL
         return true;
 
     return false;
-}
-
-bool updateDestPoints(bool isFinal)
-{
-    if(!isFinal)
-    {
-        isFinal = updateToNxtChkPnt();
-        /*presentChkPnt = getPresentChkPnt();
-        chkPntLat = getLongitude(presentChkPnt);
-        chkPntLon = getLatitude(presentChkPnt);
-        */
-        // also update master.
-    }
-    if(isFinal)
-    {
-        //update reached
-    }
-
-    return isFinal;
 }

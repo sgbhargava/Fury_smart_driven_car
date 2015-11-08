@@ -37,9 +37,9 @@
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
 
-#define bearingmode     0
-#define calibrationmode 1
-#define headingmode     2
+#define BEARINGMODE     0
+#define CALIBRATIONMODE 1
+#define HEADINGMODE     2
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -47,18 +47,19 @@ uint8_t mode = 0;
 
 void period_1Hz(void)
 {
-//    LE.toggle(1);
+
 }
 
 void period_10Hz(void)
 {
+    char LEDdisplay[4] = {'F', 'U', 'R', 'Y'};
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     gpsData_t gpsCurrentData;
     float_t distToDest, distToChkPnt;
-    double_t chkPntLat, chkPntLon, currentheading;
-    uint8_t presentChkPnt;
-    static bool finalChkPnt = false;
-    bool chkPntReached = false;
+    double_t presentLat, presentLon, chkPntLat, chkPntLon, currentheading;
+    uint8_t presentChkPnt, selectChar = 0;
+    static bool finalChkPnt_b = false;
+    bool chkPntRchd_b = false;
 
     if(NULL == gpsCurrData_q)
     {
@@ -67,40 +68,54 @@ void period_10Hz(void)
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
         presentChkPnt = getPresentChkPnt();
+
+        // present car latitude and longitude
+        presentLat = gpsCurrentData.latitude;
+        presentLon = gpsCurrentData.longitude;
+
+        // latitude and longitude of checkpoint
         chkPntLat = getLongitude(presentChkPnt);
         chkPntLon = getLatitude(presentChkPnt);
-        chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
+        //chkPntReached = checkPntReached(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
 
-        if(chkPntReached)
+        // heading degree of car
+        currentheading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
+
+        // Distance of checkpoint and final distance
+        distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
+        distToDest = calcDistToFinalDest(distToChkPnt);
+
+        // check if the car has reached the checkpoint
+        finalChkPnt_b = checkPntReached(distToChkPnt);
+
+        if(finalChkPnt_b)
         {
-            finalChkPnt = updateDestPoints(finalChkPnt);
+            // if final checkpoint reached then display 'FURY'
+            LD.setLeftDigit(LEDdisplay[selectChar]);
+            LD.setRightDigit(LEDdisplay[selectChar+1]);
+            selectChar = (selectChar + 1) % 3;
         }
 
-        currentheading = headingdir(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
-        distToChkPnt = calcDistToNxtChkPnt(gpsCurrentData.latitude, gpsCurrentData.longitude, chkPntLat, chkPntLon);
-        distToDest = calcDistToFinalDest(distToChkPnt);
     }
     else
     {
 
     }
 
-    if(bearingmode == mode)
-        compassbearing_reading();//bearing mode
+    if(BEARINGMODE == mode)
+        compassbearing_reading();       //bearing mode
 
-    else if(calibrationmode == mode)
-        mode = calibrate_compass(mode);//calibration mode
+    else if(CALIBRATIONMODE == mode)
+        mode = calibrate_compass(mode); //calibration mode
 
-    else if(headingmode == mode)
-        mode = headingmode_compass();//To get back to bearing mode
+    else if(HEADINGMODE == mode)
+        mode = headingmode_compass();   //To get back to bearing mode
 
     else
     {
         if(SW.getSwitch(2))
             mode = 0;
-
     }
-    //LE.toggle(2);
 }
 
 void period_100Hz(void)
@@ -109,12 +124,10 @@ void period_100Hz(void)
     if(CAN_is_bus_off(can1))
         CAN_reset_bus(can1);
 #endif
-    //LE.toggle(3);
 }
 
 void period_1000Hz(void)
 {
-//    LE.toggle(4);
     if(SW.getSwitch(1))
         mode = 1;
 }

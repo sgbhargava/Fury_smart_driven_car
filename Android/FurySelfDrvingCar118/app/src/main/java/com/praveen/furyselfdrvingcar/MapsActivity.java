@@ -9,13 +9,14 @@ import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.os.Bundle;
+import android.net.Uri;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,26 +27,13 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -62,110 +50,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static String data = "$32m23s45";
     public static LatLng sLoc=null;
     public static Location iLoc=null;
+    public static Map<Integer, Double[]> locationHash = new HashMap<>();
     public  int key=2;
-
-    public Double totalDistance;
-  public   Map<Integer, checkPointLoc> map=new HashMap<>();
-
-    public class checkPointLoc{
-        public int checkNo=0;
-        public double lat=0;
-        public double lng=0;
-        public int isFinal=0;
-    }
-public class httpTask extends AsyncTask<URL, Void, Void>{
-
-
-    @Override
-    protected Void doInBackground(URL... h) {
-        String url=null;
-        StringBuilder stringBuilder = new StringBuilder();
-        JSONObject direction;
-
-        Log.d("url","1");
-        HttpURLConnection con =null;
-        try {
-
-
-            con = (HttpURLConnection) h[0].openConnection();
-            con.setReadTimeout(10000);
-            con.setConnectTimeout(15000);
-            con.setDoInput(true);
-            InputStreamReader stream = new InputStreamReader(con.getInputStream());
-            //InputStream stream=new BufferedInputStream(conn.getInputStream());
-
-            Log.d("http","stream");
-            int b;
-            while ((b = stream.read()) != -1) {
-                stringBuilder.append((char) b);
-            }
-            Log.d("HTTP","pass");
-        } catch (Exception e) {
-            Log.d("HTTP","Fail");
-            e.printStackTrace();
-        }
-        //Log.d("str",stringBuilder.toString());
-        try{
-            direction=new JSONObject(stringBuilder.toString());
-
-            JSONArray routeArray= direction.getJSONArray("routes");
-            JSONObject routes=routeArray.getJSONObject(0);
-            JSONArray legsArray=routes.getJSONArray("legs");
-            JSONObject legs=legsArray.getJSONObject(0);
-            //Log.d("str",legs.toString());
-            String str=new String();
-            //str=legs.getJSONObject("distance").getJSONObject("value").toString();
-            JSONObject distance=legs.getJSONObject("distance");
-
-            str=distance.getString("value");
-            totalDistance= Double.valueOf(str);
-            //Log.d("str",str);
-            JSONArray stepsArray=legs.getJSONArray("steps");
-            //Log.d("step",stepsArray.toString());
-
-            checkPointLoc location=new  checkPointLoc();
-
-
-            for(int i=0 ;i<stepsArray.length();i++){
-
-
-                location.checkNo=i+1;
-                Log.d("check", String.valueOf(stepsArray.length()));
-                JSONObject steps=stepsArray.getJSONObject(i);
-                Log.d("steps",steps.toString());
-                Double lat=null;
-                Double lng=null;
-                lat=steps.getJSONObject("end_location").getDouble("lat");
-               lng= steps.getJSONObject("end_location").getDouble("lng");
-                location.lat=lat;
-                location.lng=lng;
-
-                location.isFinal=0;
-
-                if(location.checkNo==stepsArray.length()){
-                    location.isFinal=1;
-
-                }
-
-                map.put(i, location);
-
-                 checkPointLoc t =map.get(i);
-                Log.d("CheckNO", String.valueOf(t.checkNo));
-                Log.d("lat", String.valueOf(t.lat));
-                Log.d("long", String.valueOf(t.lng));
-                Log.d("IsFinal", String.valueOf(t.isFinal));
-
-                }
-
-
-
-        } catch (Exception e) {
-        }
-
-
-        return null;
-    }
-}
+    public boolean flag=true;
 
     public void mapActivity(){
         setContentView(R.layout.activity_maps);
@@ -194,7 +81,30 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
     }
 
 
+    public double CalculationByDistance(Location StartP, LatLng EndP) {
+        int Radius = 6371;// radius of earth in Km
+        double lat1 = 37.33435244;
+        double lat2 = -121.8834241;
+        double lon1 = 37.33510907;
+        double lon2 = -121.8816578;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1))
+                * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2)
+                * Math.sin(dLon / 2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        double valueResult = Radius * c;
+        double km = valueResult / 1;
+        DecimalFormat newFormat = new DecimalFormat("####");
+        int kmInDec = Integer.valueOf(newFormat.format(km));
+        double meter = valueResult % 1000;
+        int meterInDec = Integer.valueOf(newFormat.format(meter));
+        Log.i("Radius Value", "" + valueResult + "   KM  " + kmInDec
+                + " Meter   " + meterInDec);
 
+        return Radius * c;
+    }
     private void setDestination(SupportMapFragment mapFragment) {
         Log.d("BT", "Entered SD");
         final GoogleMap googleMap = mapFragment.getMap();
@@ -204,66 +114,46 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
 
             @Override
             public void onMapLongClick(LatLng latLng) {
-
+                if (flag) {
                     sLoc = latLng;
-
-
+                    Double data[] = {sLoc.latitude, sLoc.longitude};
+                    locationHash.put(key, data);
                     // Creating a marker
+                    MarkerOptions markerOptions = new MarkerOptions();
 
-                LatLng iLatLng = new LatLng(iLoc.getLatitude(),iLoc.getLongitude());
-
-                MarkerOptions iMarkerOptions = new MarkerOptions();
-                MarkerOptions markerOptions = new MarkerOptions();
-
-                iMarkerOptions.position(iLatLng);
-                iMarkerOptions.title(iLatLng.latitude + " : " + iLatLng.longitude);
-
+                    // Setting the position for the marker
                     markerOptions.position(latLng);
 
+                    // Setting the title for the marker.
+                    // This will be displayed on taping the marker
                     markerOptions.title(latLng.latitude + " : " + latLng.longitude);
 
                     // Clears the previously touched position
-                    googleMap.clear();
-                googleMap.animateCamera(CameraUpdateFactory.newLatLng(iLatLng));
-                googleMap.addMarker(iMarkerOptions);
+                    //googleMap.clear();
+
                     // Animating to the touched position
-                googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 
                     // Placing a marker on the touched position
-
                     googleMap.addMarker(markerOptions);
-                    String url = ("https://maps.googleapis.com/maps/api/directions/json?origin=" + iLoc.getLatitude() + "," + iLoc.getLongitude() + "&destination="
-                            + sLoc.latitude + "," + sLoc.longitude + "&mode=walking&sensor=false&units=metric");
-                    try {
-                        URL link = new URL(url);
-                        Log.d("url", url);
-                        httpTask ht = new httpTask();
-                        ht.execute(link);
-
-                        MarkerOptions cMarkerOptions = new MarkerOptions();
-                        checkPointLoc loc=new  checkPointLoc();
-                        for (int j=0;j<map.size();j++) {
-                            Log.d("CM",String.valueOf(map.size()));
-                            loc=map.get(j);
-                            LatLng ml = new LatLng(loc.lat,loc.lng);
-                            Log.d("lat",String.valueOf(loc.lat));
-                            Log.d("lng",String.valueOf(loc.lng));
-
-                            cMarkerOptions.position(ml);
-                            cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
-                            //GoogleMap googleMap = null;
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
-
-                            // Placing a marker on the touched position
-                            googleMap.addMarker(cMarkerOptions);
-                            Log.d("CM", "Exit");
-                        }
-
-
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    }
-
+                    String distance = String.valueOf((CalculationByDistance(iLoc, sLoc) * 1000));
+                    StringBuffer text = new StringBuffer();
+                    text.append("Total Distance");
+                    text.append(':');
+                    text.append(distance);
+                    TextView tDistance = (TextView) findViewById(R.id.distance);
+                    tDistance.setText(text.toString());
+                    flag=false;
+                    Intent i = new Intent(Intent.ACTION_VIEW,Uri.parse("geo:37.827500,-122.481670"));
+                    i.setClassName("com.google.android.apps.maps",
+                            "com.google.android.maps.MapsActivity");
+                    startActivity(i);
+                    //Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                    //       Uri.parse("http://maps.google.com/maps?saddr=" + iLoc.getLatitude() + "," + iLoc.getLongitude() + "&daddr=" + sLoc.latitude + "," + sLoc.longitude));
+                    //startActivity(intent);
+                }else{
+                    Toast.makeText(getApplicationContext(), "Destination already selected", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         Log.d("BT", "Exited SD");

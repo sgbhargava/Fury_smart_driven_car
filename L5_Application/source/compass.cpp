@@ -18,15 +18,17 @@
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "math.h"
+#include "CompassGPS_calculation.hpp"
 
 /**Few functions here are just to make sure the I2C is working is fine**/
 I2C2 &compass = I2C2::getInstance();
 
-void compassbearing_reading()
+uint8_t compassbearing_reading()
 {
     LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
+    return data;
     printf("compass bearing:%d\n", data);
 }
 
@@ -104,6 +106,25 @@ uint8_t headingmode_compass()
     return headingMode;
 }
 
+#if 1
+/*
+ * Writing a pseudo code
+ * Should modify it in future
+ * */
+void actualheadingdir()
+{
+    actual_headingdir *ptr = NULL;
+    double_t lat1=0,lat2=0,long1=0,long2=0;
+    ptr->current_angle = compassbearing_reading();
 
+    /*This call should receive data from abhi's struct and should be updated
+     * I have typecastted this for now to match the typedef struct
+     * Should think about it again
+     * For now to avoid compilation errors I'm passing 0's*/
 
+    ptr->desired_angle = (uint8_t) headingdir(lat1,long1,lat2,long2);
+    ptr->destination_reached/*can take equate this to check point*/;
+    ptr->is_valid/*not sure how to use this*/;
+}
+#endif
 

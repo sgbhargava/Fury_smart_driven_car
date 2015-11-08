@@ -106,7 +106,7 @@ void period_10Hz(void)
         compassbearing_reading();       //bearing mode
 
     else if(CALIBRATIONMODE == mode)
-        mode = calibrate_compass(mode); //calibration mode
+        mode = calibrate_compass(mode); //c alibration mode
 
     else if(HEADINGMODE == mode)
         mode = headingmode_compass();   //To get back to bearing mode

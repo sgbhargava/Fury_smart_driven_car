@@ -60,7 +60,7 @@ float_t calcDistToFinalDest(float_t distToNxtChkPnt);
  *
  * Returns true if reached.
  */
-bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong);
+bool checkPntReached(float_t distance);
 
 /*
  * This updates the checkpoint number

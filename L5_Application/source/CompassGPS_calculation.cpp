@@ -14,10 +14,10 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#define TO_DEG  (180 / 3.14159)
-#define RADIUS  6371000             // This is the radius of earth in meters.
-#define TO_RAD  (3.14159 / 180)     // value of PI by angle
-
+#define TO_DEG      (180 / 3.14159)
+#define RADIUS      6371000             // This is the radius of earth in meters.
+#define TO_RAD      (3.14159 / 180)     // value of PI by angle
+#define TWO_METERS  2
 
 float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
@@ -96,19 +96,14 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
     return fmodf((headingdirection+360),360);
 }
 
-bool checkPntReached(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
+bool checkPntReached(float_t distance)
 {
-    const float_t vicinity = 0.001;
-    bool latInUpperBound, latInLowerBound, longInUpperBound, longInLowerBound;
+    bool intermediateChkPnt;
+    if (distance <= TWO_METERS)
+        intermediateChkPnt = updateToNxtChkPnt();
 
-    latInUpperBound = (currentLat <= (chkPntLat + vicinity)) && (currentLat >= chkPntLat);
-    latInLowerBound = (currentLat >= (chkPntLat - vicinity)) && (currentLat <= chkPntLat);
-
-    longInUpperBound = (currentLong <= (chkPntLat + vicinity)) && (currentLong >= chkPntLong);
-    longInLowerBound = (currentLong >= (chkPntLat + vicinity)) && (currentLong <= chkPntLong);
-
-    if((latInLowerBound || latInUpperBound) && (longInLowerBound || longInUpperBound))
-        return true;
-
-    return false;
+    if (intermediateChkPnt)
+        return 0;
+    else
+        return 1;
 }

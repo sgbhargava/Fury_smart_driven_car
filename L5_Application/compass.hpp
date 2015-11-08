@@ -18,7 +18,7 @@
 #include "math.h"
 
 /*Calculates heading direction for a full circle*/
-void compassbearing_reading();
+uint8_t compassbearing_reading();
 
 /*Calculates heading direction*/
 void compassbearingreading_highlowbytes();
@@ -39,4 +39,13 @@ uint8_t calibrate_compass(uint8_t mode);
 uint8_t headingmode_compass();
 
 
+typedef struct {
+        uint8_t current_angle;
+        uint8_t desired_angle;
+        uint8_t destination_reached;
+        uint8_t is_valid;
+}actual_headingdir;
+
+/*Sends current angle and desired angle to master to make turn or not*/
+void actualheadingdir();
 #endif /* L5_APPLICATION_COMPASS_HPP_ */

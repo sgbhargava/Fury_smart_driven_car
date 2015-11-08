@@ -4,7 +4,6 @@ import sys, getopt
 import re
 
 """
-ALPHA VERSION!  NOT TESTED!
 This parses the Vector DBC file to generate code to marshal and unmarshal DBC defined messages
 
 Use Python (3.5 was tested to work)
@@ -74,23 +73,33 @@ class Message(object):
         return False
 
 
+class DBC(object):
+    def __init__(self, name):
+        self.name = name
+        self.messages = []
+        self.nodes = []
+
+    
 def main(argv):
     dbcfile = ''
     self_node = ''
-
+    gen_all = False
+    
     try:
-        opts, args = getopt.getopt(argv, "hi:s:", ["ifile=", "self="])
+        opts, args = getopt.getopt(argv, "hi:s:a", ["ifile=", "self="])
     except getopt.GetoptError:
-        print ('dbc_parse.py -i <dbcfile> -s <self_node>')
+        print ('dbc_parse.py -i <dbcfile> -s <self_node> -all False')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print ('dbc_parse.py -i <dbcfile> -s <self_node>')
+            print ('dbc_parse.py -i <dbcfile> -s <self_node> - all False')
             sys.exit()
         elif opt in ("-i", "--ifile"):
             dbcfile = arg
         elif opt in ("-s", "--self"):
             self_node = arg
+        elif opt in ("-a", "--all"):
+            gen_all = True
 
     print ("/// DBC file: %s    Self node: %s" % (dbcfile, self_node))
     print ("/// This file should be included by a source file, for example: #include \"generated.c\"")
@@ -98,18 +107,28 @@ def main(argv):
     print ("#include <stdint.h>")
     print ("")
     
-    messages = []
+    dbc = DBC(dbcfile)
     f = open(dbcfile, "r")
     while 1:
         line = f.readline()
         if not line:
             break
 
+        # Nodes in the DBC file
+        if line.startswith("BU_:"):
+            nodes = line.strip("\n").split(' ')
+            dbc.nodes = (nodes[1:])
+            if self_node not in dbc.nodes:
+                print ('/////////////////////////////// ERROR /////////////////////////////////////')
+                print ('#error "Self node: ' + self_node + ' not found in _BU nodes in the DBC file"')
+                print ('/////////////////////////////// ERROR /////////////////////////////////////')
+                print ('')
+            
         # Start of a message
         if line.startswith("BO_ "):
             tokens = line.split(' ')
             msg = Message(tokens[1], tokens[2].strip(":"), tokens[3], tokens[4].strip("\n"))
-            messages.append(msg)
+            dbc.messages.append(msg)
 
         # Signals
         if line.startswith(" SG_ "):
@@ -135,11 +154,16 @@ def main(argv):
 
             # Add the signal the last message object
             sig = Signal(t[2], bit_start, bit_size, is_unsigned, scale, offset, min_val, max_val, recipients)
-            messages[-1].add_signal(sig)
+            dbc.messages[-1].add_signal(sig)
         
     # Generate message IDs
-    for m in messages:
-        print ("static const uint32_t " + m.get_struct_name()[:-2] + "_MID = " + m.mid + ";")
+    for m in dbc.messages:
+        print ("static const uint32_t " + (m.get_struct_name()[:-2] + "_MID = ").ljust(32+7) + m.mid + ";")
+    print ("")
+    
+    # Generate message LENs
+    for m in dbc.messages:
+        print ("static const uint8_t " + (m.get_struct_name()[:-2] + "_DLC = ").ljust(32+7) + m.dlc + ";")
     print ("")
     
     # Generate MIA struct
@@ -149,7 +173,11 @@ def main(argv):
     print ("} mia_info_t;")
         
     # Generate converted struct types for each message
-    for m in messages:
+    for m in dbc.messages:
+        if (False == m.is_recipient_of_at_least_one_sig(self_node) and m.sender != self_node):
+            print ("\n/// Not generating '" + m.get_struct_name() + "' since we are not the sender or a recipient of any of its signals")
+            continue
+            
         print ("\n/// Message: " + m.name + " from '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid)
         print ("typedef struct {")
         for s in m.signals:
@@ -161,58 +189,70 @@ def main(argv):
 
     # Generate MIA handler "externs"
     print ("\n/// These 'externs' need to be defined in a source file of your project")
-    for m in messages:
-        if m.is_recipient_of_at_least_one_sig(self_node):
+    for m in dbc.messages:
+        if gen_all or m.is_recipient_of_at_least_one_sig(self_node):
             print ("extern const uint32_t " + m.name + "__MIA_MS;")
             print ("extern const " + m.get_struct_name() + " " + m.name + "__MIA_MSG;")
             
     # Generate marshal methods
-    for m in messages:
-        if m.sender != self_node:
+    for m in dbc.messages:
+        if not gen_all and m.sender != self_node:
             print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_encode() since the sender is " + m.sender + " and we are " + self_node)
             continue
 
         print ("\n/// Encode " + m.sender + "'s '" + m.name + "' message")
-        print ("static inline void " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
+        print ("/// @returns the DLC that should be used for this message")
+        print ("static uint8_t " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
         print ("{")
         print ("    *to = 0; ///< Default the entire destination data with zeroes")
+        print ("")
+        
         for s in m.signals:
             # Min/Max check
             if s.min_val != 0 or s.max_val != 0:
-                print ("    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
+                print ("\n    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
                 print ("    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }")
 
             # Compute binary value
             print ("    *to |= ((uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5)) << " + str(s.bit_start) + ";")
+        print ("\n    return " +  m.get_struct_name()[:-2] +"_DLC;")
         print ("}")
 
     # Generate unmarshal methods
-    for m in messages:
-        if not m.is_recipient_of_at_least_one_sig(self_node):
+    for m in dbc.messages:
+        if not gen_all and not m.is_recipient_of_at_least_one_sig(self_node):
             print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_decode() since we are not the recipient of any of its signals")
             continue
 
         print ("\n/// Decode " + m.sender + "'s '" + m.name + "' message")
-        print ("static inline void " + m.get_struct_name()[:-2] + "_decode(" + m.get_struct_name() + " *to, const uint64_t *from)")
+        print ("static inline bool " + m.get_struct_name()[:-2] + "_decode(" + m.get_struct_name() + " *to, const uint64_t *from, uint8_t dlc)")
         print ("{")
+        print ("    const bool success = true;")
+        print ("    if (dlc != " + m.get_struct_name()[:-2] + "_DLC) {");
+        print ("        return !success;")
+        print ("    }")
+        print ("")
         for s in m.signals:
-            print ("    to->" + s.name + " =", end='')
-            print (" (((*from >> " + str(s.bit_start) + ") & 0x" + format(2 ** s.bit_size - 1, '02x') + ")", end='')
+            print ("    to->" + s.name.ljust(32) + " =", end='')
+            print (" (((*from >> " + str(s.bit_start).rjust(2) + ") & 0x" + format(2 ** s.bit_size - 1, '08x').ljust(7) + ")", end='')
             print (" * " + str(s.scale) + ") + (" + s.offset_str + ");")
         print ("")
         print ("    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter")
+        print ("    return success;")
         print ("}")
 
-    # Generate MIA handler for the messages we are a recipient of
-    for m in messages:
-        if not m.is_recipient_of_at_least_one_sig(self_node):
+    # Generate MIA handler for the dbc.messages we are a recipient of
+    for m in dbc.messages:
+        if not gen_all and not m.is_recipient_of_at_least_one_sig(self_node):
             continue
 
-        print ("\n/// Handle MIA for " + m.sender + "'s '" + m.name + "' message")
-        print ("/// @param time_incr_ms  The time to increment the MIA counter with")
-        print ("/// @post If the MIA counter is not reset, and goes beyond the MIA value, the MIA flag is set")
-        print ("static inline void " + m.get_struct_name()[:-2] + "_handle_mia(" + m.get_struct_name() + " *msg, uint32_t time_incr_ms)")
+        print ("\n/// Handle the MIA for " + m.sender + "'s '" + m.name + "' message")
+        print ("/// @param   time_incr_ms  The time to increment the MIA counter with")
+        print ("/// @returns true if the MIA just occurred")
+        print ("/// @post    If the MIA counter is not reset, and goes beyond the MIA value, the MIA flag is set")
+        print ("static inline bool " + m.get_struct_name()[:-2] + "_handle_mia(" + m.get_struct_name() + " *msg, uint32_t time_incr_ms)")
         print ("{")
+        print ("    bool mia_occurred = false;")
         print ("    const mia_info_t old_mia = msg->mia_info;")
         print ("    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= " + m.name + "__MIA_MS);")
         print ("")
@@ -224,7 +264,9 @@ def main(argv):
         print ("        *msg = " + m.name + "__MIA_MSG;")
         print ("        msg->mia_info.mia_counter_ms = " + m.name + "__MIA_MS;")
         print ("        msg->mia_info.is_mia = true;")
+        print ("        mia_occurred = true;");
         print ("    }")
+        print ("\n    return mia_occurred;");
         print ("}")       
         
         
@@ -246,8 +288,8 @@ def get_signal_code(s):
     # Comment with destination nodes:
     code += "   Destination: "
     for r in s.recipients:
-        if len(s.recipients) == 1:
-            code += s.recipients[0]
+        if r == s.recipients[0]:
+            code += r
         else:
             code += "," + r
 

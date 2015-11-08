@@ -34,6 +34,9 @@ class Signal(object):
             return "float"
         else:
             _max = (2 ** self.bit_size) * self.scale
+            if not self.is_unsigned:
+                _max *= 2
+                
             t = "uint32_t"
             if _max <= 256:
                 t = "uint8_t"
@@ -63,6 +66,12 @@ class Message(object):
 
     def get_struct_name(self):
         return "%s_TX_%s_t" % (self.sender, self.name)
+        
+    def is_recipient_of_at_least_one_sig(self, node):
+        for s in self.signals:
+            if node in s.recipients:
+                return True
+        return False
 
 
 def main(argv):
@@ -84,7 +93,11 @@ def main(argv):
             self_node = arg
 
     print ("/// DBC file: %s    Self node: %s" % (dbcfile, self_node))
-
+    print ("/// This file should be included by a source file, for example: #include \"generated.c\"")
+    print ("#include <stdbool.h>")
+    print ("#include <stdint.h>")
+    print ("")
+    
     messages = []
     f = open(dbcfile, "r")
     while 1:
@@ -123,22 +136,34 @@ def main(argv):
             # Add the signal the last message object
             sig = Signal(t[2], bit_start, bit_size, is_unsigned, scale, offset, min_val, max_val, recipients)
             messages[-1].add_signal(sig)
-
+        
     # Generate converted struct types for each message
     for m in messages:
-        print ("\n/// From '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid)
+        print ("\n/// Message: " + m.name + " from '" + m.sender + "', DLC: " + m.dlc + " byte(s), MID: " + m.mid)
         print ("typedef struct {")
         for s in m.signals:
             print (get_signal_code(s))
+        
+        print ("")
+        print ("    uint32_t __is_mia : 1;          ///< Missing in action flag")
+        print ("    uint32_t __mia_counter_ms : 31; ///< Missing in action counter")
         print ("} " + m.get_struct_name() + ";")
 
+    # Generate MIA handler "externs"
+    print ("\n/// These 'externs' need to be defined in a source file of your project")
+    for m in messages:
+        if m.is_recipient_of_at_least_one_sig(self_node):
+            print ("extern const uint32_t " + m.name + "__MIA_MS;")
+            print ("extern const " + m.get_struct_name() + " " + m.name + "__MIA_VALUE;")
+            
     # Generate marshal methods
     for m in messages:
         if m.sender != self_node:
-            print ("\r\n\\\ Not generating code for marshal_" + m.get_struct_name()[:-2] + "() since the sender is " + m.sender + " and we are " + self_node)
+            print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_encode() since the sender is " + m.sender + " and we are " + self_node)
             continue
 
-        print ("\nstatic inline void marshal_" + m.get_struct_name()[:-2] + "(uint64_t *to, " + m.get_struct_name() + " *from)")
+        print ("\n/// Encode " + m.sender + "'s '" + m.name + "' message")
+        print ("static inline void " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
         print ("{")
         print ("    uint64_t tmp = 0;")
         print ("    *to = 0; ///< Default the entire destination data with zeroes")
@@ -156,15 +181,44 @@ def main(argv):
 
     # Generate unmarshal methods
     for m in messages:
-        print ("\nstatic inline void unmarshal_" + m.get_struct_name()[:-2] + "(" + m.get_struct_name() + " *to, const uint64_t *from)")
+        if not m.is_recipient_of_at_least_one_sig(self_node):
+            print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_decode() since we are not the recipient of any of its signals")
+            continue
+
+        print ("\n/// Decode " + m.sender + "'s '" + m.name + "' message")
+        print ("static inline void " + m.get_struct_name()[:-2] + "_decode(" + m.get_struct_name() + " *to, const uint64_t *from)")
         print ("{")
         for s in m.signals:
             print ("    to->" + s.name + " =", end='')
             print (" (((*from >> " + str(s.bit_start) + ") & 0x" + format(2 ** s.bit_size - 1, '02x') + ")", end='')
             print (" * " + str(s.scale) + ") + (" + s.offset_str + ");")
+        print ("")
+        print ("    to->__mia_counter_ms = 0; ///< Reset the MIA counter")
         print ("}")
 
+    # Generate MIA handler
+    for m in messages:
+        if m.sender == self_node:
+            continue
 
+        print ("\n/// Handle MIA for " + m.sender + "'s '" + m.name + "' message")
+        print ("/// @param time_incr_ms  The time to increment the MIA counter with")
+        print ("/// @post If the MIA counter is not reset, and goes beyond the MIA value, the MIA flag is set")
+        print ("static inline void " + m.get_struct_name()[:-2] + "_handle_mia(" + m.get_struct_name() + " *msg, uint32_t time_incr_ms)")
+        print ("{")
+        print ("    const bool was_mia = msg->__is_mia;")
+        print ("    const uint32_t mia_value_copy = msg->__mia_counter_ms;")
+        print ("    msg->__is_mia = (msg->__mia_counter_ms >= " + m.name + "__MIA_MS);")
+        print ("")
+        print ("    if (!msg->__is_mia) { msg->__mia_counter_ms += time_incr_ms; }")
+        print ("    else if(!was_mia)   { ")
+        print ("        // Copy MIA value, and then restore counter value and MIA flag")
+        print ("        *msg = " + m.name + "__MIA_VALUE;")
+        print ("        msg->__mia_counter_ms = mia_value_copy;")
+        print ("        msg->__is_mia = true;")
+        print ("    }")
+        print ("}")       
+        
 def get_signal_code(s):
     code = ""
     # code += "    " + str(s.__dict__)

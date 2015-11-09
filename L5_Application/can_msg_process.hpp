@@ -27,8 +27,13 @@ typedef struct{
 }dir_can_msg_t;
 
 typedef struct{
-    uint64_t backward:4;
-    uint64_t forward:4;
+    uint64_t backward:1;        // use the customized backward
+    uint64_t incrBackward:1;    // if backward is true, and incrBackward is true, it means increasing the speed.
+    uint64_t customBackward:2;  // if backward is true, this indicates the customized code
+                                // if backward is true, and incrBackward is false, this is 0x3 means decreasing
+    uint64_t forward:1;
+    uint64_t incrForward:1;
+    uint64_t customForward:2;
 }throttle_can_msg_t;
 
 typedef struct{

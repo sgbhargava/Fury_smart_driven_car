@@ -48,6 +48,8 @@ CANMsg * canMsgHandler = CANMsg::getInstance();
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+/*
+    */
     return true; // Must return true upon success
 }
 

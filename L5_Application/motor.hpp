@@ -49,8 +49,10 @@ class SpeedCtrl
         void initESC();
         bool checkPWM(float pwm);
         void setSpeedPWM(float pwm);
+        void setSpeedCustom(bool forward, uint8_t speedSetting);
         void incrSpeedPWM();
         void descrSpeedPWM();
+        void setStop();
 
     private:
         SpeedCtrl();
@@ -63,6 +65,12 @@ class SpeedCtrl
         const float basePWM = BASE_DUTY_CYCLE;
         const float frontLimitPWM = MAX_DUTY_CYCLE;
         const float backLimitPWM = MIN_DUTY_CYCLE;
+        const float speed_forward_custom1 = 8.68;
+        const float speed_forward_custom2 = 8.7;
+        const float speed_forward_custom3 = 8.72;
+        const float speed_backward_custom1 = 8.0;
+        const float speed_backward_custom2 = 7.8;
+        const float speed_backward_custom3 = 7.6;
 };
 
 class SpeedMonitor
@@ -72,7 +80,6 @@ class SpeedMonitor
         void setRpm(int rpmVal);
         void calSpeed();
         int getRpm();
-        float getSpeedMeter();
         void getSpeed(float* rpm, float* speed);
 
     private:
@@ -81,5 +88,6 @@ class SpeedMonitor
         float m_speed = 0;
         float m_rpm = 0;
         uint64_t m_last_time = 0;
+
 };
 #endif

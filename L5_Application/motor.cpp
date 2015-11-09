@@ -127,7 +127,34 @@ void SpeedCtrl::setSpeedPWM(float pwm)
         speedPWM = pwm;
     }
 }
+void SpeedCtrl::setStop()
+{
+    printf("Stop\n");
+    speedPWM = basePWM;
+    throttlePWM.set(basePWM);
+}
+void SpeedCtrl::setSpeedCustom(bool forward, uint8_t speedSetting)
+{
+    if (forward)
+    {
+        if (speedSetting == 1)
+            setSpeedPWM(speed_forward_custom1);
+        else if (speedSetting == 2)
+            setSpeedPWM(speed_forward_custom2);
+        else if (speedSetting == 3)
+            setSpeedPWM(speed_forward_custom3);
+    }
+    else
+    {
+        if (speedSetting == 1)
+            setSpeedPWM(speed_backward_custom1);
+        else if (speedSetting == 2)
+            setSpeedPWM(speed_backward_custom2);
+        else if (speedSetting == 3)
+            setSpeedPWM(speed_backward_custom3);
+    }
 
+}
 void SpeedCtrl::incrSpeedPWM()
 {
     float pwm = speedPWM + PWMStep;

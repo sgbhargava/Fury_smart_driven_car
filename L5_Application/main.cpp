@@ -90,7 +90,8 @@ class initMotorTask: public scheduler_task {
             return true;
         }
         bool run (void* p){
-            if (SW.getSwitch(1))
+
+            if (SW.getSwitchValues() & 0x1)
             {
                 SpeedCtrl* speed = SpeedCtrl::getInstance();
                 speed->initESC();

@@ -26,11 +26,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -45,7 +40,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+import java.util.Vector;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -62,10 +57,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static String data = "$32m23s45";
     public static LatLng sLoc=null;
     public static Location iLoc=null;
-    public  int key=2;
+    public  JSONObject checkObj =null;
+    public SupportMapFragment mapFragment =null;
+
 
     public Double totalDistance;
-  public   Map<Integer, checkPointLoc> map=new HashMap<>();
+  public   Vector<checkPointLoc> v = new Vector<checkPointLoc>();
 
     public class checkPointLoc{
         public int checkNo=0;
@@ -73,20 +70,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public double lng=0;
         public int isFinal=0;
     }
-public class httpTask extends AsyncTask<URL, Void, Void>{
+public class httpTask extends AsyncTask<URL, Void, JSONObject>{
 
+    JSONObject direction;
 
     @Override
-    protected Void doInBackground(URL... h) {
+    protected JSONObject doInBackground(URL... h) {
         String url=null;
         StringBuilder stringBuilder = new StringBuilder();
-        JSONObject direction;
+
 
         Log.d("url","1");
         HttpURLConnection con =null;
         try {
-
-
             con = (HttpURLConnection) h[0].openConnection();
             con.setReadTimeout(10000);
             con.setConnectTimeout(15000);
@@ -105,65 +101,81 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
             e.printStackTrace();
         }
         //Log.d("str",stringBuilder.toString());
-        try{
+
+        try
+        {
             direction=new JSONObject(stringBuilder.toString());
+        }
+        catch (Exception e)
+        {
 
-            JSONArray routeArray= direction.getJSONArray("routes");
-            JSONObject routes=routeArray.getJSONObject(0);
-            JSONArray legsArray=routes.getJSONArray("legs");
-            JSONObject legs=legsArray.getJSONObject(0);
-            //Log.d("str",legs.toString());
-            String str=new String();
-            //str=legs.getJSONObject("distance").getJSONObject("value").toString();
-            JSONObject distance=legs.getJSONObject("distance");
-
-            str=distance.getString("value");
-            totalDistance= Double.valueOf(str);
-            //Log.d("str",str);
-            JSONArray stepsArray=legs.getJSONArray("steps");
-            //Log.d("step",stepsArray.toString());
-
-            checkPointLoc location=new  checkPointLoc();
-
-
-            for(int i=0 ;i<stepsArray.length();i++){
-
-
-                location.checkNo=i+1;
-                Log.d("check", String.valueOf(stepsArray.length()));
-                JSONObject steps=stepsArray.getJSONObject(i);
-                Log.d("steps",steps.toString());
-                Double lat=null;
-                Double lng=null;
-                lat=steps.getJSONObject("end_location").getDouble("lat");
-               lng= steps.getJSONObject("end_location").getDouble("lng");
-                location.lat=lat;
-                location.lng=lng;
-
-                location.isFinal=0;
-
-                if(location.checkNo==stepsArray.length()){
-                    location.isFinal=1;
-
-                }
-
-                map.put(i, location);
-
-                 checkPointLoc t =map.get(i);
-                Log.d("CheckNO", String.valueOf(t.checkNo));
-                Log.d("lat", String.valueOf(t.lat));
-                Log.d("long", String.valueOf(t.lng));
-                Log.d("IsFinal", String.valueOf(t.isFinal));
-
-                }
-
-
-
-        } catch (Exception e) {
         }
 
+        return direction;
+    }
 
-        return null;
+    protected void onPostExecute(JSONObject result){
+
+        super.onPostExecute(result);
+        Log.d("onpost", "hh");
+       // this.notify();
+        checkObj = result;
+
+        if (checkObj != null)
+        {
+            try {
+
+                JSONArray routeArray = checkObj.getJSONArray("routes");
+                JSONObject routes = routeArray.getJSONObject(0);
+                JSONArray legsArray = routes.getJSONArray("legs");
+                JSONObject legs = legsArray.getJSONObject(0);
+
+                String str = new String();
+
+                JSONObject distance = legs.getJSONObject("distance");
+
+                str = distance.getString("value");
+                totalDistance = Double.valueOf(str);
+
+                JSONArray stepsArray = legs.getJSONArray("steps");
+
+                for (int i = 0; i < stepsArray.length(); i++) {
+
+                    checkPointLoc location = new checkPointLoc();
+                    location.checkNo = i + 1;
+                    Log.d("check", String.valueOf(stepsArray.length()));
+                    JSONObject steps = stepsArray.getJSONObject(i);
+                    Log.d("steps", steps.toString());
+                    Double lat = null;
+                    Double lng = null;
+                    lat = steps.getJSONObject("end_location").getDouble("lat");
+                    lng = steps.getJSONObject("end_location").getDouble("lng");
+                    location.lat = lat;
+                    location.lng = lng;
+
+                    location.isFinal = 0;
+
+                    if (location.checkNo == stepsArray.length()) {
+                        location.isFinal = 1;
+
+                    }
+                    Log.d("block", "HER1");
+                    v.add(location);
+                    Log.d("block", "HER2");
+                    checkPointLoc t = v.get(i);
+                    Log.d("block", "HER3");
+                    Log.d("CheckNO", String.valueOf(t.checkNo));
+                    Log.d("lat", String.valueOf(t.lat));
+                    Log.d("long", String.valueOf(t.lng));
+                    Log.d("IsFinal", String.valueOf(t.isFinal));
+                }
+
+            } catch (Exception e) {
+            }
+
+            reciever.obtainMessage(3).sendToTarget();
+        }
+
     }
 }
 
@@ -182,7 +194,7 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         //  mapActivity();
@@ -238,27 +250,9 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
                         URL link = new URL(url);
                         Log.d("url", url);
                         httpTask ht = new httpTask();
+                        if (v!=null){
+                            v.clear();                      }
                         ht.execute(link);
-
-                        MarkerOptions cMarkerOptions = new MarkerOptions();
-                        checkPointLoc loc=new  checkPointLoc();
-                        for (int j=0;j<map.size();j++) {
-                            Log.d("CM",String.valueOf(map.size()));
-                            loc=map.get(j);
-                            LatLng ml = new LatLng(loc.lat,loc.lng);
-                            Log.d("lat",String.valueOf(loc.lat));
-                            Log.d("lng",String.valueOf(loc.lng));
-
-                            cMarkerOptions.position(ml);
-                            cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
-                            //GoogleMap googleMap = null;
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
-
-                            // Placing a marker on the touched position
-                            googleMap.addMarker(cMarkerOptions);
-                            Log.d("CM", "Exit");
-                        }
-
 
                     } catch (MalformedURLException e) {
                         e.printStackTrace();
@@ -268,9 +262,6 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
         });
         Log.d("BT", "Exited SD");
     }
-
-
-
 
 
     /**
@@ -423,7 +414,36 @@ public class httpTask extends AsyncTask<URL, Void, Void>{
                     Toast.makeText(getApplicationContext(),read,Toast.LENGTH_LONG).show();
 
                 }
+                break;
+
+                case 3:
+                {
+                    MarkerOptions cMarkerOptions = new MarkerOptions();
+                    checkPointLoc loc= new checkPointLoc();
+                    final GoogleMap googleMap = mapFragment.getMap();
+
+                    for (int j=0;j<v.size();j++) {
+                        Log.d("CM",String.valueOf(v.size()));
+                        loc=v.get(j);
+                        LatLng ml = new LatLng(loc.lat,loc.lng);
+                        Log.d("lat",String.valueOf(loc.lat));
+                        Log.d("lng",String.valueOf(loc.lng));
+
+                        cMarkerOptions.position(ml);
+                        cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
+                        //GoogleMap googleMap = null;
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
+
+                        // Placing a marker on the touched position
+                        googleMap.addMarker(cMarkerOptions);
+                        Log.d("CM", "Exit");
+                    }
+                }
+                break;
+
+
             }
+
         }
     };
 

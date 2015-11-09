@@ -17,35 +17,45 @@
 #include "utilities.h"
 #include "math.h"
 
-/*Calculates heading direction for a full circle*/
-uint8_t compassbearing_reading();
+/* Calculates heading direction for a full circle!!
+ * Returns values between 0 to 255
+*/
+uint8_t compassBearing_fullCircle();
 
-/*Calculates heading direction*/
-void compassbearingreading_highlowbytes();
+/* Calculates heading direction!!
+ * Returns values between 0 to 360
+*/
+float_t compassBearing_inDeg();
 
-/*Calculates pitch angle*/
-void pitchangle();
+/* Calculates pitch angle
+ * */
+void compass_pitchAngle();
 
-/*Calculates roll angle*/
-void rollangle();
+/* Calculates roll angle*/
+void compass_rollAngle();
 
-/*Calculates temperature*/
+/* Calculates temperature*/
 void temperature();
 
-/*Compasss enters into calibration when this function is called*/
-uint8_t calibrate_compass(uint8_t mode);
+/* Compass enters into calibration when this function is called.
+ * We can calibrate the magnetometer, accelerometer and gyro*/
+uint8_t compass_calibrationMode(uint8_t mode);
 
-/*Compass enters into heading mode when this function is called*/
-uint8_t headingmode_compass();
+/* Compass enters into heading mode when this function is called.
+ * This function is required to get the compass module out of the
+ * calibration mode.
+ * */
+uint8_t compass_headingMode();
 
 
 typedef struct {
-        uint8_t current_angle;
-        uint8_t desired_angle;
-        uint8_t destination_reached;
-        uint8_t is_valid;
+        float_t current_angle;
+        double_t desired_angle;
+        //uint8_t destination_reached;
+        //uint8_t is_valid;
 }actual_headingdir;
 
 /*Sends current angle and desired angle to master to make turn or not*/
-void actualheadingdir();
+void compass_actualHeadingDir(double_t headingAngle);
+
 #endif /* L5_APPLICATION_COMPASS_HPP_ */

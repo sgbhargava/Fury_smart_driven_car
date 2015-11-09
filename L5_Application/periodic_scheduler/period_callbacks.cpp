@@ -80,9 +80,10 @@ void period_10Hz(void)
 
         // heading degree of car
         currentheading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
+        compass_actualHeadingDir(currentheading);
 
         // Distance of checkpoint and final distance
-        distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
+ /*       distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
         distToDest = calcDistToFinalDest(distToChkPnt);
 
         // check if the car has reached the checkpoint
@@ -94,7 +95,7 @@ void period_10Hz(void)
             LD.setLeftDigit(LEDdisplay[selectChar]);
             LD.setRightDigit(LEDdisplay[selectChar+1]);
             selectChar = (selectChar + 1) % 3;
-        }
+        }*/
 
     }
     else
@@ -103,18 +104,20 @@ void period_10Hz(void)
     }
 
     if(BEARINGMODE == mode)
-        compassbearing_reading();       //bearing mode
-
+    {
+        //compassBearing_fullCircle();  //bearing mode
+        compassBearing_inDeg();
+    }
     else if(CALIBRATIONMODE == mode)
-        mode = calibrate_compass(mode); //c alibration mode
+        mode = compass_calibrationMode(mode); //calibration mode
 
     else if(HEADINGMODE == mode)
-        mode = headingmode_compass();   //To get back to bearing mode
+        mode = compass_headingMode();   //To get back to bearing mode
 
     else
     {
         if(SW.getSwitch(2))
-            mode = 0;
+            mode = 2;//0
     }
 }
 

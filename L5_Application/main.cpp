@@ -59,38 +59,6 @@
  */
 int main(void)
 {
-#if COMPASSMODULE
-while(1)
-{
-    if(SW.getSwitch(1))
-    {
-        /*Enter calibration mode*/
-        //calibrate_compass();
-        LE.on(1);
-    }
-    else if(SW.getSwitch(2))
-    {
-        /*To come out of calibration mode*/
-        //headingmode_compass();
-        LE.off(1);
-    }
-    else
-    {
-        /*In heading mode*/
-        compassbearing_reading();
-        delay_ms(500);
-        compassbearingreading_highlowbytes();
-        delay_ms(500);
-        pitchangle();
-        delay_ms(1000);
-        temperature();
-        delay_ms(500);
-        rollangle();
-        delay_ms(1000);
-    }
-}
-#endif
-
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.
@@ -119,49 +87,6 @@ while(1)
     #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
-
-#if TESTCODE
-    /*
-     * Testing purpose
-     */
-
-    addChkPnts(37, 334352, 121, 883424, 1);/*Latitude: 3720.061119 Longitude: 12153.005440*/
-    addChkPnts(37, 334424, 121, 883008, 2);/*Latitude: 3720.065439 Longitude: 12152.980480*/
-    addChkPnts(37, 334571, 121, 882960, 3);/*Latitude: 3720.074261 Longitude: 12152.977600*/
-    addChkPnts(37, 334814, 121, 882382, 4);/*Latitude: 3720.088840 Longitude: 12152.942917*/
-    addChkPnts(37, 335109, 121, 881657, 5);/*Latitude: 3720.106541 Longitude: 12152.899422*/
-
-    uint8_t num,i = 0;
-    double_t templat1=0,templong1=0,temphead=0;
-    double_t templat2=0,templong2=0;
-
-    while(1)
-    {
-        if(SW.getSwitch(1))
-        {
-            num = getPresentChkPnt();
-            printf("checkpoint no: %d\n", num);
-            if(num == 1)
-            {
-                templat1 = getLatitude(num);
-                templong1 = getLongitude(num);
-                printf("%f %f\n",templat1,templong1);
-            }
-            //printf("Latitude: %f\t Longitude: %f\n\n", templat, templong);
-
-            if(num == 2)
-            {
-                templat2 = getLatitude(num);
-                templong2 = getLongitude(num);
-                printf("%f %f\n",templat2,templong2);
-                temphead = headingdir(templat1,templong1,templat2,templong2);
-                printf("%f\n",temphead);
-            }
-            updateToNxtChkPnt();
-        }
-        delay_ms(1000);
-    }
-#endif
 
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));

@@ -20,48 +20,47 @@
 #include "math.h"
 #include "CompassGPS_calculation.hpp"
 
+
+#define MODE_THREE 3
+
+
 /**Few functions here are just to make sure the I2C is working is fine**/
 I2C2 &compass = I2C2::getInstance();
 
-uint8_t compassbearing_reading()
+uint8_t compassBearing_fullCircle()
 {
-    LE.off(1);LE.off(1);
+//    LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
+    //printf("Bearing:%d\n",data);
     return data;
-    printf("compass bearing:%d\n", data);
 }
 
-void compassbearingreading_highlowbytes()
+float_t compassBearing_inDeg()
 {
     uint8_t shiftreg;
     uint8_t shiftreg1;
-    float compassangle;
+    float_t compassangle;
     shiftreg = compass.readReg(0xC0, 2);
     shiftreg1 = compass.readReg(0xC0, 3);
 
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
-    printf("compassreadings_inangles:%f\n", (compassangle / 10));
+    printf("compassangle:%f\n",(compassangle/10));
+    return (compassangle/10);
 }
 
-void pitchangle()
+void compass_pitchAngle()
 {
-    float pitchangle, pitchangle1;
+    float_t pitchangle, pitchangle1;
     pitchangle = compass.readReg(0xC0, 4);
     pitchangle1 = compass.readReg(0xC0, 26);
-
-    printf("pitchangle:%f\n", pitchangle);
-    printf("pitchangle_withoutfilter:%f\n", pitchangle1);
 }
 
-void rollangle()
+void compass_rollAngle()
 {
-    float rollangle1, rollangle2;
+    float_t rollangle1, rollangle2;
     rollangle1 = compass.readReg(0xC0, 5);
     rollangle2 = compass.readReg(0xC0, 27);
-
-    printf("rollangle:%f\n", rollangle1);
-    printf("rollangle_withoutfilter:%f\n", rollangle2);
 }
 
 void temperature()
@@ -71,60 +70,49 @@ void temperature()
     temperature_highbyte = compass.readReg(0xC0, 24);
     temperature_lowbyte = compass.readReg(0xC0, 25);
     temperature = (temperature_highbyte << 8) + (temperature_lowbyte >> 0);
-    printf("temperature:%d\n", temperature);
 }
 
-uint8_t calibrate_compass(uint8_t compassMode)
+uint8_t compass_calibrationMode(uint8_t compassMode)
 {
     /**Here register address 0 indicates its a command register**/
-    /*
-     {
-         compass.writeReg(0xC0,0,0xF0);
-         delay_ms(20);
-         compass.writeReg(0xC0,0,0xF5);
-         delay_ms(20);
-         compass.writeReg(0xC0,0,0xF6);
-         delay_ms(20);
-     }*/
+     LE.on(1);LE.off(2);
+     compass.writeReg(0xC0,0,0xF0);
+     delay_ms(20);
+     compass.writeReg(0xC0,0,0xF5);
+     delay_ms(20);
+     compass.writeReg(0xC0,0,0xF6);
+     delay_ms(20);
 
+/*
     LE.on(1);LE.off(2);
     if (SW.getSwitch(2))
     {
-        /*To come out of calibration mode*/
-        //headingmode_compass();
+        To come out of calibration mode
+        headingmode_compass();
         compassMode = 2;
-        LE.off(1);
+        //LE.off(1);
     }
-    return compassMode;
+*/
+    return MODE_THREE;
 }
 
-uint8_t headingmode_compass()
+uint8_t compass_headingMode()
 {
-//compass.writeReg(0xC0,0,0xF8);
+    compass.writeReg(0xC0,0,0xF8);
     uint8_t headingMode = 0;
-    LE.on(2);
+//    LE.on(2);
     return headingMode;
 }
 
 #if 1
-/*
- * Writing a pseudo code
- * Should modify it in future
- * */
-void actualheadingdir()
+void compass_actualHeadingDir(double_t headingAngle)
 {
+    /* The values current_angle and desired_angle will be passed to
+     * master for making turning decision
+     * */
     actual_headingdir *ptr = NULL;
-    double_t lat1=0,lat2=0,long1=0,long2=0;
-    ptr->current_angle = compassbearing_reading();
-
-    /*This call should receive data from abhi's struct and should be updated
-     * I have typecastted this for now to match the typedef struct
-     * Should think about it again
-     * For now to avoid compilation errors I'm passing 0's*/
-
-    ptr->desired_angle = (uint8_t) headingdir(lat1,long1,lat2,long2);
-    ptr->destination_reached/*can take equate this to check point*/;
-    ptr->is_valid/*not sure how to use this*/;
+    ptr->current_angle = compassBearing_inDeg();
+    ptr->desired_angle = headingAngle;
 }
 #endif
 

@@ -33,6 +33,7 @@
 #include "CAN.h"
 #include "shared_handles.h"
 #include "can_msg_process.hpp"
+#include "LCD.cpp"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -127,6 +128,8 @@ int main(void)
 
     //scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
     //scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));
+
+    scheduler_add_task(new dispLCDTask(PRIORITY_LOW));
 
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */

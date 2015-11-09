@@ -630,6 +630,20 @@ CMD_HANDLER_FUNC(speedHandler)
             ctrl->setSpeedPWM((float)atof(value));
         }
     }
+    else if(cmdParams.beginsWithIgnoreCase("customForward")) {
+        char *value = NULL;
+        if (2 == cmdParams.tokenize(" ", 2, NULL, &value)) {
+            printf("set %d\n", (float)atoi(value));
+            ctrl->setSpeedCustom(true, (float)atoi(value));
+        }
+    }
+    else if(cmdParams.beginsWithIgnoreCase("customBackward")) {
+        char *value = NULL;
+        if (2 == cmdParams.tokenize(" ", 2, NULL, &value)) {
+            printf("set %d\n", (float)atoi(value));
+            ctrl->setSpeedCustom(false, (float)atoi(value));
+        }
+    }
     return true;
 }
 

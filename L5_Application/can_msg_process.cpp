@@ -142,11 +142,13 @@ void recvAndAnalysisCanMsg(void)
         {
             SpeedCtrl * m_pSpeed = SpeedCtrl::getInstance();
             throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&mMsgRecv.data.bytes[0];
+            bool isForward = false;
             if (pThrottleCanMsg->forward)
             {
                 printf("Go Forward\n");
+                isForward = true;
                 if (pThrottleCanMsg->customForward)
-                    m_pSpeed->setSpeedPWM(pThrottleCanMsg->customForward);
+                    m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customForward);
             }
             else if (pThrottleCanMsg->incrForward)
                 m_pSpeed->incrSpeedPWM();
@@ -156,7 +158,7 @@ void recvAndAnalysisCanMsg(void)
             {
                 printf("Go Backward\n");
                 if (pThrottleCanMsg->customBackward)
-                    m_pSpeed->setSpeedPWM(pThrottleCanMsg->customBackward);
+                    m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customBackward);
             }
             else if (pThrottleCanMsg->incrBackward)
                 m_pSpeed->descrSpeedPWM();

@@ -150,7 +150,7 @@ def main(argv):
     dbcfile = '243.dbc'
     self_node = 'DRIVER'
     gen_all = True
-    big_endian = False
+    big_endian = True
 
     try:
         opts, args = getopt.getopt(argv, "hi:s:a:b", ["ifile=", "self=", "all"])
@@ -242,7 +242,7 @@ def main(argv):
             print ("extern const uint32_t " + m.name + "__MIA_MS;")
             print ("extern const " + m.get_struct_name() + " " + m.name + "__MIA_MSG;")
 
-    # Generate marshal methods
+    # Generate encode methods
     for m in dbc.messages:
         if not gen_all and m.sender != self_node:
             print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_encode() since the sender is " + m.sender + " and we are " + self_node)
@@ -253,23 +253,38 @@ def main(argv):
         print ("static msg_hdr_t " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
         print ("{")
         print ("    *to = 0; ///< Default the entire destination data with zeroes")
+        print ("    uint8_t *bytes = (uint8_t*) to;")
+        print ("    uint64_t raw_signal;")
         print ("")
 
         for s in m.signals:
             # Min/Max check
             if s.min_val != 0 or s.max_val != 0:
-                print ("\n    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
+                print ("    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
                 print ("    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }")
 
-            # Compute binary value
-            if not big_endian:
-                print ("    *to |= ((uint64_t) ((from->" + s.name + " - (" + s.offset_str + ")) / " + s.scale_str + " + 0.5)) << " + str(s.bit_start) + ";")
-                continue
+            # Compute binary value (both little and big endian)
+            # Encode should offset then divide
+            print ("    raw_signal = ((uint64_t)(((from->" + s.name + " - (" + s.offset_str + ")) / " + str(s.scale) + ") + 0.5)) & 0x" + format(2 ** s.bit_size - 1, '02x') + ";")
 
-            # Big endian:
+            bit_pos = s.bit_start
+            remaining = s.bit_size
+            byte_num = int(s.bit_start / 8)
+            while remaining > 0:
+                if remaining > 8:
+                    bits_in_this_byte = 8 - (bit_pos % 8)
+                else:
+                    bits_in_this_byte = remaining
 
+                print ("    bytes[" + str(byte_num) + "] |= (((uint8_t)(raw_signal >> " + str(bit_pos - s.bit_start) + ") & 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ") << " + str(bit_pos % 8) + ")"),
+                print ("; ///< " + str(bits_in_this_byte) + " bit(s) to B" + str(bit_pos))
+                byte_num += 1
 
-        print ("\n    return " + m.get_struct_name()[:-2] + "_HDR;")
+                bit_pos += bits_in_this_byte
+                remaining -= bits_in_this_byte
+            print ("")
+
+        print ("    return " + m.get_struct_name()[:-2] + "_HDR;")
         print ("}")
 
     # Generate unmarshal methods
@@ -287,44 +302,36 @@ def main(argv):
         print ("        return !success;")
         print ("    }")
 
-        if big_endian:
-            print ("    uint64_t tmp = 0;")
-            print ("    uint64_t bits = 0;")
-            print ("    const uint8_t *bytes = (const uint8_t*) from;")
+        print ("    uint64_t raw_signal = 0;")
+        print ("    uint64_t bits_from_byte = 0;")
+        print ("    const uint8_t *bytes = (const uint8_t*) from;")
 
-        print ("")
         for s in m.signals:
-            # Little endian:
-            if not big_endian:
-                print ("    to->" + s.name.ljust(32) + " ="),
-                print (" (((*from >> " + str(s.bit_start).rjust(2) + ") &"),
-                print (" 0x" + format(2 ** s.bit_size - 1, '08x').ljust(7) + ")"),
-                print (" * " + str(s.scale) + ") + (" + s.offset_str + ");")
-                continue
-
-            # Big endian
+            # Little and Big Endian:
             bit_pos = s.bit_start
             remaining = s.bit_size
             byte_num = int(s.bit_start / 8)
             bit_count = 0
             print ("")
-            print ("    tmp = 0;")
+            print ("    raw_signal = 0;")
             while remaining > 0:
                 if remaining > 8:
                     bits_in_this_byte = 8 - (bit_pos % 8)
                 else:
                     bits_in_this_byte = remaining
 
-                print ("    bits = ((bytes[" + str(byte_num) + "] >> " + str(bit_pos % 8) + ")"),
+                print ("    bits_from_byte = ((bytes[" + str(byte_num) + "] >> " + str(bit_pos % 8) + ")"),
                 print ("& 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ")"),
                 print ("; ///< " + str(bits_in_this_byte) + " bit(s) from B" + str(bit_pos))
-                print ("    tmp |= bits << " + str(bit_count) + ";")
+                print ("    raw_signal    |= (bits_from_byte << " + str(bit_count) + ");")
                 byte_num += 1
 
                 bit_pos += bits_in_this_byte
                 remaining -= bits_in_this_byte
                 bit_count += bits_in_this_byte
-            print ("    to->" + s.name + " = (tmp * " + str(s.scale) + ") + (" + s.offset_str + ");")
+
+            # Decode should multiply then add the offset
+            print ("    to->" + s.name + " = (raw_signal * " + str(s.scale) + ") + (" + s.offset_str + ");")
 
         print ("")
         print ("    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter")

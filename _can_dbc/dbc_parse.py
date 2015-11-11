@@ -77,6 +77,68 @@ class Signal(object):
 
         return code + "\n"
 
+    def get_encode_code(self):
+        code = ''
+
+        # Min/Max check
+        if self.min_val != 0 or self.max_val != 0:
+            code += ("    if(from->" + self.name + " < " + self.min_val_str + ") { " + "from->" + self.name + " = " + self.min_val_str + "; }\n")
+            code += ("    if(from->" + self.name + " > " + self.max_val_str + ") { " + "from->" + self.name + " = " + self.max_val_str + "; }\n")
+
+        # Compute binary value (both little and big endian)
+        # Encode should subtract offset then divide
+        code += ("    raw_signal = ((uint64_t)(((from->" + self.name + " - (" + self.offset_str + ")) / " + str(self.scale) + ") + 0.5))")
+        code += (" & 0x" + format(2 ** self.bit_size - 1, '02x') + ";\n")
+
+        bit_pos = self.bit_start
+        remaining = self.bit_size
+        byte_num = int(self.bit_start / 8)
+        while remaining > 0:
+            if remaining > 8:
+                bits_in_this_byte = 8 - (bit_pos % 8)
+            else:
+                bits_in_this_byte = remaining
+
+            code += ("    bytes[" + str(byte_num) + "] |= (((uint8_t)(raw_signal >> " + str(bit_pos - self.bit_start) + ")")
+            code += (" & 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ") << " + str(bit_pos % 8) + ")")
+            code += ("; ///< " + str(bits_in_this_byte) + " bit(s) to B" + str(bit_pos) + "\n")
+            byte_num += 1
+
+            bit_pos += bits_in_this_byte
+            remaining -= bits_in_this_byte
+        code += ("\n")
+        return code
+
+    def get_decode_code(self):
+        # Little and Big Endian:
+        bit_pos = self.bit_start
+        remaining = self.bit_size
+        byte_num = int(self.bit_start / 8)
+        bit_count = 0
+        code = ("\n")
+        code += ("    raw_signal = 0;\n")
+
+        while remaining > 0:
+            if remaining > 8:
+                bits_in_this_byte = 8 - (bit_pos % 8)
+            else:
+                bits_in_this_byte = remaining
+
+            code += ("    bits_from_byte = ((bytes[" + str(byte_num) + "] >> " + str(bit_pos % 8) + ")")
+            code += ("& 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ")")
+            code += ("; ///< " + str(bits_in_this_byte) + " bit(s) from B" + str(bit_pos) + "\n")
+            code += ("    raw_signal    |= (bits_from_byte << " + str(bit_count) + ");\n")
+            byte_num += 1
+
+            bit_pos += bits_in_this_byte
+            remaining -= bits_in_this_byte
+            bit_count += bits_in_this_byte
+
+            # Decode/get should multiply then add the offset
+            code += ("    to->" + self.name + " = (raw_signal * " + str(self.scale) + ") + (" + self.offset_str + ");\n")
+
+        return code
+
 
 class Message(object):
     """
@@ -116,6 +178,48 @@ class Message(object):
         code += ("\n    mia_info_t mia_info;")
         code += ("\n} " + self.get_struct_name() + ";\n")
         return code
+
+    def get_encode_code(self):
+        code = ''
+        code += ("\n/// Encode " + self.sender + "'s '" + self.name + "' message\n")
+        code += ("/// @returns the message header of this message\n")
+        code += ("static msg_hdr_t " + self.get_struct_name()[:-2] + "_encode(uint64_t *to, " + self.get_struct_name() + " *from)\n")
+        code += ("{\n")
+        code += ("    *to = 0; ///< Default the entire destination data with zeroes\n")
+        code += ("    uint8_t *bytes = (uint8_t*) to;\n")
+        code += ("    uint64_t raw_signal;\n")
+        code += ("\n")
+
+        for s in self.signals:
+            code += s.get_encode_code()
+
+        code += ("    return " + self.get_struct_name()[:-2] + "_HDR;\n")
+        code += ("}\n")
+        return code
+
+    def get_decode_code(self):
+        code = ''
+        code += ("\n/// Decode " + self.sender + "'s '" + self.name + "' message\n")
+        code += ("/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check\n")
+        code += ("static inline bool " + self.get_struct_name()[:-2] + "_decode(" + self.get_struct_name() + " *to, const uint64_t *from, const msg_hdr_t *hdr)\n")
+        code += ("{\n")
+        code += ("    const bool success = true;\n")
+        code += ("    if (NULL != hdr && (hdr->dlc != " + self.get_struct_name()[:-2] + "_HDR.dlc || hdr->mid != " + self.get_struct_name()[:-2] + "_HDR.mid)) {\n")
+        code += ("        return !success;\n")
+        code += ("    }\n")
+        code += ("    uint64_t raw_signal;\n")
+        code += ("    uint64_t bits_from_byte;\n")
+        code += ("    const uint8_t *bytes = (const uint8_t*) from;\n")
+
+        for s in self.signals:
+            code += s.get_decode_code()
+
+        code += ("\n")
+        code += ("    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter\n")
+        code += ("    return success;\n")
+        code += ("}\n")
+        return code
+
 
 class DBC(object):
     def __init__(self, name):
@@ -246,97 +350,15 @@ def main(argv):
     for m in dbc.messages:
         if not gen_all and m.sender != self_node:
             print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_encode() since the sender is " + m.sender + " and we are " + self_node)
-            continue
+        else:
+            print (m.get_encode_code())
 
-        print ("\n/// Encode " + m.sender + "'s '" + m.name + "' message")
-        print ("/// @returns the message header of this message")
-        print ("static msg_hdr_t " + m.get_struct_name()[:-2] + "_encode(uint64_t *to, " + m.get_struct_name() + " *from)")
-        print ("{")
-        print ("    *to = 0; ///< Default the entire destination data with zeroes")
-        print ("    uint8_t *bytes = (uint8_t*) to;")
-        print ("    uint64_t raw_signal;")
-        print ("")
-
-        for s in m.signals:
-            # Min/Max check
-            if s.min_val != 0 or s.max_val != 0:
-                print ("    if(from->" + s.name + " < " + s.min_val_str + ") { " + "from->" + s.name + " = " + s.min_val_str + "; }")
-                print ("    if(from->" + s.name + " > " + s.max_val_str + ") { " + "from->" + s.name + " = " + s.max_val_str + "; }")
-
-            # Compute binary value (both little and big endian)
-            # Encode should offset then divide
-            print ("    raw_signal = ((uint64_t)(((from->" + s.name + " - (" + s.offset_str + ")) / " + str(s.scale) + ") + 0.5)) & 0x" + format(2 ** s.bit_size - 1, '02x') + ";")
-
-            bit_pos = s.bit_start
-            remaining = s.bit_size
-            byte_num = int(s.bit_start / 8)
-            while remaining > 0:
-                if remaining > 8:
-                    bits_in_this_byte = 8 - (bit_pos % 8)
-                else:
-                    bits_in_this_byte = remaining
-
-                print ("    bytes[" + str(byte_num) + "] |= (((uint8_t)(raw_signal >> " + str(bit_pos - s.bit_start) + ") & 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ") << " + str(bit_pos % 8) + ")"),
-                print ("; ///< " + str(bits_in_this_byte) + " bit(s) to B" + str(bit_pos))
-                byte_num += 1
-
-                bit_pos += bits_in_this_byte
-                remaining -= bits_in_this_byte
-            print ("")
-
-        print ("    return " + m.get_struct_name()[:-2] + "_HDR;")
-        print ("}")
-
-    # Generate unmarshal methods
+    # Generate decode methods
     for m in dbc.messages:
         if not gen_all and not m.is_recipient_of_at_least_one_sig(self_node):
-            print ("\n/// Not generating code for " + m.get_struct_name()[ :-2] + "_decode() since we are not the recipient of any of its signals")
-            continue
-
-        print ("\n/// Decode " + m.sender + "'s '" + m.name + "' message")
-        print ("/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check")
-        print ("static inline bool " + m.get_struct_name()[:-2] + "_decode(" + m.get_struct_name() + " *to, const uint64_t *from, const msg_hdr_t *hdr)")
-        print ("{")
-        print ("    const bool success = true;")
-        print ("    if (NULL != hdr && (hdr->dlc != " + m.get_struct_name()[:-2] + "_HDR.dlc || hdr->mid != " + m.get_struct_name()[:-2] + "_HDR.mid)) {")
-        print ("        return !success;")
-        print ("    }")
-
-        print ("    uint64_t raw_signal = 0;")
-        print ("    uint64_t bits_from_byte = 0;")
-        print ("    const uint8_t *bytes = (const uint8_t*) from;")
-
-        for s in m.signals:
-            # Little and Big Endian:
-            bit_pos = s.bit_start
-            remaining = s.bit_size
-            byte_num = int(s.bit_start / 8)
-            bit_count = 0
-            print ("")
-            print ("    raw_signal = 0;")
-            while remaining > 0:
-                if remaining > 8:
-                    bits_in_this_byte = 8 - (bit_pos % 8)
-                else:
-                    bits_in_this_byte = remaining
-
-                print ("    bits_from_byte = ((bytes[" + str(byte_num) + "] >> " + str(bit_pos % 8) + ")"),
-                print ("& 0x" + format(2 ** bits_in_this_byte - 1, '02x') + ")"),
-                print ("; ///< " + str(bits_in_this_byte) + " bit(s) from B" + str(bit_pos))
-                print ("    raw_signal    |= (bits_from_byte << " + str(bit_count) + ");")
-                byte_num += 1
-
-                bit_pos += bits_in_this_byte
-                remaining -= bits_in_this_byte
-                bit_count += bits_in_this_byte
-
-            # Decode should multiply then add the offset
-            print ("    to->" + s.name + " = (raw_signal * " + str(s.scale) + ") + (" + s.offset_str + ");")
-
-        print ("")
-        print ("    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter")
-        print ("    return success;")
-        print ("}")
+            print ("\n/// Not generating code for " + m.get_struct_name()[:-2] + "_decode() since we are not the recipient of any of its signals")
+        else:
+            print (m.get_decode_code())
 
     # Generate MIA handler for the dbc.messages we are a recipient of
     for m in dbc.messages:

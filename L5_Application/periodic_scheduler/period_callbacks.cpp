@@ -136,13 +136,18 @@ void period_10Hz(void)
         compassMode = compass_headingMode();   //To get back to bearing compassMode
 
     else
-    {
-        if(SW.getSwitch(2))
-            compassMode = 2;//0
+        LD.setNumber(13);
 
-        if(SW.getSwitch(1))
-            compassMode = 1;
+    if(SW.getSwitch(2))
+    {
+        compassMode = 2;//0
+        LD.setNumber(00);
     }
+
+
+    if(SW.getSwitch(1))
+        compassMode = 1;
+
 
 }
 

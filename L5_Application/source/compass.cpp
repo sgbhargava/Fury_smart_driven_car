@@ -43,7 +43,9 @@ float_t compassBearing_inDeg()
     shiftreg1 = compass.readReg(0xC0, 3);
 
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
-    return (compassangle/10);
+
+    //14 deg is added to compensate the maagnetic declination.
+    return fmodf(((compassangle/10) +14 ), 360);
 }
 
 void compass_pitchAngle()

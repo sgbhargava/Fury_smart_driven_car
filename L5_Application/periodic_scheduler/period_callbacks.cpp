@@ -37,9 +37,16 @@
 #include "CompassGPS_calculation.hpp"
 #include "can_gpsCompass.hpp"
 #include "hashDefine.hpp"
+#include "tlm/c_tlm_comp.h"
+#include "tlm/c_tlm_var.h"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+
+gpsData_t gpsCurrentData;
+float_t distToDest, distToChkPnt, currentHeading;
+double_t chkPntLat, chkPntLon, desiredHeading;
+uint8_t presentChkPnt, compassMode = 0;
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -51,6 +58,19 @@ bool period_init(void)
 bool period_reg_tlm(void)
 {
     // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+    tlm_component *gpsCompass_cmp = tlm_component_add("GPS_Compass");
+
+    TLM_REG_VAR(gpsCompass_cmp, presentChkPnt, tlm_uint);
+    TLM_REG_VAR(gpsCompass_cmp, gpsCurrentData.latitude, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, gpsCurrentData.longitude, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, chkPntLat, tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, chkPntLon, tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, distToChkPnt, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, distToDest, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, compassMode, tlm_uint);
+    TLM_REG_VAR(gpsCompass_cmp, desiredHeading, tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, currentHeading, tlm_float);
+
     return true; // Must return true upon success
 }
 
@@ -63,13 +83,9 @@ void period_1Hz(void)
 void period_10Hz(void)
 {
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    gpsData_t gpsCurrentData;
-    float_t distToDest, distToChkPnt, currentHeading;
-    double_t presentLat, presentLon, chkPntLat, chkPntLon, currentheading;
-    uint8_t presentChkPnt;
+    double_t presentLat, presentLon;
     static bool finalChkPnt_b = false;
     bool chkPntRchd_b = false;
-    static uint8_t mode = 0;
 
     if(NULL == gpsCurrData_q)
     {
@@ -88,17 +104,9 @@ void period_10Hz(void)
         chkPntLat = getLatitude(presentChkPnt);
         chkPntLon = getLongitude(presentChkPnt);
 
-#if TESTCODE
-        if(SW.getSwitch(4))
-        {
-            printf("in periodic, current lat: %f, long: %f, chk lat: %f, chk long: %f\n", gpsCurrentData.latitude,
-                    gpsCurrentData.longitude, chkPntLat, chkPntLon);
-        }
-#endif
-
         // heading degree of car
-        currentheading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
-        //compass_actualHeadingDir(currentheading);
+        desiredHeading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
+        //compass_actualHeadingDir(desiredHeading);
 
         // Distance of checkpoint and final distance
         distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
@@ -116,24 +124,24 @@ void period_10Hz(void)
 
     }
 
-    if(BEARINGMODE == mode)
+    if(BEARINGMODE == compassMode)
     {
-        //compassBearing_fullCircle();  //bearing mode
+        //compassBearing_fullCircle();  //bearing compassMode
         currentHeading = compassBearing_inDeg();
     }
-    else if(CALIBRATIONMODE == mode)
-        mode = compass_calibrationMode(mode); //calibration mode
+    else if(CALIBRATIONMODE == compassMode)
+        compassMode = compass_calibrationMode(compassMode); //calibration mode
 
-    else if(HEADINGMODE == mode)
-        mode = compass_headingMode();   //To get back to bearing mode
+    else if(HEADINGMODE == compassMode)
+        compassMode = compass_headingMode();   //To get back to bearing compassMode
 
     else
     {
         if(SW.getSwitch(2))
-            mode = 2;//0
+            compassMode = 2;//0
 
         if(SW.getSwitch(1))
-            mode = 1;
+            compassMode = 1;
     }
 
 }

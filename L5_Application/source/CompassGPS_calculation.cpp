@@ -13,6 +13,7 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "io.hpp"
 
 #define TO_DEG      (180 / 3.14159)
 #define RADIUS      6371000             // This is the radius of earth in meters.
@@ -98,12 +99,27 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
 
 bool checkPntReached(float_t distance)
 {
-    bool intermediateChkPnt;
-    if (distance <= TWO_METERS)
+    bool intermediateChkPnt = true;
+
+    if(SW.getSwitch(4))
+        printf("periodic dist: %f\n", distance);
+
+    if (distance <= TWO_METERS )
         intermediateChkPnt = updateToNxtChkPnt();
 
     if (intermediateChkPnt)
-        return 0;
+        return false;
     else
-        return 1;
+        return true;
+}
+
+void destReached()
+{
+    char LEDdisplay[5] = {'F', 'U', 'R', 'Y', ' '};
+    static uint8_t selectChar = 0;
+
+    // if final checkpoint reached then display 'FURY'
+    LD.setLeftDigit(LEDdisplay[selectChar]);
+    LD.setRightDigit(LEDdisplay[selectChar + 1]);
+    selectChar = (selectChar + 1) % 4;
 }

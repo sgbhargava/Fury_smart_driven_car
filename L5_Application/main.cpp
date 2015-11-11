@@ -23,23 +23,74 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
-#include <compass.hpp>
-#include <gps.hpp>
+#include <hashDefine.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "utilities.h"
-#include "compass.hpp"
-//#include "i2c2.hpp"
-//#include "i2c2_device.hpp"
-//#include "i2c_base.hpp"
 #include "can.h"
 #include "io.hpp"
-#include "CompassGPS_calculation.hpp"
-#define TESTCODE 1
-#define COMPASSMODULE 0
+#include "gps.hpp"
+
 
 #if TESTCODE
+#include "compass.hpp"
 #include "can_gpsCompass.hpp"
+#include "CompassGPS_calculation.hpp"
+
+/*
+static QueueHandle_t gpsData_q = scheduler_task::getSharedObject("gps_queue");
+gpsData_t gpsData;
+*/
+
+float_t latTesting, longTesting;
+
+void testCode(void *p)
+{
+
+    static uint8_t num = 0;
+    bool valid;
+    while(1)
+    {
+        num = getPresentChkPnt();
+        if(SW.getSwitch(1))
+        {
+            printf("checkpoint no: %d, total: %d\n", num, getNumOfChkPnts());
+            printf("ChkPnt Latitude: %f\t, ChkPnt Longitude: %f\n\n", getLatitude(num), getLongitude(num));
+
+        }
+        else if(SW.getSwitch(2))
+        {
+            valid = updateToNxtChkPnt();
+            if (valid)
+                printf("updated to next\n");
+            else
+                printf("its the end\n");
+        }
+        else if(SW.getSwitch(3))
+        {
+            valid = updateToPrevChkPnt();
+            if (valid)
+                printf("update to previous\n");
+            else
+                printf("its the beginning\n");
+        }
+        else if(SW.getSwitch(4))
+        {
+
+            float chkPntDist, headingDeg;
+//            if(xQueueReceive(gpsData_q, &gpsData, 0))
+
+                printf("current latitude: %f, current longitude: %f\n", latTesting, longTesting);
+                chkPntDist = calcDistToNxtChkPnt(latTesting, longTesting, getLatitude(num), getLongitude(num));
+                headingDeg = headingdir(latTesting, longTesting, getLatitude(num), getLongitude(num));
+                printf("Checkpoint distance: %f,  Total distance: %f\n", chkPntDist, calcDistToFinalDest(chkPntDist));
+
+
+            //printf("Heading deg: %f,  desired deg: %f\n\n", headingDeg, compassbearingreading_highlowbytes());
+        }
+        vTaskDelay(500);
+    }
+}
 #endif
 
 
@@ -88,6 +139,18 @@ int main(void)
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 
+#if TESTCODE
+    /*
+     * Testing purpose
+     */
+    addChkPnts(37, 334352, 121, 883424, 1); // latitude: 3720.06112, longitude: 12153.00544
+    addChkPnts(37, 334424, 121, 883008, 2); // latitude: 3720.06544, longitude: 12152.98048
+    addChkPnts(37, 334571, 121, 882960, 3); // latitude: 3720.07426, longitude: 12152.9776
+    addChkPnts(37, 334814, 121, 882382, 4); // latitude: 3720.08884, longitude: 12152.94292
+    addChkPnts(37, 335109, 121, 881657, 5); // latitude: 3720.10654, longitude: 12152.89942
+
+    xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
+#endif
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));
 

@@ -14,6 +14,9 @@
 #include "string.h"
 #include "io.hpp"
 
+#define TEN_2   100     // 10^2
+
+extern float_t latTesting, longTesting;
 
 bool gps_data::initializeGPSBuffers()
 {
@@ -26,6 +29,7 @@ bool gps_data::initializeGPSBuffers()
 void gps_data::initializeGPSComm()
 {
     gpsComm.init(gpsBaud,gpsRxQSz,gpsTxQSz);
+    //LE.on(1);
 }
 
 void gps_data::readRawGPSData()
@@ -39,20 +43,36 @@ void gps_data::readRawGPSData()
 
 void gps_data::formatGPSData()
 {
+    uint16_t calcLat, calcLong;
     sscanf(gpsRawData, "%6s", gpsExtendedData.formatNMEA);
     if(strcmp(gpsExtendedData.formatNMEA, "$GPRMC") == 0)
     {
-        sscanf(gpsRawData, "%6s,9f,,8f,N,9f,", gpsExtendedData.formatNMEA, &gpsExtendedData.timeUTC,
-                    &gpsFormattedData.latitude, &gpsFormattedData.longitude);
-        /*printf("latitude - %f\n longitude - %f\n time - %f\n\n",
-                gpsFormattedData.latitude, gpsFormattedData.longitude, gpsFormattedData.timeUTC);
-    */}
+        sscanf(gpsRawData, "%6s,%f,%1s,%f,%1s,%f,%1s", gpsExtendedData.formatNMEA,
+                &gpsExtendedData.timeUTC, gpsExtendedData.valid, &gpsFormattedData.latitude,
+                gpsExtendedData.latDir, &gpsFormattedData.longitude, gpsExtendedData.lonDir);
+       calcLat = gpsFormattedData.latitude / TEN_2;
+       calcLong = gpsFormattedData.longitude / TEN_2;
+       gpsFormattedData.latitude = ((gpsFormattedData.latitude - (calcLat * TEN_2)) / 60) + calcLat;
+       gpsFormattedData.longitude = ((gpsFormattedData.longitude - (calcLong * TEN_2)) / 60) + calcLong;
+
+       latTesting = gpsFormattedData.latitude;
+       longTesting = gpsFormattedData.longitude;
+       //printf("%f   %f\n", gpsFormattedData.latitude, gpsFormattedData.longitude);
+       //printf("%s\n",gpsRawData);
+    }
 }
 
 void gps_data::queueGPSData()
 {
-    if(!xQueueSend(gpsDataBuffer_q, &gpsFormattedData, 0))
+    if(gpsExtendedData.valid[0] == 'A')
     {
-        LE.toggle(3);
+        if(!xQueueSend(gpsDataBuffer_q, &gpsFormattedData, 0))
+        {
+            LE.toggle(3);
+        }
+    }
+    else
+    {
+        LE.on(3);
     }
 }

@@ -4,7 +4,7 @@
  *  Created on: Oct 28, 2015
  *      Author: Abhishek Gurudutt, Tejeshwar
  *
- *  CAN communication code
+ *  functions to help in can communication.
  */
 
 #include "can_gpsCompass.hpp"
@@ -66,15 +66,6 @@ uint8_t getNumOfChkPnts()
 
 uint8_t getPresentChkPnt()
 {
-    //giveCheckPoint = firstChkPnt;
-
-   /* while(giveCheckPoint != NULL)
-    {
-        if(giveCheckPoint == prevChkPnt)
-            return giveCheckPoint->chkPntNo;
-        else
-            giveCheckPoint = giveCheckPoint->next;
-    }*/
     return giveCheckPoint->chkPntNo;
 }
 

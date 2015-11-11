@@ -43,7 +43,7 @@
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
-uint8_t mode = 0;
+
 
 void period_1Hz(void)
 {
@@ -60,6 +60,7 @@ void period_10Hz(void)
     uint8_t presentChkPnt, selectChar = 0;
     static bool finalChkPnt_b = false;
     bool chkPntRchd_b = false;
+    static uint8_t mode = 0;
 
     if(NULL == gpsCurrData_q)
     {
@@ -118,6 +119,9 @@ void period_10Hz(void)
     {
         if(SW.getSwitch(2))
             mode = 2;//0
+
+        if(SW.getSwitch(1))
+            mode = 1;
     }
 }
 
@@ -131,6 +135,5 @@ void period_100Hz(void)
 
 void period_1000Hz(void)
 {
-    if(SW.getSwitch(1))
-        mode = 1;
+
 }

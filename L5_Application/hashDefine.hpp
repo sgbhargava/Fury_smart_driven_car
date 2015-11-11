@@ -5,8 +5,8 @@
  *      Author: Tejeshwar
  */
 
-#ifndef L5_APPLICATION_HASDDEFINE_HPP_
-#define L5_APPLICATION_HASDDEFINE_HPP_
+#ifndef L5_APPLICATION_HASHDEFINE_HPP_
+#define L5_APPLICATION_HASHDEFINE_HPP_
 
 /*
  * This file contains all the #define values
@@ -30,4 +30,4 @@
 
 
 
-#endif /* L5_APPLICATION_HASDDEFINE_HPP_ */
+#endif /* L5_APPLICATION_HASHDEFINE_HPP_ */

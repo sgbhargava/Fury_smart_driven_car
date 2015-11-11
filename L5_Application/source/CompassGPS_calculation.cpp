@@ -98,7 +98,7 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
 
 bool checkPntReached(float_t distance)
 {
-    bool intermediateChkPnt;
+    static bool intermediateChkPnt = true;
     if (distance <= TWO_METERS)
         intermediateChkPnt = updateToNxtChkPnt();
 

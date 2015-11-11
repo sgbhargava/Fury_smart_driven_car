@@ -15,17 +15,16 @@
 #include "io.hpp"
 #include "utilities.h"
 #include <gps.hpp>
+#include <hashDefine.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "math.h"
 #include "CompassGPS_calculation.hpp"
 
 
-#define MODE_THREE 3
-
-
 /**Few functions here are just to make sure the I2C is working is fine**/
 I2C2 &compass = I2C2::getInstance();
+actual_headingdir *structptr = new actual_headingdir;
 
 uint8_t compassBearing_fullCircle()
 {
@@ -107,12 +106,8 @@ uint8_t compass_headingMode()
 #if 1
 void compass_actualHeadingDir(double_t headingAngle)
 {
-    /* The values current_angle and desired_angle will be passed to
-     * master for making turning decision
-     * */
-    actual_headingdir *ptr = NULL;
-    ptr->current_angle = compassBearing_inDeg();
-    ptr->desired_angle = headingAngle;
+    structptr->current_angle = compassBearing_inDeg();
+    structptr->desired_angle = headingAngle;
 }
 #endif
 

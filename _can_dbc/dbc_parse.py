@@ -134,8 +134,8 @@ class Signal(object):
             remaining -= bits_in_this_byte
             bit_count += bits_in_this_byte
 
-            # Decode/get should multiply then add the offset
-            code += ("    to->" + self.name + " = (raw_signal * " + str(self.scale) + ") + (" + self.offset_str + ");\n")
+        # Decode/get should multiply then add the offset
+        code += ("    to->" + self.name + " = (raw_signal * " + str(self.scale) + ") + (" + self.offset_str + ");\n")
 
         return code
 

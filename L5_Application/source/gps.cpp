@@ -13,10 +13,11 @@
 #include "gps.hpp"
 #include "string.h"
 #include "io.hpp"
+#include "hashDefine.hpp"
 
-#define TEN_2   100     // 10^2
-
+#if TESTCODE
 extern float_t latTesting, longTesting;
+#endif
 
 bool gps_data::initializeGPSBuffers()
 {
@@ -38,7 +39,6 @@ void gps_data::readRawGPSData()
     ok = gpsComm.gets(gpsRawData, 70, 10);
     if(!ok)
         LE.toggle(4);
-    //printf("%s\n\n", gpsRawData);
 }
 
 void gps_data::formatGPSData()
@@ -52,14 +52,14 @@ void gps_data::formatGPSData()
                 gpsExtendedData.latDir, &gpsFormattedData.longitude, gpsExtendedData.lonDir);
        calcLat = gpsFormattedData.latitude / TEN_2;
        calcLong = gpsFormattedData.longitude / TEN_2;
-       gpsFormattedData.latitude = ((gpsFormattedData.latitude - (calcLat * TEN_2)) / 60) + calcLat;
-       gpsFormattedData.longitude = ((gpsFormattedData.longitude - (calcLong * TEN_2)) / 60) + calcLong;
+       gpsFormattedData.latitude = ((gpsFormattedData.latitude - (calcLat * TEN_2)) / MINUTES) + calcLat;
+       gpsFormattedData.longitude = ((gpsFormattedData.longitude - (calcLong * TEN_2)) / MINUTES) + calcLong;
 
+#if TESTCODE
        latTesting = gpsFormattedData.latitude;
        longTesting = gpsFormattedData.longitude;
-       //printf("%f   %f\n", gpsFormattedData.latitude, gpsFormattedData.longitude);
-       //printf("%s\n",gpsRawData);
-    }
+#endif
+     }
 }
 
 void gps_data::queueGPSData()

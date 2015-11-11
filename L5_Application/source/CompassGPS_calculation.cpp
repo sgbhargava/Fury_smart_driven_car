@@ -14,11 +14,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "io.hpp"
-
-#define TO_DEG      (180 / 3.14159)
-#define RADIUS      6371000             // This is the radius of earth in meters.
-#define TO_RAD      (3.14159 / 180)     // value of PI by angle
-#define TWO_METERS  2
+#include "hashDefine.hpp"
 
 float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
@@ -101,8 +97,10 @@ bool checkPntReached(float_t distance)
 {
     bool intermediateChkPnt = true;
 
+#if TESTCODE
     if(SW.getSwitch(4))
         printf("periodic dist: %f\n", distance);
+#endif
 
     if (distance <= TWO_METERS )
         intermediateChkPnt = updateToNxtChkPnt();

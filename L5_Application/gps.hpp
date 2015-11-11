@@ -16,9 +16,7 @@
 #include "scheduler_task.hpp"
 #include "math.h"
 #include "io.hpp"
-
-#define GPSMODULE   1
-#define CAN_USAGE   1
+#include "hashDefine.hpp"
 
 typedef struct {
     float_t   latitude;             // will contain latitude in deg

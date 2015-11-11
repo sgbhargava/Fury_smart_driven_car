@@ -46,19 +46,10 @@ float_t latTesting, longTesting;
 
 void testCode(void *p)
 {
-
-    static uint8_t num = 0;
     bool valid;
     while(1)
     {
-        num = getPresentChkPnt();
-        if(SW.getSwitch(1))
-        {
-            printf("checkpoint no: %d, total: %d\n", num, getNumOfChkPnts());
-            printf("ChkPnt Latitude: %f\t, ChkPnt Longitude: %f\n\n", getLatitude(num), getLongitude(num));
-
-        }
-        else if(SW.getSwitch(2))
+        if(SW.getSwitch(3))
         {
             valid = updateToNxtChkPnt();
             if (valid)
@@ -66,27 +57,14 @@ void testCode(void *p)
             else
                 printf("its the end\n");
         }
-        else if(SW.getSwitch(3))
+        else if(SW.getSwitch(4))
         {
             valid = updateToPrevChkPnt();
             if (valid)
                 printf("update to previous\n");
             else
                 printf("its the beginning\n");
-        }
-        else if(SW.getSwitch(4))
-        {
 
-            float chkPntDist, headingDeg;
-//            if(xQueueReceive(gpsData_q, &gpsData, 0))
-
-                printf("current latitude: %f, current longitude: %f\n", latTesting, longTesting);
-                chkPntDist = calcDistToNxtChkPnt(latTesting, longTesting, getLatitude(num), getLongitude(num));
-                headingDeg = headingdir(latTesting, longTesting, getLatitude(num), getLongitude(num));
-                printf("Checkpoint distance: %f,  Total distance: %f\n", chkPntDist, calcDistToFinalDest(chkPntDist));
-
-
-            //printf("Heading deg: %f,  desired deg: %f\n\n", headingDeg, compassbearingreading_highlowbytes());
         }
         vTaskDelay(500);
     }
@@ -148,6 +126,7 @@ int main(void)
     addChkPnts(37, 334571, 121, 882960, 3); // latitude: 3720.07426, longitude: 12152.9776
     addChkPnts(37, 334814, 121, 882382, 4); // latitude: 3720.08884, longitude: 12152.94292
     addChkPnts(37, 335109, 121, 881657, 5); // latitude: 3720.10654, longitude: 12152.89942
+    addChkPnts(37, 335109, 121, 881657, 1);
 
     xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
 #endif

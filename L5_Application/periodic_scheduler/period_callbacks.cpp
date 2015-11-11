@@ -100,7 +100,6 @@ void period_10Hz(void)
 
     }
 
-
     if(BEARINGMODE == mode)
     {
         //compassBearing_fullCircle();  //bearing mode
@@ -117,8 +116,6 @@ void period_10Hz(void)
         if(SW.getSwitch(2))
             mode = 2;//0
     }
-
-
 
 }
 

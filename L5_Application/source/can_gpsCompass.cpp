@@ -8,21 +8,64 @@
  */
 
 #include "can_gpsCompass.hpp"
+#include "hashDefine.hpp"
+#include "stdio.h"
 
-
-#define CONVERT_TOMIN       60              // convert deg to minute
-#define TEN_6               1000000         // 10^6
-#define TEN_2               100             // 10^2
-
-//static checkPointData_t *nextChkPnt = NULL;
+static checkPointData_t *nextChkPnt = NULL;
 static checkPointData_t *prevChkPnt = NULL;
 static checkPointData_t *firstChkPnt = NULL;
-static uint8_t numberOfChkPnts = 0;
 static checkPointData_t *giveCheckPoint = NULL;
+static uint8_t numberOfChkPnts = 0;
 
-void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
+bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
 {
     double_t calcLat, calcLong;
+
+    checkPointData_t *traverseChkPnt = NULL;
+
+    // Check for multiple definition, also add the nodes in ascending order.
+    traverseChkPnt = firstChkPnt;
+    while(NULL != traverseChkPnt)
+    {
+        if((traverseChkPnt->chkPntNo < num) && (NULL != traverseChkPnt->next))
+        {
+            traverseChkPnt = traverseChkPnt->next;
+            prevChkPnt = traverseChkPnt;
+        }
+        else if(traverseChkPnt->chkPntNo == num)
+        {
+            return false;
+        }
+        else if((traverseChkPnt->chkPntNo > num) && (NULL != traverseChkPnt->prev))
+        {
+            traverseChkPnt = traverseChkPnt->prev;
+            prevChkPnt = traverseChkPnt;
+        }
+        else
+        {
+            if((NULL == traverseChkPnt->next) && (traverseChkPnt->chkPntNo < num))
+            {
+                nextChkPnt = NULL;
+                prevChkPnt = traverseChkPnt;
+                break;
+            }
+            else if((NULL == traverseChkPnt->prev) && (traverseChkPnt->chkPntNo > num))
+            {
+                nextChkPnt = traverseChkPnt;
+                prevChkPnt = NULL;
+                break;
+            }
+            else
+            {
+                nextChkPnt = traverseChkPnt;
+                traverseChkPnt = traverseChkPnt->prev;
+                prevChkPnt = traverseChkPnt;
+                break;
+            }
+        }
+    }
+
+    // if there are no duplicate data, then create a new checkpoint
     checkPointData_t *newChkPnt = new checkPointData_t;
     if (NULL != newChkPnt)
     {
@@ -38,10 +81,10 @@ void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
         newChkPnt->chkPntLong = calcLong;
         newChkPnt->chkPntNo = num;
         newChkPnt->prev = prevChkPnt;
-        newChkPnt->next = NULL;
+        newChkPnt->next = nextChkPnt;
         ++numberOfChkPnts;
 
-            if(NULL == firstChkPnt)
+            if(NULL == newChkPnt->prev)
             {
                 firstChkPnt = newChkPnt;
                 giveCheckPoint = firstChkPnt;
@@ -54,9 +97,14 @@ void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
             else
             {
                 prevChkPnt->next = newChkPnt;
-                prevChkPnt = newChkPnt;
+            }
+
+            if(NULL != nextChkPnt)
+            {
+                nextChkPnt->prev = newChkPnt;
             }
     }
+    return true;
 }
 
 uint8_t getNumOfChkPnts()

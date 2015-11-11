@@ -32,9 +32,9 @@ void getdata()
     temp->long_float =data;*/
 
 
-    temp->lat_dec =    (uint32_t)  (data->data.qword>>8) & (0x000000000000ff);
+    temp->lat_dec =    (uint32_t)  (data->data.qword>>8)    & (0x000000000000ff);
     temp->lat_float =  (uint32_t)  (((data->data.qword>>28) & (0x00000000fffff00))>>8);
     temp->long_dec =   (uint32_t)  (((data->data.qword>>36) & (0x0000000ff0000000))>>28);
     temp->long_float = (uint32_t)  (((data->data.qword>>56) & (0x00fffff000000000))>>36);
-    temp->chkPoint =   (uint32_t)  (((data->data.qword) & (0xff00000000000000))>>56);
+    temp->chkPoint =   (uint32_t)  (((data->data.qword)     & (0xff00000000000000))>>56);
 }

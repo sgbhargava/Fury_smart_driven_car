@@ -15,18 +15,20 @@
 #include "uart2.hpp"
 #include "scheduler_task.hpp"
 #include "math.h"
-
-#define GPSMODULE   1
-#define CAN_USAGE   1
+#include "io.hpp"
+#include "hashDefine.hpp"
 
 typedef struct {
-    float_t   latitude;
-    float_t   longitude;
+    float_t   latitude;             // will contain latitude in deg
+    float_t   longitude;            // will conatin longitude in deg
 }gpsData_t;
 
 typedef struct {
     float_t     timeUTC;            // Time parameter given by GPS
     char        formatNMEA[6];      // The format in which the GPS data is read
+    char        valid[1];           // will be 'V' if it is not valid and 'A' if it is valid
+    char        latDir[1];          // will contain 'N'- North or 'S'- South
+    char        lonDir[1];          // will contain 'E'- East or 'W' - West
 }gpsExtendedData_t;
 
 /*
@@ -54,6 +56,7 @@ class gps_data : public scheduler_task{
 
         bool run(void *p)
         {
+            //LE.on(4);
             readRawGPSData();
             formatGPSData();
             queueGPSData();

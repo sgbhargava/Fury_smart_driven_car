@@ -31,7 +31,6 @@ uint8_t compassBearing_fullCircle()
 //    LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
-    //printf("Bearing:%d\n",data);
     return data;
 }
 
@@ -44,7 +43,6 @@ float_t compassBearing_inDeg()
     shiftreg1 = compass.readReg(0xC0, 3);
 
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
-    printf("compassangle:%f\n",(compassangle/10));
     return (compassangle/10);
 }
 

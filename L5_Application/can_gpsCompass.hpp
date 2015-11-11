@@ -2,7 +2,7 @@
  * can_gpsCompass.hpp
  *
  *  Created on: Oct 28, 2015
- *      Author: Abhi
+ *      Author: Abhishek Gurudutt, Tejeshwar
  */
 
 #ifndef L5_APPLICATION_CAN_GPSCOMPASS_HPP_
@@ -26,8 +26,9 @@ typedef struct checkPointData{
  * @lonDec      : Decimal part of longitude
  * @lonFloat    : Floating part of longitude
  * @num         : checkpoint number
+ * returns true if added, false if not
  */
-void addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num);
+bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num);
 
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();
@@ -41,9 +42,16 @@ double_t getLongitude(uint8_t longitudeNumber);
 /* returns the present latitude value */
 double_t getLatitude(uint8_t latitudeNumber);
 
-/* Updates to next checkpoint */
+/* Updates to next checkpoint
+ * returns true if it is intermediate checkpoint
+ * returns false if it is a final checkpoint
+ */
 bool updateToNxtChkPnt();
 
-/* Updates to previous checkpoint */
+/* Updates to previous checkpoint
+ * returns true if it is intermediate checkpoint
+ * returns false if it is the first checkpoint
+ */
 bool updateToPrevChkPnt();
+
 #endif /* L5_APPLICATION_CAN_GPSCOMPASS_HPP_ */

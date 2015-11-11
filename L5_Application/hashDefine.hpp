@@ -19,7 +19,7 @@
 #define  TO_DEG              (180 / 3.14159)
 #define  TO_RAD              (3.14159 / 180)
 #define  RADIUS              637100     // RADIUS OF EARTH IN METERS
-#define  TWO_METRES          2
+#define  TWO_METERS          2
 #define  MODE_THREE          3          // RANDOMN VALUE
 #define  MINUTES             60         // TO MINUTES
 #define  TEN_6               1000000    // 10^6

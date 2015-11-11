@@ -13,11 +13,8 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
-
-#define TO_DEG      (180 / 3.14159)
-#define RADIUS      6371000             // This is the radius of earth in meters.
-#define TO_RAD      (3.14159 / 180)     // value of PI by angle
-#define TWO_METERS  2
+#include "io.hpp"
+#include "hashDefine.hpp"
 
 float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t chkPntLat, double_t chkPntLong)
 {
@@ -99,11 +96,23 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
 bool checkPntReached(float_t distance)
 {
     static bool intermediateChkPnt = true;
+
     if (distance <= TWO_METERS)
         intermediateChkPnt = updateToNxtChkPnt();
 
     if (intermediateChkPnt)
-        return 0;
+        return false;
     else
-        return 1;
+        return true;
+}
+
+void destReached()
+{
+    char LEDdisplay[5] = {'F', 'U', 'R', 'Y', ' '};
+    static uint8_t selectChar = 0;
+
+    // if final checkpoint reached then display 'FURY'
+    LD.setLeftDigit(LEDdisplay[selectChar]);
+    LD.setRightDigit(LEDdisplay[selectChar + 1]);
+    selectChar = (selectChar + 1) % 4;
 }

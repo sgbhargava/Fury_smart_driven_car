@@ -67,4 +67,9 @@ bool checkPntReached(float_t distance);
  */
 bool updateDestPoints(bool isFinal);
 
+/*
+ * update message telling destination is reached
+ */
+void destReached();
+
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

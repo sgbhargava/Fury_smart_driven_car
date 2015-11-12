@@ -40,7 +40,7 @@
 #include "can_msg_process.hpp"
 
 /// This is the stack size used for each of the period tasks
-const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4*2);
+const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4);
 #ifdef CAN_MSG_CLASS
 CANMsg * canMsgHandler = CANMsg::getInstance();
 #endif
@@ -48,8 +48,17 @@ CANMsg * canMsgHandler = CANMsg::getInstance();
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-/*
-    */
+#if 0
+
+    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
+        printf("CAN initialization is done\n");
+    }
+    CAN_bypass_filter_accept_all_msgs();
+    CAN_reset_bus(can_t::can1);
+#endif
+    DirectionCtrl::getInstance()->init();
+    SpeedCtrl::getInstance()->init();
+    SpeedMonitor::getInstance()->init();
     return true; // Must return true upon success
 }
 
@@ -67,8 +76,8 @@ void period_1Hz(void)
     canMsgHandler->sendSpeed();
     //canMsgHandler->sendHeartBeat();
 #else
-    sendSpeed();
-    sendHeartBeat();
+    //sendSpeed();
+    //sendHeartBeat();
 #endif
 
 }

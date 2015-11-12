@@ -633,15 +633,15 @@ CMD_HANDLER_FUNC(speedHandler)
     else if(cmdParams.beginsWithIgnoreCase("customForward")) {
         char *value = NULL;
         if (2 == cmdParams.tokenize(" ", 2, NULL, &value)) {
-            printf("set %d\n", (float)atoi(value));
-            ctrl->setSpeedCustom(true, (float)atoi(value));
+            printf("set %d\n", (int)atoi(value));
+            ctrl->setSpeedCustom(true, (int)atoi(value));
         }
     }
     else if(cmdParams.beginsWithIgnoreCase("customBackward")) {
         char *value = NULL;
         if (2 == cmdParams.tokenize(" ", 2, NULL, &value)) {
-            printf("set %d\n", (float)atoi(value));
-            ctrl->setSpeedCustom(false, (float)atoi(value));
+            printf("set %d\n", (int)atoi(value));
+            ctrl->setSpeedCustom(false, (int)atoi(value));
         }
     }
     return true;
@@ -649,6 +649,7 @@ CMD_HANDLER_FUNC(speedHandler)
 
 CMD_HANDLER_FUNC(directionHandler)
 {
+
     DirectionCtrl* direction = DirectionCtrl::getInstance();
     printf("Set Direction to %s", cmdParams.c_str());
     if (cmdParams == "farRight")
@@ -671,6 +672,7 @@ CMD_HANDLER_FUNC(directionHandler)
     {
         direction->setDirection(DirectionCtrl::dirFarLeft);
     }
+
     return true;
 }
 CMD_HANDLER_FUNC(speedMonHandler)

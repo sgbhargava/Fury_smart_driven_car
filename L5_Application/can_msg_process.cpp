@@ -195,7 +195,7 @@ void sendHeartBeat(void)
     msg.msg_id = CAN_MSG_ID_HEARTBEAT;
     msg.frame_fields.is_29bit = 0;
     msg.frame_fields.data_len = 1;
-    msg.data.bytes[0] = 1; //cheartbeatCnt++;
+    msg.data.bytes[0] = cheartbeatCnt++;
     CAN_tx(can_t::can1, &msg, 0);
 }
 #endif

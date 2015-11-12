@@ -8,15 +8,17 @@ class dispLCDTask : public scheduler_task
 {
     public:
         dispLCDTask(uint8_t priority) :
-            scheduler_task("dispLCDTask", 512 * 8, priority),
+            scheduler_task("dispLCDTask", 2048, priority),
             my_uart_tx(Uart2::getInstance())
         {
             //my_uart_tx.init(9600);
             //my_uart_tx.init(115200);
-            my_uart_tx.init(38400);
         }
 
-        bool init(){return true;}
+        bool init(){
+            my_uart_tx.init(38400);
+            return true;
+        }
 
         bool run(void *p)
         {

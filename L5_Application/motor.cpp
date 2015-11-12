@@ -11,16 +11,19 @@ DirectionCtrl::DirectionCtrl(void) :
         directionPWM(PWM(PWM::pwm1, STANDARD_FREQ)),
         pin0_29(P0_29), pin0_30(P0_30)
 {
-    dirPWM = basePWM;
-    directionPWM.set(dirPWM);
-    pin0_29.setAsOutput();
-    pin0_30.setAsOutput();
 }
 DirectionCtrl * DirectionCtrl::getInstance()
 {
     if (m_pInstance == NULL)
         m_pInstance = new DirectionCtrl();
     return m_pInstance;
+}
+void DirectionCtrl::init()
+{
+    dirPWM = basePWM;
+    directionPWM.set(dirPWM);
+    pin0_29.setAsOutput();
+    pin0_30.setAsOutput();
 }
 void DirectionCtrl::setDirection(int dir)
 {
@@ -60,14 +63,9 @@ void DirectionCtrl::setDirection(int dir)
 
 SpeedCtrl* SpeedCtrl::m_pInstance = NULL;
 SpeedCtrl::SpeedCtrl():
-        throttlePWM(PWM(PWM::pwm2, STANDARD_FREQ)),
-        pin1_22(P1_22), pin1_23(P1_23)
+        throttlePWM(PWM(PWM::pwm2, STANDARD_FREQ))
+        //pin1_22(P1_22), pin1_23(P1_23)
 {
-    speedPWM = basePWM;
-    throttlePWM.set(basePWM);
-    //LD.setNumber(speedPWM);
-    pin1_22.setAsOutput();
-    pin1_23.setAsOutput();
 
 }
 
@@ -76,7 +74,17 @@ SpeedCtrl* SpeedCtrl::getInstance(){
         m_pInstance = new SpeedCtrl();
     return m_pInstance;
 }
+void SpeedCtrl::init()
+{
+    speedPWM = basePWM;
+    throttlePWM.set(basePWM);
+    //LD.setNumber(speedPWM);
+#ifdef IO1
+    pin1_22.setAsOutput();
+    pin1_23.setAsOutput();
+#endif
 
+}
 void SpeedCtrl::initESC()
 {
 
@@ -97,6 +105,7 @@ bool SpeedCtrl::checkPWM(float pwm)
     printf("Check speed %f\n", pwm);
     //if ((pwm > backLimitPWM) && (pwm < frontLimitPWM))
     //{
+#ifdef IO1
         if ( basePWM - pwm > 0.5)
         {
             pin1_22.setHigh();
@@ -106,11 +115,11 @@ bool SpeedCtrl::checkPWM(float pwm)
             pin1_22.setLow();
             pin1_23.setLow();
         }
+#endif
         return true;
     //}
     //return false;
 }
-
 void SpeedCtrl::setSpeedPWM(float pwm)
 {
     if (checkPWM(pwm)){
@@ -182,6 +191,7 @@ void SpeedCtrl::descrSpeedPWM()
         printf("This(PWM:%f) is out of limit\n", pwm);
     }
 }
+
 SpeedMonitor* SpeedMonitor::m_pInstance = NULL;
 void speed_pulse_start(void)
 {
@@ -189,6 +199,9 @@ void speed_pulse_start(void)
 }
 
 SpeedMonitor::SpeedMonitor()
+{
+}
+void SpeedMonitor::init()
 {
     //Singleton
     int port2_5 = 5;
@@ -210,7 +223,7 @@ void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
     const uint64_t FIVE_SECOND = 5* 1000;
     uint64_t cur_time = 0;//sys_get_uptime_ms();
-    if ((m_speed != 0.0 && m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
+    if (((int)m_speed != 0 && (int)m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
     {
         m_speed = 0;
         m_rpm = 0;
@@ -232,4 +245,3 @@ void SpeedMonitor::calSpeed(){
     //m_speed = m_speed_meter /1000 * KM_TO_MILES;
     m_last_time = cur_time;
 }
-

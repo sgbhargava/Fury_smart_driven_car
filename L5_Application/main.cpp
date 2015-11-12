@@ -85,13 +85,13 @@ class initMotorTask: public scheduler_task {
 class initMotorTask: public scheduler_task {
     public:
         initMotorTask(uint8_t priority):
-            scheduler_task("initMotorTask", 2048, priority) {
+            scheduler_task("initMotorTask", 4096, priority) {
         }
         bool init(void) {
+            SW.init();
             return true;
         }
         bool run (void* p){
-
             if (SW.getSwitchValues() & 0x1)
             {
                 SpeedCtrl* speed = SpeedCtrl::getInstance();
@@ -117,6 +117,7 @@ int main(void)
      */
 
     //Initialization
+#if 1
 #ifndef CAN_MSG_CLASS
     if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
         printf("CAN initialization is done\n");
@@ -124,7 +125,7 @@ int main(void)
     CAN_bypass_filter_accept_all_msgs();
     CAN_reset_bus(can_t::can1);
 #endif
-
+#endif
 
     //scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
     //scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));
@@ -201,7 +202,7 @@ int main(void)
         u3.init(WIFI_BAUD_RATE, WIFI_RXQ_SIZE, WIFI_TXQ_SIZE);
         scheduler_add_task(new wifiTask(Uart3::getInstance(), PRIORITY_LOW));
     #endif
-    scheduler_add_task(new initMotorTask  (PRIORITY_LOW));
+    scheduler_add_task(new initMotorTask  (PRIORITY_MEDIUM));
 
     scheduler_start(); ///< This shouldn't return
     return -1;

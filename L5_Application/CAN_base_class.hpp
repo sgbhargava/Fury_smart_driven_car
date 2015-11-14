@@ -16,6 +16,7 @@ public:
 	CAN_base_class();
 	bool get_data(uint16_t id, uint64_t *data);
 	uint16_t getword(uint64_t data, uint8_t n_word);
+	uint8_t getbyte(uint64_t data, uint8_t n_byte);
 	bool add_can_id(uint16_t id1,uint16_t id2);
 
 };

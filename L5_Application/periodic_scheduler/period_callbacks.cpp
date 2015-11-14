@@ -50,11 +50,7 @@ enum direction {
 	straight, far_right, right, left, far_left
 };
 
-typedef struct {
-	uint16_t SonicSensor1;
-	uint16_t SonicSensor2;
-	uint16_t SonicSensor3;
-} SonicSensor_t;
+
 
 can_msg_t motor_throttle;
 can_msg_t motor_steer;
@@ -66,7 +62,6 @@ int previousDirection = straight;
 int correctSpeed = forward;
 int previousSpeed = reverse;
 
-SonicSensor_t SonicData;
 
 uint16_t lidar = 0;
 /// This is the stack size used for each of the period tasks

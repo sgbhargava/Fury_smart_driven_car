@@ -33,6 +33,15 @@ uint16_t CAN_base_class::getword(uint64_t data, uint8_t n_word)
 	returned_data = temp2_16 | temp3_16;
 	return returned_data;
 }
+
+uint8_t CAN_base_class::getbyte(uint_fast64_t data, uint8_t n_byte)
+{
+		uint8_t returned_data = 0;
+
+		returned_data = ((data >> (n_byte *8)) & 0xFF);
+		return returned_data;
+
+}
 void bus_off_cb(uint32_t arg)
 {
 

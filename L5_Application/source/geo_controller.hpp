@@ -45,8 +45,5 @@ public:
 	bool get_checkpoint_req();
 	bool geo_controller_class_init();
 };
-
-
-
 #endif /* L5_APPLICATION_SOURCE_GEO_CONTROLLER_HPP_ */
 

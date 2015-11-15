@@ -60,7 +60,7 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
     }
 
     // adding the present distance to checkpoint with the rest of the checkpoint distance
-    finalDist = restOfChkPntDist + distToChkPnt;
+    finalDist = (float_t)restOfChkPntDist + distToChkPnt;
 
     return finalDist;
 }

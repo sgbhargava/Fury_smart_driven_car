@@ -41,14 +41,21 @@
 static QueueHandle_t gpsData_q = scheduler_task::getSharedObject("gps_queue");
 gpsData_t gpsData;
 */
-
 float_t latTesting, longTesting;
-
 void testCode(void *p)
 {
     bool valid;
+    static uint8_t num = 0;
     while(1)
     {
+        num = getPresentChkPnt();
+        if(SW.getSwitch(1))
+        {
+            float longitude, latitude;
+            printf("%f, %f\n", getLatitude(num), getLongitude(num));
+            float dist = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
+            printf("distance to ckpnt : %f, total: %f", dist, calcDistToFinalDest(dist));
+        }
         if(SW.getSwitch(3))
         {
             valid = updateToNxtChkPnt();
@@ -121,12 +128,11 @@ int main(void)
     /*
      * Testing purpose
      */
-    addChkPnts(37, 334352, 121, 883424, 1); // latitude: 3720.06112, longitude: 12153.00544
-    addChkPnts(37, 334424, 121, 883008, 2); // latitude: 3720.06544, longitude: 12152.98048
-    addChkPnts(37, 334571, 121, 882960, 3); // latitude: 3720.07426, longitude: 12152.9776
-    addChkPnts(37, 334814, 121, 882382, 4); // latitude: 3720.08884, longitude: 12152.94292
-    addChkPnts(37, 335109, 121, 881657, 5); // latitude: 3720.10654, longitude: 12152.89942
-    addChkPnts(37, 335109, 121, 881657, 1);
+    addChkPnts(37, 334429, 121, 883402, 1); // latitude: 37.33422, longitude: 121.8834
+    addChkPnts(37, 334453, 121, 883290, 2); // latitude: 3720.06544, longitude: 12152.98048
+    addChkPnts(37, 334642, 121, 882854, 3); // latitude: 3720.07426, longitude: 12152.9776
+    addChkPnts(37, 334804, 121, 882389, 4); // latitude: 3720.08884, longitude: 12152.94292
+    addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942
 
     xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
 #endif

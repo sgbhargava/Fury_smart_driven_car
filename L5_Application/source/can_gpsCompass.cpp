@@ -69,12 +69,8 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
     checkPointData_t *newChkPnt = new checkPointData_t;
     if (NULL != newChkPnt)
     {
-        // Calculating the floating part and concatenating in the form lat: DDMM.MMMM, long: DDDMM.MMMM
-        calcLat = (latFloat / (float_t)TEN_6);
-        calcLat = (latDec) + calcLat;
-
-        calcLong = (lonFloat / (float_t)TEN_6);
-        calcLong = ((float_t)lonDec) + calcLong;
+        calcLat = convertLatitudeToDegree(latDec, latFloat);
+        calcLong = convertLongitudeToDegree(lonDec, lonFloat);
 
         // Storing the values in a structure.
         newChkPnt->chkPntLat = calcLat;
@@ -105,6 +101,26 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
             }
     }
     return true;
+}
+
+double_t convertLatitudeToDegree(uint8_t latDec, uint32_t latFloat)
+{
+    double_t latDegree;
+
+    latDegree = (latFloat / (float_t)TEN_6);
+    latDegree = (latDec) + latDegree;
+
+    return latDegree;
+}
+
+double_t convertLongitudeToDegree(uint8_t lonDec, uint32_t lonFloat)
+{
+    double_t longDegree;
+
+    longDegree = (lonFloat / (float_t)TEN_6);
+    longDegree = ((float_t)lonDec) + longDegree;
+
+    return longDegree;
 }
 
 uint8_t getNumOfChkPnts()

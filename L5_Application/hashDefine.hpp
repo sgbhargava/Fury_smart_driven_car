@@ -18,7 +18,7 @@
 #define  HEADINGMODE         2
 #define  TO_DEG              (180 / 3.14159)
 #define  TO_RAD              (3.14159 / 180)
-#define  RADIUS              637100     // RADIUS OF EARTH IN METERS
+#define  RADIUS              6371000     // RADIUS OF EARTH IN METERS
 #define  TWO_METERS          2
 #define  MODE_THREE          3          // RANDOMN VALUE
 #define  MINUTES             60         // TO MINUTES

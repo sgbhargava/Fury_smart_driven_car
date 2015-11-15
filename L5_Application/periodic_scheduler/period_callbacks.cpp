@@ -143,11 +143,8 @@ void period_10Hz(void)
         compassMode = 2;//0
         LD.setNumber(00);
     }
-
-
     if(SW.getSwitch(1))
         compassMode = 1;
-
 
 }
 

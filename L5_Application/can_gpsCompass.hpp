@@ -30,6 +30,22 @@ typedef struct checkPointData{
  */
 bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num);
 
+/*
+ * Converts the received latitude to the required format which is in degrees.
+ * @latDec      : Decimal part of latitude
+ * @latFloat    : Floating part of latitude
+ * returns the converted latitude in Degrees
+ */
+double_t convertLatitudeToDegree(uint8_t latDec, uint32_t latFloat);
+
+/*
+ * Converts the received longitude to the required format which is in degrees.
+ * @lonDec      : Decimal part of longitude
+ * @lonFloat    : Floating part of longitude
+ * returns the converted longitude in Degrees
+ */
+double_t convertLongitudeToDegree(uint8_t lonDec, uint32_t lonFloat);
+
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();
 

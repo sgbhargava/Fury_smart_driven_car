@@ -9,17 +9,11 @@
 #define L5_APPLICATION_IO_BRIDGE_HPP_
 
 #include "CAN_base_class.hpp"
-
-typedef struct long_lat{
-	        uint32_t lattitude_dec :8;
-	        uint32_t lattitude_float :20;
-	        uint32_t longitude_dec :8;
-	        uint32_t longitude_float :20;
-	        uint32_t checkpoint:8;
-}long_lat __attribute__((packed));
+#include "geo_controller.hpp"
 
 class IO_base_class:public CAN_base_class
 {
+public:
 		uint16_t id_heart_beat = 0x180;
 		uint16_t id_drive_mode = 0x181;
 		uint16_t id_location = 0x182;

@@ -27,13 +27,13 @@ bool motor_class::get_motor_status()
 
 bool motor_class::send_motor_throttle()
 {
-	if(!CAN_rx(can1, &motor_throttle_can_mess,0))
+	if(!CAN_tx(can1, &motor_throttle_can_mess,0))
 		return false;
 	return true;
 }
 bool motor_class::send_motor_steering()
 {
-	if(!CAN_rx(can1, &motor_steering_can_mess,0))
+	if(!CAN_tx(can1, &motor_steering_can_mess,0))
 		return false;
 	return true;
 }

@@ -22,6 +22,7 @@ typedef struct{
 
 class motor_class:public CAN_base_class
 {
+public:
 	uint16_t id_heart_beat = 0x100;
 	uint16_t id_motor_status = 0x102;
 	uint16_t id_motor_throttle = 0x21;

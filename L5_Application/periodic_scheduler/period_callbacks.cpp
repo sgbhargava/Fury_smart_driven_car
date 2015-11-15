@@ -38,14 +38,18 @@
 #include "can.h"
 #include "printf_lib.h"
 #include "sensors.hpp"
-#define rx
+#include "motor.hpp"
+#include "IO_bridge.hpp"
+#include "geo_controller.hpp"
 #define lidar_threshold 100
 #define sonic_threshold 50
 
 #define forward 0xF0
 #define reverse 0x00
 sensor_class sensor;
-
+motor_class motor;
+geo_controller_class geo_controller;
+IO_base_class IO_controller;
 enum direction {
 	straight, far_right, right, left, far_left
 };
@@ -129,19 +133,10 @@ void Obstruction_avoidance_algorithm(void)
 bool period_init(void)
 {
 	CAN_base_class my_can;
-	/*motor_throttle.msg_id = 0x022;
-	motor_throttle.frame_fields.is_29bit = 0;
-	motor_throttle.frame_fields.data_len = 1;       // Send 8 bytes
-
-	motor_steer.msg_id = 0x021;
-	motor_steer.frame_fields.is_29bit = 0;
-	motor_steer.frame_fields.data_len = 1;       // Send 8 bytes
-
-	heart_beat.msg_id = 0x221;
-	heart_beat.frame_fields.is_29bit = 0;
-	heart_beat.frame_fields.data_len = 1;       // Send 8 bytes*/
-
 	sensor.sensor_class_init();
+	motor.motor_class_init();
+	IO_controller.IO_base_class_init();
+	geo_controller.geo_controller_class_init();
 
     return true; // Must return true upon success
 }

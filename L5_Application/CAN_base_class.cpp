@@ -81,14 +81,6 @@ CAN_base_class::CAN_base_class()
 bool CAN_base_class::add_can_id(uint16_t id1, uint16_t id2){
 
 	CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, id1), CAN_gen_sid(can1, id2));
-		    //(2 == CAN_fullcan_get_num_entries());
-		    //(LPC_CANAF->SFF_sa     == 4);
-		    //(LPC_CANAF->SFF_GRP_sa == 4);
-		    //(LPC_CANAF->EFF_sa     == 4);
-		    //(LPC_CANAF->EFF_GRP_sa == 4);
-		    //(LPC_CANAF->ENDofTable == 4);
 
-		    //(4 == CAN_fullcan_get_num_entries());
-		    //(LPC_CANAF->SFF_sa     == 8);
 
 }

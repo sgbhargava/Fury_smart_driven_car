@@ -30,31 +30,46 @@
 #include "can.h"
 #include "io.hpp"
 #include "gps.hpp"
-
+#include "inttypes.h"
+#include "receive_Canmsg.hpp"
 
 #if TESTCODE
 #include "compass.hpp"
 #include "can_gpsCompass.hpp"
 #include "CompassGPS_calculation.hpp"
 
+
+
 /*
 static QueueHandle_t gpsData_q = scheduler_task::getSharedObject("gps_queue");
 gpsData_t gpsData;
 */
 float_t latTesting, longTesting;
+uint32_t g[2];
+
 void testCode(void *p)
 {
     bool valid;
     static uint8_t num = 0;
     while(1)
     {
-        num = getPresentChkPnt();
+
         if(SW.getSwitch(1))
         {
+            //g[0] = 0x02f423f7;
+            //g[1] = 0x9f423f25;
+
             float longitude, latitude;
             printf("%f, %f\n", getLatitude(num), getLongitude(num));
             float dist = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
             printf("distance to ckpnt : %f, total: %f", dist, calcDistToFinalDest(dist));
+
+            double_t chklat = 37.999999;
+            double_t chklon = 121.999999;
+            uint8_t chk = 2;
+            sendGPS_data(&chk,&chklat,&chklon);
+           //printf("%" PRIu64 "\n",g);
+          // getdata();
         }
         if(SW.getSwitch(3))
         {
@@ -117,6 +132,7 @@ int main(void)
         /* Used to calculate the present location. connect the GPS module to UART2 */
     #if GPSMODULE
         scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
+//        scheduler_add_task(new getGpsCompass_data(PRIORITY_LOW));
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */

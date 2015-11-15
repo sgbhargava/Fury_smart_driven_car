@@ -39,14 +39,15 @@
 #include "hashDefine.hpp"
 #include "tlm/c_tlm_comp.h"
 #include "tlm/c_tlm_var.h"
+#include "receive_Canmsg.hpp"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-gpsData_t gpsCurrentData;
-float_t distToDest, distToChkPnt, currentHeading;
-double_t chkPntLat, chkPntLon, desiredHeading;
-uint8_t presentChkPnt, compassMode = 0;
+gpsData_t  gpsCurrentData;
+float_t    distToDest, distToChkPnt, currentHeading;
+double_t   chkPntLat, chkPntLon, desiredHeading;
+uint8_t    presentChkPnt, compassMode = 0;
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -100,17 +101,24 @@ void period_10Hz(void)
         presentLat = gpsCurrentData.latitude;
         presentLon = gpsCurrentData.longitude;
 
+        //Sending GPS data to master.
+        sendGPS_data(&presentChkPnt,&presentLat,&presentLon);
+
         // latitude and longitude of checkpoint
         chkPntLat = getLatitude(presentChkPnt);
         chkPntLon = getLongitude(presentChkPnt);
 
         // heading degree of car
         desiredHeading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
-        //compass_actualHeadingDir(desiredHeading);
+        if(BEARINGMODE == compassMode)
+            currentHeading = compassBearing_inDeg();
 
         // Distance of checkpoint and final distance
         distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
         distToDest = calcDistToFinalDest(distToChkPnt);
+
+        //Sending compass data to master.
+        sendCompass_data(currentHeading, desiredHeading, presentChkPnt, distToChkPnt, distToDest);
 
         // check if the car has reached the checkpoint
         finalChkPnt_b = checkPntReached(distToChkPnt);
@@ -124,12 +132,7 @@ void period_10Hz(void)
 
     }
 
-    if(BEARINGMODE == compassMode)
-    {
-        //compassBearing_fullCircle();  //bearing compassMode
-        currentHeading = compassBearing_inDeg();
-    }
-    else if(CALIBRATIONMODE == compassMode)
+    if(CALIBRATIONMODE == compassMode)
         compassMode = compass_calibrationMode(compassMode); //calibration mode
 
     else if(HEADINGMODE == compassMode)

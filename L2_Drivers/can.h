@@ -157,7 +157,7 @@ bool CAN_rx(can_t can, can_msg_t *msg, uint32_t timeout_ms);
  * @param can  The can bus type.  @see can_t
  * @param msg  The CAN message
  * @param timeout_ms  If FreeRTOS is running, the task will block for timeout_ms
- *                    if HW buffers and the transmit queue is full.
+ *                    If HW buffers and the transmit queue is full.
  *                    If FreeRTOS is not running the timeout is simply, ignored, and
  *                    false is returned if all three HW buffers are full.
  *

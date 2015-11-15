@@ -45,7 +45,7 @@ float_t compassBearing_inDeg()
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
 
     //14 deg is added to compensate the maagnetic declination.
-    return fmodf(((compassangle/10) +14 ), 360);
+    return fmodf(((compassangle/10) + 14 ), 360);
 }
 
 void compass_pitchAngle()

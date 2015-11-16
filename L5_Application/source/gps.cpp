@@ -30,7 +30,6 @@ bool gps_data::initializeGPSBuffers()
 void gps_data::initializeGPSComm()
 {
     gpsComm.init(gpsBaud,gpsRxQSz,gpsTxQSz);
-    //LE.on(1);
 }
 
 void gps_data::readRawGPSData()

@@ -9,4 +9,31 @@ The general idea is to interact with the project through terminal commands.
 See "ChangeLog" for the changes made to the sample project source code.
 -----------------------------------------------------------------------------
 
-changed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+LED decode:
+
+LED 3 (Toggle)          - Toggles for every unsucessful queue send of GPS data.
+LED 3 (On)              - GPS data is not valid
+LED 4 (Toggle)          - Toggles for every unsuccessful read of raw GPS data.
+LED 1 and LED 2 (on)    - GPS Data is not on queue
+LED 1 and LED 2 (off)   - GPS Data is on queue, and is being computed in 10Hz task
+
+UART usage:
+UART 2 is used for GPS receive.
+  

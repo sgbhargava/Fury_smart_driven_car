@@ -90,11 +90,14 @@ void period_10Hz(void)
 
     if(NULL == gpsCurrData_q)
     {
-        LE.on(3);
-        LE.on(4);
+        LE.on(1);
+        LE.on(2);
     }
     else if(xQueueReceive(gpsCurrData_q, &gpsCurrentData, 0))
     {
+        LE.off(1);
+        LE.off(2);
+
         presentChkPnt = getPresentChkPnt();
 
         // present car latitude and longitude

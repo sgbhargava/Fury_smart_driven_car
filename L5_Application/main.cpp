@@ -85,7 +85,7 @@ class initMotorTask: public scheduler_task {
 class initMotorTask: public scheduler_task {
     public:
         initMotorTask(uint8_t priority):
-            scheduler_task("initMotorTask", 4096, priority) {
+            scheduler_task("initMotorTask", 2048, priority) {
         }
         bool init(void) {
             SW.init();
@@ -116,16 +116,6 @@ int main(void)
      * control codes can be learned by typing the "learn" terminal command.
      */
 
-    //Initialization
-#if 1
-#ifndef CAN_MSG_CLASS
-    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
-        printf("CAN initialization is done\n");
-    }
-    CAN_bypass_filter_accept_all_msgs();
-    CAN_reset_bus(can_t::can1);
-#endif
-#endif
 
     //scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
     //scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));

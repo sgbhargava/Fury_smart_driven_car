@@ -11,6 +11,10 @@ DirectionCtrl::DirectionCtrl(void) :
         directionPWM(PWM(PWM::pwm1, STANDARD_FREQ)),
         pin0_29(P0_29), pin0_30(P0_30)
 {
+    dirPWM = basePWM;
+    directionPWM.set(dirPWM);
+    pin0_29.setAsOutput();
+    pin0_30.setAsOutput();
 }
 DirectionCtrl * DirectionCtrl::getInstance()
 {
@@ -18,13 +22,7 @@ DirectionCtrl * DirectionCtrl::getInstance()
         m_pInstance = new DirectionCtrl();
     return m_pInstance;
 }
-void DirectionCtrl::init()
-{
-    dirPWM = basePWM;
-    directionPWM.set(dirPWM);
-    pin0_29.setAsOutput();
-    pin0_30.setAsOutput();
-}
+
 void DirectionCtrl::setDirection(int dir)
 {
     LD.setNumber(dir);
@@ -63,10 +61,14 @@ void DirectionCtrl::setDirection(int dir)
 
 SpeedCtrl* SpeedCtrl::m_pInstance = NULL;
 SpeedCtrl::SpeedCtrl():
-        throttlePWM(PWM(PWM::pwm2, STANDARD_FREQ))
-        //pin1_22(P1_22), pin1_23(P1_23)
+        throttlePWM(PWM(PWM::pwm2, STANDARD_FREQ)),
+        pin1_22(P1_22), pin1_23(P1_23)
 {
-
+    speedPWM = basePWM;
+    throttlePWM.set(basePWM);
+    //LD.setNumber(speedPWM);
+    pin1_22.setAsOutput();
+    pin1_23.setAsOutput();
 }
 
 SpeedCtrl* SpeedCtrl::getInstance(){
@@ -74,17 +76,7 @@ SpeedCtrl* SpeedCtrl::getInstance(){
         m_pInstance = new SpeedCtrl();
     return m_pInstance;
 }
-void SpeedCtrl::init()
-{
-    speedPWM = basePWM;
-    throttlePWM.set(basePWM);
-    //LD.setNumber(speedPWM);
-#ifdef IO1
-    pin1_22.setAsOutput();
-    pin1_23.setAsOutput();
-#endif
 
-}
 void SpeedCtrl::initESC()
 {
 
@@ -105,7 +97,6 @@ bool SpeedCtrl::checkPWM(float pwm)
     printf("Check speed %f\n", pwm);
     //if ((pwm > backLimitPWM) && (pwm < frontLimitPWM))
     //{
-#ifdef IO1
         if ( basePWM - pwm > 0.5)
         {
             pin1_22.setHigh();
@@ -115,7 +106,6 @@ bool SpeedCtrl::checkPWM(float pwm)
             pin1_22.setLow();
             pin1_23.setLow();
         }
-#endif
         return true;
     //}
     //return false;
@@ -200,14 +190,10 @@ void speed_pulse_start(void)
 
 SpeedMonitor::SpeedMonitor()
 {
-}
-void SpeedMonitor::init()
-{
     //Singleton
     int port2_5 = 5;
     eint3_enable_port2(port2_5, eint_rising_edge, speed_pulse_start);
 }
-
 SpeedMonitor* SpeedMonitor::getInstance(){
     if (m_pInstance == NULL)
         m_pInstance = new SpeedMonitor();

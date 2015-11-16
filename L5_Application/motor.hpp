@@ -60,8 +60,8 @@ class SpeedCtrl
         SpeedCtrl();
         static SpeedCtrl * m_pInstance;
         PWM throttlePWM;
-        //GPIO pin1_22;
-        //GPIO pin1_23;
+        GPIO pin1_22;
+        GPIO pin1_23;
         float speedPWM = 0;
         const float PWMStep = 0.1;
         const float basePWM = BASE_DUTY_CYCLE;
@@ -80,7 +80,6 @@ class SpeedMonitor
 {
     public:
         static SpeedMonitor * getInstance();
-        void init();
         void setRpm(int rpmVal);
         void calSpeed();
         int getRpm();

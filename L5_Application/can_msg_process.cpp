@@ -126,52 +126,95 @@ void CANMsg::sendTxCanMsg(void)
 
 #else
 static int cheartbeatCnt = 0;
+void can_msg_process_init(void)
+{
+    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
+        printf("CAN initialization is done\n");
+    }
+    CAN_reset_bus(can_t::can1);
+
+    // Add CAN ID
+    CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_RESET), CAN_gen_sid(can1, CAN_MSG_ID_STEER));
+    CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_THROTTLE), CAN_gen_sid(can1, CAN_MSG_ID_SENSOR));
+    //CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_HEARTBEAT), CAN_gen_sid(can1, CAN_MSG_ID_GPS_COMPASS));
+    //CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_GPS), CAN_gen_sid(can1, 0xffff));
+
+}
 void recvAndAnalysisCanMsg(void)
 {
-    can_msg_t mMsgRecv;
+    can_fullcan_msg_t fc_temp;
+    can_fullcan_msg_t *reset_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_RESET));
 
-    while (CAN_rx(can1, &mMsgRecv, 0))
-    {
-        if (mMsgRecv.msg_id == CAN_MSG_ID_STEER)
-        {
-            dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&mMsgRecv.data.bytes[0];
-            DirectionCtrl::getInstance()->setDirection(pDirCanMsg->turn);
-            printf("Dir REV MSG %x %x\n", mMsgRecv.msg_id , mMsgRecv.data.bytes[0]);
-        }
-        else if (mMsgRecv.msg_id == CAN_MSG_ID_THROTTLE)
-        {
-            SpeedCtrl * m_pSpeed = SpeedCtrl::getInstance();
-            throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&mMsgRecv.data.bytes[0];
-            bool isForward = false;
-            if (pThrottleCanMsg->forward)
-            {
-                printf("Go Forward\n");
-                isForward = true;
-                if (pThrottleCanMsg->customForward)
-                    m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customForward);
-            }
-            else if (pThrottleCanMsg->incrForward)
-                m_pSpeed->incrSpeedPWM();
-            else if (pThrottleCanMsg->customForward & 0x3)
-                m_pSpeed->descrSpeedPWM();
-            else if (pThrottleCanMsg->backward)
-            {
-                printf("Go Backward\n");
-                if (pThrottleCanMsg->customBackward)
-                    m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customBackward);
-            }
-            else if (pThrottleCanMsg->incrBackward)
-                m_pSpeed->descrSpeedPWM();
-            else if (pThrottleCanMsg->customBackward & 0x3)
-                m_pSpeed->incrSpeedPWM();
-            else
-                m_pSpeed->setStop();
-
-            printf("Speed REV MSG %x %x\n", mMsgRecv.msg_id , mMsgRecv.data.bytes[0]);
-        }
+    if (CAN_fullcan_read_msg_copy(reset_fc_ptr, &fc_temp)){
+        sys_reboot();
     }
-}
 
+    can_fullcan_msg_t *steer_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_STEER));
+    if (CAN_fullcan_read_msg_copy(steer_fc_ptr, &fc_temp)){
+
+        dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&fc_temp.data.bytes[0];
+        DirectionCtrl::getInstance()->setDirection(pDirCanMsg->turn);
+        printf("Dir REV MSG %x %x\n", (unsigned int)fc_temp.msg_id , (unsigned int)fc_temp.data.bytes[0]);
+    }
+
+    can_fullcan_msg_t *throttle_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_THROTTLE));
+    if (CAN_fullcan_read_msg_copy(throttle_fc_ptr, &fc_temp)){
+        SpeedCtrl * m_pSpeed = SpeedCtrl::getInstance();
+        throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&fc_temp.data.bytes[0];
+        bool isForward = false;
+        if (pThrottleCanMsg->forward)
+        {
+            printf("Go Forward\n");
+            isForward = true;
+            if (pThrottleCanMsg->customForward)
+                m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customForward);
+        }
+        else if (pThrottleCanMsg->incrForward)
+            m_pSpeed->incrSpeedPWM();
+        else if (pThrottleCanMsg->customForward & 0x3)
+            m_pSpeed->descrSpeedPWM();
+        else if (pThrottleCanMsg->backward)
+        {
+            printf("Go Backward\n");
+            if (pThrottleCanMsg->customBackward)
+                m_pSpeed->setSpeedCustom(isForward, pThrottleCanMsg->customBackward);
+        }
+        else if (pThrottleCanMsg->incrBackward)
+            m_pSpeed->descrSpeedPWM();
+        else if (pThrottleCanMsg->customBackward & 0x3)
+            m_pSpeed->incrSpeedPWM();
+        else
+            m_pSpeed->setStop();
+
+        printf("Speed REV MSG %x %x\n", (unsigned int)fc_temp.msg_id , (unsigned int)fc_temp.data.bytes[0]);
+    }
+
+}
+//#define PRINT_ALL_CAN_MSG
+void readCANMsgs(void)
+{
+    can_fullcan_msg_t fc_temp;
+    can_fullcan_msg_t *sensor_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_SENSOR));
+
+    if (CAN_fullcan_read_msg_copy(sensor_fc_ptr, &fc_temp)){
+
+#ifdef PRINT_ALL_CAN_MSG
+        const int centerSensor = 1;
+        const int leftSensor = 3;
+        const int rightSensor = 5;
+        const int backSensor = 7;
+        if (fc_temp.data_len == 8)
+        {
+            printf("Sensor:: Center %x\n", fc_temp.data.bytes[centerSensor]);
+            printf("Sensor:: Left %x\n", fc_temp.data.bytes[leftSensor]);
+            printf("Sensor:: Right %x\n", fc_temp.data.bytes[rightSensor]);
+            printf("Sensor:: Back %x\n", fc_temp.data.bytes[backSensor]);
+        }
+#endif
+    }
+
+
+}
 void sendSpeed(void)
 {
     float rpm= 0 , speed= 0;

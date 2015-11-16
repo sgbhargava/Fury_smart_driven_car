@@ -48,17 +48,7 @@ CANMsg * canMsgHandler = CANMsg::getInstance();
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-#if 0
-
-    if (CAN_init(can_t::can1, 100, 10, 10, NULL, NULL)){
-        printf("CAN initialization is done\n");
-    }
-    CAN_bypass_filter_accept_all_msgs();
-    CAN_reset_bus(can_t::can1);
-#endif
-    DirectionCtrl::getInstance()->init();
-    SpeedCtrl::getInstance()->init();
-    SpeedMonitor::getInstance()->init();
+    can_msg_process_init();
     return true; // Must return true upon success
 }
 
@@ -77,7 +67,8 @@ void period_1Hz(void)
     //canMsgHandler->sendHeartBeat();
 #else
     //sendSpeed();
-    //sendHeartBeat();
+    sendHeartBeat();
+    readCANMsgs();
 #endif
 
 }

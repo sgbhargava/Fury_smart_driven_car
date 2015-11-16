@@ -24,7 +24,6 @@
 
 /**Few functions here are just to make sure the I2C is working is fine**/
 I2C2 &compass = I2C2::getInstance();
-actual_headingdir *structptr = new actual_headingdir;
 
 uint8_t compassBearing_fullCircle()
 {
@@ -74,7 +73,7 @@ void temperature()
 uint8_t compass_calibrationMode(uint8_t compassMode)
 {
     /**Here register address 0 indicates its a command register**/
-     LE.on(1);LE.off(2);
+    // LE.on(1);LE.off(2);
      compass.writeReg(0xC0,0,0xF0);
      delay_ms(20);
      compass.writeReg(0xC0,0,0xF5);
@@ -82,16 +81,6 @@ uint8_t compass_calibrationMode(uint8_t compassMode)
      compass.writeReg(0xC0,0,0xF6);
      delay_ms(20);
 
-/*
-    LE.on(1);LE.off(2);
-    if (SW.getSwitch(2))
-    {
-        To come out of calibration mode
-        headingmode_compass();
-        compassMode = 2;
-        //LE.off(1);
-    }
-*/
     return MODE_THREE;
 }
 
@@ -99,15 +88,7 @@ uint8_t compass_headingMode()
 {
     compass.writeReg(0xC0,0,0xF8);
     uint8_t headingMode = 0;
-//    LE.on(2);
     return headingMode;
 }
 
-#if 1
-void compass_actualHeadingDir(double_t headingAngle)
-{
-    structptr->current_angle = compassBearing_inDeg();
-    structptr->desired_angle = headingAngle;
-}
-#endif
 

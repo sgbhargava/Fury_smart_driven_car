@@ -78,7 +78,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
-
+    heartbeat();
 }
 
 void period_10Hz(void)
@@ -147,11 +147,10 @@ void period_10Hz(void)
     if(SW.getSwitch(2))
     {
         compassMode = 2;//0
-        LD.setNumber(00);
+        LD.setNumber(10);
     }
     if(SW.getSwitch(1))
         compassMode = 1;
-
 }
 
 

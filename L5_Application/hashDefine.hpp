@@ -12,6 +12,7 @@
  * This file contains all the #define values
  * */
 
+
 #define  TESTCODE            1
 #define  BEARINGMODE         0
 #define  CALIBRATIONMODE     1
@@ -26,8 +27,11 @@
 #define  TEN_2               100
 #define  GPSMODULE           1
 #define  CAN_USAGE           1
-
-
+#define  HEARTBEAT_ID        0x160
+#define  COMPASS_DIST_ID     0x162
+#define  GPS_DATA_ID         0x164
+#define  MASTER_GPSDATA_ID   0x321
+#define  MASTER_RESET_ID     0x320
 
 
 #endif /* L5_APPLICATION_HASHDEFINE_HPP_ */

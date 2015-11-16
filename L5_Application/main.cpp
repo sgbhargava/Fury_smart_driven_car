@@ -120,6 +120,7 @@ int main(void)
      * such that it can save remote control codes to non-volatile memory.  IR remote
      * control codes can be learned by typing the "learn" terminal command.
      */
+
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
@@ -129,10 +130,9 @@ int main(void)
     #if CAN_USAGE
         CAN_init(can1,100,2,2,NULL,NULL);
     #endif
-        /* Used to calculate the present location. connect the GPS module to UART2 */
+    /* Used to calculate the present location. connect the GPS module to UART2 */
     #if GPSMODULE
         scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
-//        scheduler_add_task(new getGpsCompass_data(PRIORITY_LOW));
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */

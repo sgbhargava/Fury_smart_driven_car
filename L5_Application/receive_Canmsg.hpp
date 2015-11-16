@@ -2,7 +2,7 @@
  * receive_Canmsg.hpp
  *
  *  Created on: Nov 10, 2015
- *      Author: Tejeshwar
+ *      Author: Tejeshwar,Abhishek
  */
 
 #ifndef RECEIVE_CANMSG_HPP_
@@ -40,18 +40,13 @@ void sendGPS_data(uint8_t *,double_t*, double_t*);
 void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentChkPnt,
         float_t nxtChkPntDist, float_t finalDestDist);
 
-/*To receive data from communication bridge*/
-void getdata();
+/*Receives data from CANBUS*/
+void can_receive();
 
-/*To transmit data to master*/
-void gps_transmit(uint32_t,uint16_t *);
+/*Transmits data to master*/
+void can_transmit(uint32_t,uint16_t *);
 
-/*To transmit compass values to master*/
-void compass_transmit();
-
-/*To receive heartbeat message*/
+/*Transmit heartbeat message to master*/
 void heartbeat();
-
-
 
 #endif /* RECEIVE_CANMSG_HPP_ */

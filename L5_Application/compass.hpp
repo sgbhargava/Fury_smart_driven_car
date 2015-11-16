@@ -17,6 +17,7 @@
 #include "utilities.h"
 #include "math.h"
 
+
 /* Calculates heading direction for a full circle!!
  * Returns values between 0 to 255
 */
@@ -38,7 +39,7 @@ void compass_rollAngle();
 void temperature();
 
 /* Compass enters into calibration when this function is called.
- * We can calibrate the magnetometer, accelerometer and gyro*/
+ * We calibrate the magnetometer, accelerometer and gyro*/
 uint8_t compass_calibrationMode(uint8_t mode);
 
 /* Compass enters into heading mode when this function is called.
@@ -46,16 +47,5 @@ uint8_t compass_calibrationMode(uint8_t mode);
  * calibration mode.
  * */
 uint8_t compass_headingMode();
-
-
-typedef struct {
-        float_t current_angle;
-        double_t desired_angle;
-        //uint8_t destination_reached;
-        //uint8_t is_valid;
-}actual_headingdir;
-
-/*Sends current angle and desired angle to master to make turn or not*/
-void compass_actualHeadingDir(double_t headingAngle);
 
 #endif /* L5_APPLICATION_COMPASS_HPP_ */

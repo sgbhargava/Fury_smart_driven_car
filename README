@@ -8,32 +8,30 @@ The general idea is to interact with the project through terminal commands.
 -----------------------------------------------------------------------------
 See "ChangeLog" for the changes made to the sample project source code.
 -----------------------------------------------------------------------------
+1. LED Display
+   10: Indicates compass is in heading mode.
+   13: Indicates compass is in calibration mode.
+   17: Represents irrevalant CAN message.
+   
+2. Switch
+   Switch 1: If switch 1 is pressed compass enters calibration mode.
+   Switch 2: If switch 2 is pressed compass enters heading mode.
+   
+3. CAN1 pins
+   P0.0: RD1 
+   P0.1: TD1
+   
+4. I2C pins
+   P0.10: SDA2
+   P0.11: SCL2
 
+5. LED decode:
 
+   LED 3 (Toggle)          - Toggles for every unsucessful queue send of GPS data.
+   LED 3 (On)              - GPS data is not valid
+   LED 4 (Toggle)          - Toggles for every unsuccessful read of raw GPS data.
+   LED 1 and LED 2 (on)    - GPS Data is not on queue
+   LED 1 and LED 2 (off)   - GPS Data is on queue, and is being computed in 10Hz task
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-LED decode:
-
-LED 3 (Toggle)          - Toggles for every unsucessful queue send of GPS data.
-LED 3 (On)              - GPS data is not valid
-LED 4 (Toggle)          - Toggles for every unsuccessful read of raw GPS data.
-LED 1 and LED 2 (on)    - GPS Data is not on queue
-LED 1 and LED 2 (off)   - GPS Data is on queue, and is being computed in 10Hz task
-
-UART usage:
-UART 2 is used for GPS receive.
-  
+6. UART usage:
+   UART 2 is used for GPS receive.

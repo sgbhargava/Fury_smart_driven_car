@@ -43,7 +43,7 @@
 #include "tlm/c_tlm_var.h"
 
 /// This is the stack size used for each of the period tasks
-const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4);
+const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4*2);
 #ifdef CAN_MSG_CLASS
 CANMsg * canMsgHandler = CANMsg::getInstance();
 #endif

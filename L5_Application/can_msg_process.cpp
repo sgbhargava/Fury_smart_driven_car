@@ -136,9 +136,8 @@ void can_msg_process_init(void)
     // Add CAN ID
     CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_RESET), CAN_gen_sid(can1, CAN_MSG_ID_STEER));
     CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_THROTTLE), CAN_gen_sid(can1, CAN_MSG_ID_SENSOR));
-    //CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_HEARTBEAT), CAN_gen_sid(can1, CAN_MSG_ID_GPS_COMPASS));
-    //CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_GPS), CAN_gen_sid(can1, 0xffff));
-
+    CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_SENSOR_HEARTBEAT), CAN_gen_sid(can1, CAN_MSG_ID_GPS_COMPASS));
+    CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_GPS), CAN_gen_sid(can1, CAN_MSG_ID_GPS_HEARTBEAT));
 }
 void recvAndAnalysisCanMsg(void)
 {
@@ -190,7 +189,7 @@ void recvAndAnalysisCanMsg(void)
     }
 
 }
-//#define PRINT_ALL_CAN_MSG
+#define PRINT_ALL_CAN_MSG
 void readCANMsgs(void)
 {
     can_fullcan_msg_t fc_temp;
@@ -213,6 +212,27 @@ void readCANMsgs(void)
 #endif
     }
 
+    can_fullcan_msg_t *compass_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_GPS_COMPASS));
+    if (CAN_fullcan_read_msg_copy(compass_fc_ptr, &fc_temp)){
+
+#ifdef PRINT_ALL_CAN_MSG
+        for (int i = 0; i < fc_temp.data_len; i ++)
+        {
+            printf("GPS::Compass(%d) %x\n", i, fc_temp.data.bytes[i]);
+        }
+#endif
+    }
+
+    can_fullcan_msg_t *gps_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_GPS_GPS));
+    if (CAN_fullcan_read_msg_copy(gps_fc_ptr, &fc_temp)){
+
+#ifdef PRINT_ALL_CAN_MSG
+        for (int i = 0; i < fc_temp.data_len; i ++)
+        {
+            printf("GPS::GPS(%d) %x\n", i, fc_temp.data.bytes[i]);
+        }
+#endif
+    }
 
 }
 void sendSpeed(void)

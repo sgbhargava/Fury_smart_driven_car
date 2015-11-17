@@ -16,6 +16,7 @@
 class DirectionCtrl
 {
     public:
+        float dirPWM = 0;
         enum
         {
             dirCenter,
@@ -34,7 +35,6 @@ class DirectionCtrl
         PWM directionPWM;
         GPIO pin0_29;
         GPIO pin0_30;
-        float dirPWM = 0;
         const float halfTurn = ((MAX_DUTY_CYCLE - BASE_DUTY_CYCLE) / 2);
         const float basePWM = BASE_DUTY_CYCLE;
         const float farRight = MAX_DUTY_CYCLE;
@@ -46,6 +46,8 @@ class DirectionCtrl
 class SpeedCtrl
 {
     public:
+        float speed;
+        float speedPWM = 0;
         static SpeedCtrl * getInstance();
         void init();
         void initESC();
@@ -62,7 +64,6 @@ class SpeedCtrl
         PWM throttlePWM;
         GPIO pin1_22;
         GPIO pin1_23;
-        float speedPWM = 0;
         const float PWMStep = 0.1;
         const float basePWM = BASE_DUTY_CYCLE;
         const float frontLimitPWM = MAX_DUTY_CYCLE;
@@ -79,6 +80,8 @@ class SpeedCtrl
 class SpeedMonitor
 {
     public:
+        float m_speed = 0;
+        float m_rpm = 0;
         static SpeedMonitor * getInstance();
         void setRpm(int rpmVal);
         void calSpeed();
@@ -88,8 +91,6 @@ class SpeedMonitor
     private:
         SpeedMonitor();
         static SpeedMonitor * m_pInstance;
-        float m_speed = 0;
-        float m_rpm = 0;
         uint64_t m_last_time = 0;
 
 };

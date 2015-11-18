@@ -32,6 +32,8 @@
 #define  GPS_DATA_ID         0x164
 #define  MASTER_GPSDATA_ID   0x321
 #define  MASTER_RESET_ID     0x320
+#define  DATA_LEN_EIGHT      8
+#define  DATA_LEN_ZERO       0
 
 
 #endif /* L5_APPLICATION_HASHDEFINE_HPP_ */

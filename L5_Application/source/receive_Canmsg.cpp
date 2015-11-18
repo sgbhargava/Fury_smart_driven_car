@@ -20,12 +20,13 @@ lat_long_info          *transmit_gpsdata     = new lat_long_info;
 compass_distance_info  *transmit_compassdata = new compass_distance_info;
 
 
-void can_transmit(uint32_t msgID,uint64_t *updateGps_data)
+void can_transmit(uint32_t msgID, uint64_t *updateGps_data, uint8_t dataLength)
 {
-    can_msg_t *gpsData = NULL;
-    gpsData->msg_id = msgID;
-    gpsData->data.qword = *updateGps_data;
-    CAN_tx(can1,gpsData,10);
+    can_msg_t gpsData;
+    gpsData.msg_id = msgID;
+    gpsData.data.qword = *updateGps_data;
+    gpsData.frame_fields.data_len = dataLength;
+    CAN_tx(can1, &gpsData, 10);
 }
 
 void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *currentLon)
@@ -44,7 +45,7 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
     uint64_t presentGps_data = *(uint64_t *) (transmit_gpsdata);
     uint32_t msgID = GPS_DATA_ID;
 
-    can_transmit(msgID,&presentGps_data);
+    can_transmit(msgID, &presentGps_data, DATA_LEN_EIGHT);
 }
 
 void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentChkPnt,
@@ -59,31 +60,32 @@ void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentCh
     uint64_t presentCompassDist_data = *(uint64_t *) (transmit_compassdata);
     uint32_t msgID = COMPASS_DIST_ID;
 
-    can_transmit(msgID, &presentCompassDist_data);
+    can_transmit(msgID, &presentCompassDist_data, DATA_LEN_EIGHT);
 }
 
 void can_receive()
 {
-    can_msg_t *data = NULL;
-    CAN_rx(can1,data,100);
+    can_msg_t data;
 
-    if(data->msg_id == MASTER_GPSDATA_ID)
-        receive_gpsdata = (lat_long_info*)  &(data->data.qword);
+    CAN_rx(can1, &data, 1);
 
-    else if(data->msg_id == MASTER_RESET_ID)
+    if(data.msg_id == MASTER_GPSDATA_ID)
+    {
+        receive_gpsdata = (lat_long_info*)  &(data.data.qword);
+        addChkPnts(receive_gpsdata->lat_dec,receive_gpsdata->long_dec,receive_gpsdata->long_dec,
+                                                        receive_gpsdata->long_float,receive_gpsdata->chkPoint);
+
+    }
+    else if(data.msg_id == MASTER_RESET_ID)
         sys_reboot();
 
     else
         LD.setNumber(17);
 
-    addChkPnts(receive_gpsdata->lat_dec,receive_gpsdata->long_dec,receive_gpsdata->long_dec,
-                                                receive_gpsdata->long_float,receive_gpsdata->chkPoint);
 }
 
 void heartbeat()
 {
-    can_msg_t *heartBeat_msg = NULL;
-    heartBeat_msg->msg_id = HEARTBEAT_ID;
-
-    CAN_tx(can1,heartBeat_msg,10);
+    uint64_t data = 0;
+    can_transmit(HEARTBEAT_ID, &data, DATA_LEN_ZERO);
 }

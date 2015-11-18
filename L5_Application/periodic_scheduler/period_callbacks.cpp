@@ -79,6 +79,7 @@ bool period_reg_tlm(void)
 void period_1Hz(void)
 {
     heartbeat();
+    //can_receive();
 }
 
 void period_10Hz(void)
@@ -132,7 +133,8 @@ void period_10Hz(void)
     }
     else
     {
-
+        LE.toggle(1);
+        LE.toggle(2);
     }
 
     if(CALIBRATIONMODE == compassMode)
@@ -159,6 +161,8 @@ void period_100Hz(void)
 #if CAN_USAGE
     if(CAN_is_bus_off(can1))
         CAN_reset_bus(can1);
+
+
 #endif
 }
 

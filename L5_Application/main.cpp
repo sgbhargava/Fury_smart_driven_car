@@ -68,6 +68,7 @@ void testCode(void *p)
             double_t chklon = 121.999999;
             uint8_t chk = 2;
             sendGPS_data(&chk,&chklat,&chklon);
+            sendCompass_data(300.05, 345.25, chk, dist, calcDistToFinalDest(dist));
            //printf("%" PRIu64 "\n",g);
           // getdata();
         }
@@ -129,6 +130,9 @@ int main(void)
     /* Initialization of can1 */
     #if CAN_USAGE
         CAN_init(can1,100,2,2,NULL,NULL);
+        CAN_bypass_filter_accept_all_msgs();
+        CAN_reset_bus(can1);
+
     #endif
     /* Used to calculate the present location. connect the GPS module to UART2 */
     #if GPSMODULE

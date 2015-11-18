@@ -44,7 +44,7 @@ void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentCh
 void can_receive();
 
 /*Transmits data to master*/
-void can_transmit(uint32_t,uint16_t *);
+void can_transmit(uint32_t, uint16_t *, uint8_t);
 
 /*Transmit heartbeat message to master*/
 void heartbeat();

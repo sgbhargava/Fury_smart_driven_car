@@ -15,6 +15,7 @@
 #include  "inttypes.h"
 #include  "lpc_sys.h"
 
+// Generally, pointer is initialized to NULL and in the init() function they get new type
 lat_long_info          *receive_gpsdata      = new lat_long_info;
 lat_long_info          *transmit_gpsdata     = new lat_long_info;
 compass_distance_info  *transmit_compassdata = new compass_distance_info;
@@ -23,8 +24,8 @@ compass_distance_info  *transmit_compassdata = new compass_distance_info;
 void can_transmit(uint32_t msgID, uint64_t *updateGps_data, uint8_t dataLength)
 {
     can_msg_t gpsData;
-    gpsData.msg_id = msgID;
-    gpsData.data.qword = *updateGps_data;
+    gpsData.msg_id                = msgID;
+    gpsData.data.qword            = *updateGps_data;
     gpsData.frame_fields.data_len = dataLength;
     CAN_tx(can1, &gpsData, 10);
 }
@@ -36,6 +37,8 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
     uint32_t sendLon_dec   = (uint32_t) *currentLon;
     uint32_t sendLon_float = (*currentLon - sendLon_dec) * (TEN_6);
 
+    // with dbc: you can use scale of 0.000001
+    // 123456789 ==> 123.456789
     transmit_gpsdata->lat_dec    = sendLat_dec;
     transmit_gpsdata->lat_float  = sendLat_float;
     transmit_gpsdata->long_dec   = sendLon_dec;
@@ -69,6 +72,7 @@ void can_receive()
 
     CAN_rx(can1, &data, 1);
 
+    // START of checkpoints that resets all the checkpoint
     if(data.msg_id == MASTER_GPSDATA_ID)
     {
         receive_gpsdata = (lat_long_info*)  &(data.data.qword);

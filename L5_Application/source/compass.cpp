@@ -43,10 +43,11 @@ float_t compassBearing_inDeg()
 
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
 
-    //14 deg is added to compensate the maagnetic declination.
+    //14 deg is added to compensate the magnetic declination.
     return fmodf(((compassangle/10) + 14 ), 360);
 }
 
+#if 0
 void compass_pitchAngle()
 {
     float_t pitchangle, pitchangle1;
@@ -69,6 +70,7 @@ void temperature()
     temperature_lowbyte = compass.readReg(0xC0, 25);
     temperature = (temperature_highbyte << 8) + (temperature_lowbyte >> 0);
 }
+#endif
 
 uint8_t compass_calibrationMode(uint8_t compassMode)
 {

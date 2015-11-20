@@ -16,8 +16,9 @@
 #define CAN_MSG_ID_RESET 0x20
 #define CAN_MSG_ID_STEER 0x21
 #define CAN_MSG_ID_THROTTLE 0x22
-#define CAN_MSG_ID_SPEED  0x102
+
 #define CAN_MSG_ID_HEARTBEAT 0x100
+#define CAN_MSG_ID_SPEED  0x102
 
 //CAN MSG for debug
 #define CAN_MSG_ID_SENSOR_HEARTBEAT 0x140
@@ -30,6 +31,8 @@
 #define BACKWARD_SPEED 8.0
 
 //#define CAN_MSG_CLASS
+#define DBC_FILE
+#ifndef DBC_FILE
 typedef struct{
     uint64_t turn:3;
 }dir_can_msg_t;
@@ -44,6 +47,7 @@ typedef struct{
     uint64_t customForward:2;
 }throttle_can_msg_t;
 
+#endif
 typedef struct{
     uint64_t speed:8;
     uint64_t rpm:8;

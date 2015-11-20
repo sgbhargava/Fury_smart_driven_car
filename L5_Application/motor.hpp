@@ -27,7 +27,6 @@ class DirectionCtrl
         };
         static DirectionCtrl * getInstance();
         void setDirection(int dir);
-        void init(void);
 
     private:
         DirectionCtrl();
@@ -46,12 +45,12 @@ class DirectionCtrl
 class SpeedCtrl
 {
     public:
-        float speed;
+        float desiredSpeed = 0;
         float speedPWM = 0;
         static SpeedCtrl * getInstance();
-        void init();
         void initESC();
         bool checkPWM(float pwm);
+        void checkSpeed();
         void setSpeedPWM(float pwm);
         void setSpeedCustom(bool forward, uint8_t speedSetting);
         void incrSpeedPWM();
@@ -64,7 +63,8 @@ class SpeedCtrl
         PWM throttlePWM;
         GPIO pin1_22;
         GPIO pin1_23;
-        const float PWMStep = 0.1;
+        bool selfTuning = false;
+        const float PWMStep = 0.01;
         const float basePWM = BASE_DUTY_CYCLE;
         const float frontLimitPWM = MAX_DUTY_CYCLE;
         const float backLimitPWM = MIN_DUTY_CYCLE;

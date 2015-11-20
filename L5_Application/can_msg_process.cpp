@@ -1,11 +1,14 @@
 #include <cstdio>
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "_can_dbc/auto_gen.inc"
 #include "can_msg_process.hpp"
 
 #include "CAN.h"
 #include "shared_handles.h"
 
+#include "uart2.hpp"
+#include "i2c2.hpp"
 
 #ifdef CAN_MSG_CLASS
 
@@ -138,6 +141,8 @@ void can_msg_process_init(void)
     CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_THROTTLE), CAN_gen_sid(can1, CAN_MSG_ID_SENSOR));
     CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_SENSOR_HEARTBEAT), CAN_gen_sid(can1, CAN_MSG_ID_GPS_COMPASS));
     CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, CAN_MSG_ID_GPS_GPS), CAN_gen_sid(can1, CAN_MSG_ID_GPS_HEARTBEAT));
+
+    Uart2::getInstance().init(38400);
 }
 void recvAndAnalysisCanMsg(void)
 {
@@ -151,14 +156,50 @@ void recvAndAnalysisCanMsg(void)
     can_fullcan_msg_t *steer_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_STEER));
     if (CAN_fullcan_read_msg_copy(steer_fc_ptr, &fc_temp)){
 
+#ifdef DBC_FILE
+        DRIVER_TX_STEER_t steer_msg;
+        DRIVER_TX_STEER_decode(&steer_msg, (uint64_t*) &fc_temp.data.bytes, &DRIVER_TX_STEER_HDR);
+        DirectionCtrl::getInstance()->setDirection(steer_msg.DRIVER_STEER_dir);
+
+#else
         dir_can_msg_t *pDirCanMsg = (dir_can_msg_t *)&fc_temp.data.bytes[0];
         DirectionCtrl::getInstance()->setDirection(pDirCanMsg->turn);
         printf("Dir REV MSG %x %x\n", (unsigned int)fc_temp.msg_id , (unsigned int)fc_temp.data.bytes[0]);
+#endif
     }
 
     can_fullcan_msg_t *throttle_fc_ptr = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, CAN_MSG_ID_THROTTLE));
     if (CAN_fullcan_read_msg_copy(throttle_fc_ptr, &fc_temp)){
         SpeedCtrl * m_pSpeed = SpeedCtrl::getInstance();
+#ifdef DBC_FILE
+        DRIVER_TX_THROTTLE_t throttle_msg;
+        DRIVER_TX_THROTTLE_decode(&throttle_msg, (uint64_t*) &fc_temp.data.bytes, &DRIVER_TX_THROTTLE_HDR);
+        if (throttle_msg.DRIVER_THROTTLE_stop)
+            m_pSpeed->setStop();
+        else
+        {
+            bool isForward = throttle_msg.DRIVER_THROTTLE_forward ? true: false;
+            bool isIncr = throttle_msg.DRIVER_THROTTLE_incr ? true : false;
+
+            if ( throttle_msg.DRIVER_THROTTLE_usecustom )
+            {
+                m_pSpeed->setSpeedCustom(isForward, throttle_msg.DRIVER_THROTTLE_custom);
+            }
+            else
+            {
+                if (isForward)
+                {
+                    if (isIncr) m_pSpeed->incrSpeedPWM();
+                    else m_pSpeed->descrSpeedPWM();
+                }
+                else
+                {
+                    if (isIncr) m_pSpeed->descrSpeedPWM();
+                    else m_pSpeed->incrSpeedPWM();
+                }
+            }
+        }
+#else
         throttle_can_msg_t *pThrottleCanMsg = (throttle_can_msg_t *)&fc_temp.data.bytes[0];
         bool isForward = false;
         if (pThrottleCanMsg->forward)
@@ -184,7 +225,7 @@ void recvAndAnalysisCanMsg(void)
             m_pSpeed->incrSpeedPWM();
         else
             m_pSpeed->setStop();
-
+#endif
         printf("Speed REV MSG %x %x\n", (unsigned int)fc_temp.msg_id , (unsigned int)fc_temp.data.bytes[0]);
     }
 
@@ -243,13 +284,26 @@ void sendSpeed(void)
     //printf("Speed RPM: %f, Speed:%f \n", rpm, speed);
 
     can_msg_t msg;
+#ifdef DBC_FILE
+    MOTOR_TX_SPEED_t speedMsg;
+    speedMsg.MOTOR_SPEED_rpm = (int) rpm;
+    speedMsg.MOTOR_SPEED_speed = (int) speed;
+    msg_hdr_t hdr = MOTOR_TX_SPEED_encode((uint64_t *)&msg.data.bytes, &speedMsg);
+
+    msg.msg_id = hdr.mid;
+    msg.frame_fields.data_len = hdr.dlc;
+#else
     msg.msg_id = CAN_MSG_ID_SPEED;
     msg.frame_fields.is_29bit = 0;
     msg.frame_fields.data_len = 1;
     speed_can_msg_t* pSpeedCanMsg = (speed_can_msg_t*) &msg.data.bytes[0];
     pSpeedCanMsg->rpm = (int)rpm;
     pSpeedCanMsg->speed = (int)speed;
+#endif
     CAN_tx(can_t::can1, &msg, 0);
+
+    Uart2::getInstance().printf("RPM: %d Speed: %d", (int)rpm, (int)speed);
+
 }
 
 void sendHeartBeat(void)

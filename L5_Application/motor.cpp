@@ -95,8 +95,8 @@ void SpeedCtrl::initESC()
 bool SpeedCtrl::checkPWM(float pwm)
 {
     printf("Check speed %f\n", pwm);
-    //if ((pwm > backLimitPWM) && (pwm < frontLimitPWM))
-    //{
+    if ((pwm > backLimitPWM) && (pwm < frontLimitPWM))
+    {
         if ( basePWM - pwm > 0.5)
         {
             pin1_22.setHigh();
@@ -107,28 +107,54 @@ bool SpeedCtrl::checkPWM(float pwm)
             pin1_23.setLow();
         }
         return true;
-    //}
-    //return false;
+    }
+    return false;
 }
+void SpeedCtrl::checkSpeed()
+{
+    if (selfTuning)
+    {
+        float readbackRpm = 0 , readbackSpeed = 0;
+        SpeedMonitor::getInstance()->getSpeed( &readbackRpm, &readbackSpeed);
+        if (desiredSpeed == 0 && readbackSpeed != 0)
+        {
+            setSpeedPWM(basePWM);
+        }
+        else
+        {
+            if (readbackSpeed < desiredSpeed)
+            {
+                incrSpeedPWM();
+            }
+            else if (readbackSpeed > desiredSpeed)
+            {
+                descrSpeedPWM();
+            }
+        }
+    }
+}
+
 void SpeedCtrl::setSpeedPWM(float pwm)
 {
     if (checkPWM(pwm)){
         printf("Set speed %f\n", pwm);
-        if ((( speedPWM < SpeedCtrl::basePWM ) && (pwm > SpeedCtrl::basePWM)) ||
-                (( speedPWM > SpeedCtrl::basePWM ) && (pwm < SpeedCtrl::basePWM)))
+        if ((( speedPWM < basePWM ) && (pwm > basePWM)) ||
+                (( speedPWM > basePWM ) && (pwm < basePWM)))
         { //Change forward to backward or backward to forward
-            throttlePWM.set(SpeedCtrl::basePWM-0.3);
+            throttlePWM.set(basePWM-0.3);
             vTaskDelay(1000);
-            throttlePWM.set(SpeedCtrl::basePWM);
+            throttlePWM.set(basePWM);
             vTaskDelay(1000);
         }
         throttlePWM.set(pwm);
         speedPWM = pwm;
+        selfTuning = false;
     }
 }
 void SpeedCtrl::setStop()
 {
     printf("Stop\n");
+    desiredSpeed = 0;
     speedPWM = basePWM;
     throttlePWM.set(basePWM);
 }
@@ -137,21 +163,40 @@ void SpeedCtrl::setSpeedCustom(bool forward, uint8_t speedSetting)
     if (forward)
     {
         if (speedSetting == 1)
+        {
             setSpeedPWM(speed_forward_custom1);
+            desiredSpeed = 1;//???
+        }
         else if (speedSetting == 2)
+        {
             setSpeedPWM(speed_forward_custom2);
+            desiredSpeed = 2;
+        }
         else if (speedSetting == 3)
+        {
             setSpeedPWM(speed_forward_custom3);
+            desiredSpeed = 3;
+        }
     }
     else
     {
         if (speedSetting == 1)
+        {
             setSpeedPWM(speed_backward_custom1);
+            desiredSpeed = -1; //???
+        }
         else if (speedSetting == 2)
+        {
             setSpeedPWM(speed_backward_custom2);
+            desiredSpeed = -2; //???
+        }
         else if (speedSetting == 3)
+        {
             setSpeedPWM(speed_backward_custom3);
+            desiredSpeed = -3; //???
+        }
     }
+    //selfTuning = true;//////check the speed 1st
 
 }
 void SpeedCtrl::incrSpeedPWM()
@@ -207,9 +252,9 @@ void SpeedMonitor::setRpm(int rpmVal)
 }
 void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
-    const uint64_t FIVE_SECOND = 5* 1000;
-    uint64_t cur_time = 0;//sys_get_uptime_ms();
-    if (((int)m_speed != 0 && (int)m_rpm != 0) && (cur_time - m_last_time > FIVE_SECOND))
+    const uint64_t ONE_SECOND = 1000;
+    uint64_t cur_time = sys_get_uptime_ms();
+    if (((int)m_speed != 0 && (int)m_rpm != 0) && (cur_time - m_last_time > ONE_SECOND))
     {
         m_speed = 0;
         m_rpm = 0;

@@ -77,7 +77,7 @@ void period_1Hz(void)
     canMsgHandler->sendSpeed();
     //canMsgHandler->sendHeartBeat();
 #else
-    //sendSpeed();
+    sendSpeed();
     sendHeartBeat();
     readCANMsgs();
 #endif
@@ -86,7 +86,7 @@ void period_1Hz(void)
 
 void period_10Hz(void)
 {
-
+// using the number of the 1 0 and calculate the
 }
 
 void period_100Hz(void)
@@ -96,7 +96,12 @@ void period_100Hz(void)
 #else
     recvAndAnalysisCanMsg();
 #endif
-
+    SpeedCtrl::getInstance()->checkSpeed();
+// if (actual is > desired)
+    // pwm --;
+    //else
+    //pwm ++;
+// if desire == 0 ; stop
 }
 
 void period_1000Hz(void)

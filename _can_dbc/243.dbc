@@ -59,8 +59,8 @@ BO_ 100 MOTOR_HEARTBEAT: 8 MOTOR
  SG_ MOTOR_HEARTBEAT_cmd : 0|64@1+ (1,0) [0|0] "" DRIVER
  
 BO_ 102 SPEED: 1 MOTOR
- SG_ MOTOR_SPEED_speed : 0|4@1+ (1,0) [0|0] "" DRIVER
- SG_ MOTOR_SPEED_rpm : 4|4@1+ (1,0) [0|0] "" DRIVER
+ SG_ MOTOR_SPEED_speed : 0|8@1+ (1,0) [0|0] "" DRIVER
+ SG_ MOTOR_SPEED_rpm : 8|8@1+ (1,0) [0|0] "" DRIVER
 
  
 CM_ BU_ NOONE "No node, used to indicate if it's a debug message going to no one";

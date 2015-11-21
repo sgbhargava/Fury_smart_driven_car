@@ -65,8 +65,8 @@ typedef struct {
 
 /// Message: SPEED from 'MOTOR', DLC: 1 byte(s), MID: 102
 typedef struct {
-    uint8_t MOTOR_SPEED_speed;           ///< B3:0   Destination: DRIVER
-    uint8_t MOTOR_SPEED_rpm;             ///< B7:4   Destination: DRIVER
+    uint8_t MOTOR_SPEED_speed;           ///< B7:0   Destination: DRIVER
+    uint8_t MOTOR_SPEED_rpm;             ///< B15:8   Destination: DRIVER
 
     mia_info_t mia_info;
 } MOTOR_TX_SPEED_t;
@@ -83,6 +83,7 @@ extern const uint32_t MOTOR_HEARTBEAT__MIA_MS;
 extern const MOTOR_TX_MOTOR_HEARTBEAT_t MOTOR_HEARTBEAT__MIA_MSG;
 extern const uint32_t SPEED__MIA_MS;
 extern const MOTOR_TX_SPEED_t SPEED__MIA_MSG;
+
 
 /// Encode DRIVER's 'RESET_MOTOR' message
 /// @returns the message header of this message
@@ -183,14 +184,15 @@ static msg_hdr_t MOTOR_TX_SPEED_encode(uint64_t *to, MOTOR_TX_SPEED_t *from)
     uint8_t *bytes = (uint8_t*) to;
     uint64_t raw_signal;
 
-    raw_signal = ((uint64_t)(((from->MOTOR_SPEED_speed - (0)) / 1.0) + 0.5)) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw_signal >> 0) & 0x0f) << 0); ///< 4 bit(s) to B0
+    raw_signal = ((uint64_t)(((from->MOTOR_SPEED_speed - (0)) / 1.0) + 0.5)) & 0xff;
+    bytes[0] |= (((uint8_t)(raw_signal >> 0) & 0xff) << 0); ///< 8 bit(s) to B0
 
-    raw_signal = ((uint64_t)(((from->MOTOR_SPEED_rpm - (0)) / 1.0) + 0.5)) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw_signal >> 0) & 0x0f) << 4); ///< 4 bit(s) to B4
+    raw_signal = ((uint64_t)(((from->MOTOR_SPEED_rpm - (0)) / 1.0) + 0.5)) & 0xff;
+    bytes[1] |= (((uint8_t)(raw_signal >> 0) & 0xff) << 0); ///< 8 bit(s) to B8
 
     return MOTOR_TX_SPEED_HDR;
 }
+
 
 /// Decode DRIVER's 'RESET_MOTOR' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
@@ -327,12 +329,12 @@ static inline bool MOTOR_TX_SPEED_decode(MOTOR_TX_SPEED_t *to, const uint64_t *f
     const uint8_t *bytes = (const uint8_t*) from;
 
     raw_signal = 0;
-    bits_from_byte = ((bytes[0] >> 0)& 0x0f); ///< 4 bit(s) from B0
+    bits_from_byte = ((bytes[0] >> 0)& 0xff); ///< 8 bit(s) from B0
     raw_signal    |= (bits_from_byte << 0);
     to->MOTOR_SPEED_speed = (raw_signal * 1.0) + (0);
 
     raw_signal = 0;
-    bits_from_byte = ((bytes[0] >> 4)& 0x0f); ///< 4 bit(s) from B4
+    bits_from_byte = ((bytes[1] >> 0)& 0xff); ///< 8 bit(s) from B8
     raw_signal    |= (bits_from_byte << 0);
     to->MOTOR_SPEED_rpm = (raw_signal * 1.0) + (0);
 

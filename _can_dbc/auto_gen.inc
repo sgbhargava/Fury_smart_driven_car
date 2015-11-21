@@ -48,7 +48,7 @@ typedef struct {
     uint8_t DRIVER_THROTTLE_stop;        ///< B0:0  Min: 0 Max: 1   Destination: MOTOR
     uint8_t DRIVER_THROTTLE_forward;     ///< B1:1  Min: 0 Max: 1   Destination: MOTOR
     uint8_t DRIVER_THROTTLE_usecustom;   ///< B2:2  Min: 0 Max: 1   Destination: MOTOR
-    uint8_t DRIVER_THROTTLE_custom;      ///< B4:3  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t DRIVER_THROTTLE_custom;      ///< B4:3  Min: 0 Max: 3   Destination: MOTOR
     uint8_t DRIVER_THROTTLE_incr;        ///< B5:5  Min: 0 Max: 1   Destination: MOTOR
 
     mia_info_t mia_info;
@@ -140,7 +140,7 @@ static msg_hdr_t DRIVER_TX_THROTTLE_encode(uint64_t *to, DRIVER_TX_THROTTLE_t *f
     bytes[0] |= (((uint8_t)(raw_signal >> 0) & 0x01) << 2); ///< 1 bit(s) to B2
 
     if(from->DRIVER_THROTTLE_custom < 0) { from->DRIVER_THROTTLE_custom = 0; }
-    if(from->DRIVER_THROTTLE_custom > 1) { from->DRIVER_THROTTLE_custom = 1; }
+    if(from->DRIVER_THROTTLE_custom > 3) { from->DRIVER_THROTTLE_custom = 3; }
     raw_signal = ((uint64_t)(((from->DRIVER_THROTTLE_custom - (0)) / 1.0) + 0.5)) & 0x03;
     bytes[0] |= (((uint8_t)(raw_signal >> 0) & 0x03) << 3); ///< 2 bit(s) to B3
 
@@ -191,7 +191,6 @@ static msg_hdr_t MOTOR_TX_SPEED_encode(uint64_t *to, MOTOR_TX_SPEED_t *from)
 
     return MOTOR_TX_SPEED_HDR;
 }
-
 
 /// Decode DRIVER's 'RESET_MOTOR' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
@@ -340,6 +339,8 @@ static inline bool MOTOR_TX_SPEED_decode(MOTOR_TX_SPEED_t *to, const uint64_t *f
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
     return success;
 }
+
+
 /// Handle the MIA for DRIVER's 'RESET_MOTOR' message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred

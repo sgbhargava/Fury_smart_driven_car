@@ -43,32 +43,22 @@
 #include "geo_controller.hpp"
 #include "tlm/c_tlm_comp.h"
 #include "tlm/c_tlm_var.h"
-/*
-#define lidar_threshold 100
-#define sonic_threshold 50
-*/
+
 #define forward 0xF0
 #define reverse 0x00
 CAN_base_class my_can;
 sensor_class *sensor;
 motor_class *motor;
-geo_controller_class geo_controller;
-IO_base_class IO_controller;
-//enum direction {
-//	straight, far_right, right, left, far_left
-//};
+geo_controller_class *geo_controller;
+IO_base_class *IO_controller;
 
 
 can_msg_t motor_throttle;
 can_msg_t motor_steer;
 can_msg_t heart_beat;
 
-//int correctDirection = straight;
-//int previousDirection = straight;
-
 int correctSpeed = forward;
 int previousSpeed = reverse;
-
 
 
 /// This is the stack size used for each of the period tasks
@@ -124,11 +114,9 @@ bool period_init(void)
 {
 	motor = motor_class::getInstance();
 	sensor = sensor_class::getInstance();
+	geo_controller = geo_controller_class::getInstance();
+	IO_controller = IO_base_class::get_Instance();
 	my_can.CAN_base_class_init();
-
-
-	//IO_controller.IO_base_class_init();
-	//geo_controller.geo_controller_class_init();
 
     return true; // Must return true upon success
 }
@@ -167,15 +155,8 @@ void period_10Hz(void) {
 
 
 void period_100Hz(void) {
-	/*can_msg_t msg;
-	 if(CAN_rx(can1, &msg,0))
-	 {
-	 if(!xQueueSend(can_queue, &msg, 0))
-	 {
-	 printf("couldnt send to queue\n");
-	 }
-	 }
-	 */
+
+
 }
 
 void period_1000Hz(void) {

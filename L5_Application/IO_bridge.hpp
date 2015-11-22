@@ -14,6 +14,7 @@
 class IO_base_class:public CAN_base_class
 {
 public:
+		static IO_base_class* get_Instance();
 		uint16_t id_heart_beat = 0x180;
 		uint16_t id_drive_mode = 0x181;
 		uint16_t id_location = 0x182;
@@ -23,6 +24,9 @@ public:
 		bool IO_base_class_init();
 		bool get_drive_authotization();
 		bool get_location_details();
+
+private:
+		static IO_base_class *single;
 
 };
 	#endif /* L5_APPLICATION_IO_BRIDGE_HPP_ */

@@ -6,6 +6,14 @@
  */
 #include "IO_bridge.hpp"
 
+IO_base_class* IO_base_class::single = NULL;
+IO_base_class* IO_base_class::get_Instance()
+{
+	if(single == NULL)
+		single = new IO_base_class();
+	return single;
+}
+
 bool IO_base_class::IO_base_class_init()
 {
 	add_can_id(id_heart_beat, id_drive_mode);

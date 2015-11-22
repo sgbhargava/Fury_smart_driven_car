@@ -41,8 +41,7 @@ public:
 
 private:
 	static motor_class *single;
-
-		throttle_can_payload motor_throttle_payload;
+	throttle_can_payload motor_throttle_payload;
 };
 
 #endif /* L5_APPLICATION_SOURCE_MOTOR_HPP_ */

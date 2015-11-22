@@ -50,7 +50,7 @@
 #define forward 0xF0
 #define reverse 0x00
 CAN_base_class my_can;
-sensor_class sensor;
+sensor_class *sensor;
 motor_class *motor;
 geo_controller_class geo_controller;
 IO_base_class IO_controller;
@@ -77,10 +77,10 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 void Obstruction_avoidance_algorithm(void)
 {
-	motor = motor_class::getInstance();
-	if (sensor.lidar < sensor.lidar_threshold )
+	/*motor = motor_class::getInstance();*/
+	if (sensor->lidar < sensor->lidar_threshold )
 		{
-			 if (sensor.right < sensor.sensor_threshold)
+			 if (sensor->right < sensor->sensor_threshold)
 			 {
 				motor->motor_steering = 3; //left
 			 }
@@ -92,11 +92,11 @@ void Obstruction_avoidance_algorithm(void)
 		}
 		else
 		{
-			if (sensor.right < sensor.sensor_threshold)
+			if (sensor->right < sensor->sensor_threshold)
 			{
 				motor->motor_steering = 3;
 			}
-			else if (sensor.left < sensor.sensor_threshold)
+			else if (sensor->left < sensor->sensor_threshold)
 			{
 				motor->motor_steering =2;
 			}
@@ -123,8 +123,9 @@ void Obstruction_avoidance_algorithm(void)
 bool period_init(void)
 {
 	motor = motor_class::getInstance();
+	sensor = sensor_class::getInstance();
 	my_can.CAN_base_class_init();
-	sensor.sensor_class_init();
+
 
 	//IO_controller.IO_base_class_init();
 	//geo_controller.geo_controller_class_init();
@@ -137,10 +138,10 @@ bool period_reg_tlm(void)
 {
 
     // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.left,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.right,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.back,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->left,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->right,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->lidar,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->back,tlm_int);
    TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,tlm_int);
   // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.sensor_threshold,tlm_int);
   // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar_threshold,tlm_int);
@@ -157,7 +158,8 @@ void period_1Hz(void) {
 
 
 void period_10Hz(void) {
-	if(!sensor.get_sensor_reading())
+
+	if(!sensor->get_sensor_reading())
 		u0_dbg_printf("ERROR failed to get sensor data\n");
 	Obstruction_avoidance_algorithm();
 

@@ -12,6 +12,7 @@
 class sensor_class:public CAN_base_class
 {
 public:
+	static sensor_class* getInstance();
 	uint16_t heart_beat = 0x140;
 	uint16_t sensors = 0x142;
 	uint16_t battery = 0x144;
@@ -23,6 +24,10 @@ public:
 	uint16_t sensor_threshold = 30;
 	bool get_sensor_reading();
 	bool sensor_class_init();
+
+private:
+	static sensor_class *single;
+
 };
 
 

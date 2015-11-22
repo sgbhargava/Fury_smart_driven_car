@@ -26,6 +26,15 @@ bool sensor_class::sensor_class_init()
 	add_can_id(battery, 0xFF);
 	return true;
 }
+sensor_class* sensor_class::single = NULL;
+sensor_class* sensor_class::getInstance()
+{
+	if(single == NULL)
+	{
+		single = new sensor_class();
+	}
 
+	return single;
+}
 
 

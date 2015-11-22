@@ -75,6 +75,7 @@ void data_ovr_cb(uint32_t arg)
 void CAN_base_class::CAN_base_class_init()
 {
 motor_class *motor;
+sensor_class *sensor;
 	printf("can constructor\n");
 
 	if(CAN_init(can1, 100, 5, 5, bus_off_cb,data_ovr_cb))
@@ -82,6 +83,10 @@ motor_class *motor;
 	CAN_reset_bus(can1);
 	motor = motor_class::getInstance();
 	motor->motor_class_init();
+
+	sensor = sensor_class::getInstance();
+	sensor->sensor_class_init();
+
 
 }
 

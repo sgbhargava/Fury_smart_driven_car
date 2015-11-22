@@ -53,7 +53,7 @@ bool motor_class::send_motor_steering()
 }
 
 motor_class* motor_class::single = NULL;
-motor_class * motor_class::getInstance()
+motor_class* motor_class::getInstance()
 {
 	if(single == NULL)
 		single = new motor_class();

@@ -28,6 +28,7 @@
 class geo_controller_class: public CAN_base_class
 {
 public:
+	static geo_controller_class* getInstance();
 	uint16_t id_heart_beat = 0x160;
 	uint16_t id_compass_heading_data =0x162;
 	uint16_t id_gps_coordinates = 0x164;
@@ -44,6 +45,9 @@ public:
 	bool get_compass_data();
 	bool get_checkpoint_req();
 	bool geo_controller_class_init();
+
+private:
+	static  geo_controller_class *single;
 };
 #endif /* L5_APPLICATION_SOURCE_GEO_CONTROLLER_HPP_ */
 

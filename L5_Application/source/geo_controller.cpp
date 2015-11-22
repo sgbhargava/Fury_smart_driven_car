@@ -6,6 +6,15 @@
  */
 #include "geo_controller.hpp"
 
+
+geo_controller_class* geo_controller_class::single = NULL;
+geo_controller_class* geo_controller_class::getInstance()
+{
+	if(single == NULL)
+		single = new geo_controller_class();
+	return single;
+}
+
 bool geo_controller_class::geo_controller_class_init()
 {
 	add_can_id(id_heart_beat,id_gps_distance);

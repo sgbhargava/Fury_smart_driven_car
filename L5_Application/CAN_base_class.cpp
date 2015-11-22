@@ -5,6 +5,10 @@
  *      Author: Bhargava
  */
 #include "CAN_base_class.hpp"
+#include "motor.hpp"
+#include "sensors.hpp"
+#include "IO_bridge.hpp"
+#include "geo_controller.hpp"
 #define first 0
 #define second 16
 #define third 32
@@ -68,19 +72,28 @@ void data_ovr_cb(uint32_t arg)
 
 }
 
-CAN_base_class::CAN_base_class()
+void CAN_base_class::CAN_base_class_init()
 {
-
+motor_class *motor;
 	printf("can constructor\n");
 
 	if(CAN_init(can1, 100, 5, 5, bus_off_cb,data_ovr_cb))
 		printf("can intialised\n");
 	CAN_reset_bus(can1);
+	motor = motor_class::getInstance();
+	motor->motor_class_init();
+
 }
 
 bool CAN_base_class::add_can_id(uint16_t id1, uint16_t id2){
 
-	CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, id1), CAN_gen_sid(can1, id2));
+	if(!CAN_fullcan_add_entry(can1, CAN_gen_sid(can1, id1), CAN_gen_sid(can1, id2)))
+		{
+		printf("false\n");
+		return false;
+		}
+	printf("added address\n");
+	return true;
 
 
 }

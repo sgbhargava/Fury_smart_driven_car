@@ -41,102 +41,93 @@
 #include "motor.hpp"
 #include "IO_bridge.hpp"
 #include "geo_controller.hpp"
+#include "tlm/c_tlm_comp.h"
+#include "tlm/c_tlm_var.h"
+/*
 #define lidar_threshold 100
 #define sonic_threshold 50
-
+*/
 #define forward 0xF0
 #define reverse 0x00
+CAN_base_class my_can;
 sensor_class sensor;
-motor_class motor;
+motor_class *motor;
 geo_controller_class geo_controller;
 IO_base_class IO_controller;
-enum direction {
-	straight, far_right, right, left, far_left
-};
-
+//enum direction {
+//	straight, far_right, right, left, far_left
+//};
 
 
 can_msg_t motor_throttle;
 can_msg_t motor_steer;
 can_msg_t heart_beat;
 
-int correctDirection = straight;
-int previousDirection = straight;
+//int correctDirection = straight;
+//int previousDirection = straight;
 
 int correctSpeed = forward;
 int previousSpeed = reverse;
 
 
-uint16_t lidar = 0;
+
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+#if 1
 
-/*
 void Obstruction_avoidance_algorithm(void)
 {
-	if (lidar < lidar_threshold)
+	motor = motor_class::getInstance();
+	if (sensor.lidar < sensor.lidar_threshold )
 		{
-			 if (SonicData.SonicSensor1 < sonic_threshold)
+			 if (sensor.right < sensor.sensor_threshold)
 			 {
-				correctDirection = right;
+				motor->motor_steering = 3; //left
 			 }
 			 else
 			 {
-				correctDirection = left;
+				 motor->motor_steering = 2; //right
 			 }
 
 		}
 		else
 		{
-			if (SonicData.SonicSensor1 < sonic_threshold)
+			if (sensor.right < sensor.sensor_threshold)
 			{
-				correctDirection = right;
+				motor->motor_steering = 3;
 			}
-			else if (SonicData.SonicSensor2 < sonic_threshold)
+			else if (sensor.left < sensor.sensor_threshold)
 			{
-				correctDirection = left;
+				motor->motor_steering =2;
 			}
 			else
 			{
-				correctDirection = straight;
+				motor->motor_steering =0;
 			}
 		}
 
+	printf("motor steer %d\n", motor->motor_steering);
+
+	if(!motor->send_motor_steering())
+	{
+		printf("ERROR failed to send 21\n");
 	}
-	//  printf("head =%d \n",correctDirection);
-	motor_steer.data.bytes[0] = correctDirection;
-	//previousDirection=correctDirection;
-	CAN_tx(can1, &motor_steer, 0);
-	//printf("correctDirection =%d \n",correctDirection);
-	//}
 
-	 if(previousSpeed!=correctSpeed)
-	 {
-	 motor_throttle.data.bytes[0]=correctSpeed;
-	 previousSpeed=correctSpeed;
-	 CAN_tx(can1, &motor_throttle, 0);
-	 // printf("correctSpeed =%d \n",correctSpeed);
-
-	 }
-
-
-
-		motor_steer.data.bytes[0] = correctDirection;
-		CAN_tx(can1, &motor_steer, 0);
 }
-*/
 
+#endif
 
 
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-	CAN_base_class my_can;
+	motor = motor_class::getInstance();
+	my_can.CAN_base_class_init();
 	sensor.sensor_class_init();
-	motor.motor_class_init();
-	IO_controller.IO_base_class_init();
-	geo_controller.geo_controller_class_init();
+
+	//IO_controller.IO_base_class_init();
+	//geo_controller.geo_controller_class_init();
 
     return true; // Must return true upon success
 }
@@ -144,27 +135,31 @@ bool period_init(void)
 //Register any telemetry variables
 bool period_reg_tlm(void)
 {
+
     // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.left,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.right,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.back,tlm_int);
+   TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,tlm_int);
+  // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.sensor_threshold,tlm_int);
+  // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar_threshold,tlm_int);
+   return true; // Must return true upon success
 }
 
 
 void period_1Hz(void) {
-
-	if(sensor.get_sensor_reading())
+	/*if(sensor.get_sensor_reading())
 			u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
 		else
-			u0_dbg_printf("no sensor\n");
-
-
+			u0_dbg_printf("no sensor\n");*/
 }
 
 
 void period_10Hz(void) {
-
-
-	// LE.toggle(2);
-
+	if(!sensor.get_sensor_reading())
+		u0_dbg_printf("ERROR failed to get sensor data\n");
+	Obstruction_avoidance_algorithm();
 
 }
 

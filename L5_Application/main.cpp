@@ -23,7 +23,7 @@
  * 			@see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
  *
  */
-#define rx
+
 #include "stdio.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"

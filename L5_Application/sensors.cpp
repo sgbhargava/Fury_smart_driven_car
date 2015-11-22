@@ -5,7 +5,6 @@
  *      Author: Bhargava
  */
 #include "sensors.hpp"
-
 bool sensor_class::get_sensor_reading()
 {
 	uint64_t temp;
@@ -22,6 +21,7 @@ bool sensor_class::get_sensor_reading()
 
 bool sensor_class::sensor_class_init()
 {
+
 	add_can_id(heart_beat,sensors);
 	add_can_id(battery, 0xFF);
 	return true;

@@ -13,7 +13,7 @@
 class CAN_base_class
 {
 public:
-	CAN_base_class();
+	void CAN_base_class_init();
 	bool get_data(uint16_t id, uint64_t *data);
 	uint16_t getword(uint64_t data, uint8_t n_word);
 	uint8_t getbyte(uint64_t data, uint8_t n_byte);

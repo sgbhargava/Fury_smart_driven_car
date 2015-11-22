@@ -19,6 +19,8 @@ public:
 	uint16_t right = 0;
 	uint16_t lidar = 0;
 	uint16_t back = 0;
+	uint16_t lidar_threshold = 75;
+	uint16_t sensor_threshold = 30;
 	bool get_sensor_reading();
 	bool sensor_class_init();
 };

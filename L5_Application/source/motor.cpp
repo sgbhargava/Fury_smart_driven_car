@@ -55,7 +55,7 @@ bool motor_class::send_motor_steering()
 }
 bool motor_class::stop()
 {
-	throttle = 0x00;
+	throttle = 0x01;
 	return true;
 }
 

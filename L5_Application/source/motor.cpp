@@ -36,6 +36,9 @@ bool motor_class::get_motor_status()
 
 bool motor_class::send_motor_throttle()
 {
+	motor_throttle_can_mess.data.bytes[0] = throttle;
+	motor_throttle_can_mess.frame_fields.data_len = 1;
+	motor_throttle_can_mess.frame_fields.is_29bit = 0;
 	if(!CAN_tx(can1, &motor_throttle_can_mess,0))
 		return false;
 	return true;
@@ -45,13 +48,32 @@ bool motor_class::send_motor_steering()
 	motor_steering_can_mess.data.bytes[0] = motor_steering;
 	motor_steering_can_mess.frame_fields.data_len = 1;
 	motor_steering_can_mess.frame_fields.is_29bit = 0;
-	printf("id is %x\n",motor_steering_can_mess.msg_id);
-	printf("data is %d\n", motor_steering_can_mess.data.bytes[0]);
+
 	if(!CAN_tx(can1, &motor_steering_can_mess,0))
 		return false;
 	return true;
 }
+bool motor_class::stop()
+{
+	throttle = 0x00;
+	return true;
+}
 
+bool motor_class::custom_1()
+{
+	throttle = 0x0E;
+	return true;
+}
+bool motor_class::custom_2()
+{
+	throttle = 0x16;
+	return true;
+}
+bool motor_class::custom_3()
+{
+	throttle = 0x1E;
+	return true;
+}
 motor_class* motor_class::single = NULL;
 motor_class* motor_class::getInstance()
 {

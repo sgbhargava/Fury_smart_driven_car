@@ -27,7 +27,8 @@
  * For example, the 1000Hz take slot runs periodically every 1ms, and whatever you
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
-
+#define sonar_hard_threshold 20
+#define lidar_hard_threshold 20
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -70,15 +71,25 @@ void Obstruction_avoidance_algorithm(void)
 	/*motor = motor_class::getInstance();*/
 	if (sensor->lidar < sensor->lidar_threshold )
 		{
+		if(sensor->lidar <lidar_hard_threshold)
+			{
+			motor->stop();
+		//	motor->motor_throttle_payload.stop = 1;
+
+			}
+		else
+		{
 			 if (sensor->right < sensor->sensor_threshold)
 			 {
-				motor->motor_steering = 3; //left
+				motor->motor_steering = 4; //left
 			 }
 			 else
 			 {
-				 motor->motor_steering = 2; //right
+				 motor->motor_steering = 1; //right
 			 }
+			 motor->custom_1();
 
+		}
 		}
 		else
 		{
@@ -94,6 +105,7 @@ void Obstruction_avoidance_algorithm(void)
 			{
 				motor->motor_steering =0;
 			}
+			motor->custom_1();
 		}
 
 	printf("motor steer %d\n", motor->motor_steering);
@@ -103,6 +115,8 @@ void Obstruction_avoidance_algorithm(void)
 		printf("ERROR failed to send 21\n");
 	}
 
+	if(!motor->send_motor_throttle())
+		printf("ERROR failed to send 22\n");
 }
 
 #endif

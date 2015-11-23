@@ -9,16 +9,21 @@
 #define L5_APPLICATION_SOURCE_MOTOR_HPP_
 #include "CAN_base_class.hpp"
 
+typedef struct {
+    uint32_t mid; ///< Message ID of the message
+    uint8_t  dlc; ///< Data length of the message
+} msg_hdr_t;
 
-typedef struct{
+/*typedef struct{
 
-    uint64_t stop;        ///< B0:0  Min: 0 Max: 1   Destination: MOTOR
-    uint64_t forward;     ///< B1:1  Min: 0 Max: 1   Destination: MOTOR
-    uint64_t usecustom;   ///< B2:2  Min: 0 Max: 1   Destination: MOTOR
-    uint64_t custom;      ///< B4:3  Min: 0 Max: 1   Destination: MOTOR
-    uint64_t incr;        ///< B5:5  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t stop:1;        ///< B0:0  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t forward:1;     ///< B1:1  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t usecustom:1;   ///< B2:2  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t custom:2;      ///< B4:3  Min: 0 Max: 1   Destination: MOTOR
+    uint8_t incr:1;        ///< B5:5  Min: 0 Max: 1   Destination: MOTOR
 
-}throttle_can_payload __attribute__((packed));
+}throttle_can_payload __attribute__((packed));*/
+
 
 class motor_class:public CAN_base_class
 {
@@ -32,16 +37,20 @@ public:
 			uint8_t motor_steering = 0;
 			can_msg_t motor_throttle_can_mess;
 			can_msg_t motor_steering_can_mess;
+			uint8_t throttle = 0;
 	static motor_class* getInstance();
 	bool motor_class_init();
 	bool get_motor_status();
 	bool send_motor_throttle();
 	bool send_motor_steering();
+	bool stop();
+	bool custom_1();
+	bool custom_2();
+	bool custom_3();
 	motor_class();
 
 private:
 	static motor_class *single;
-	throttle_can_payload motor_throttle_payload;
 };
 
 #endif /* L5_APPLICATION_SOURCE_MOTOR_HPP_ */

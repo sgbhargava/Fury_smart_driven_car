@@ -27,8 +27,8 @@
  * For example, the 1000Hz take slot runs periodically every 1ms, and whatever you
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
-#define sonar_hard_threshold 20
-#define lidar_hard_threshold 20
+#define sonar_hard_threshold 30
+#define lidar_hard_threshold 30
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -45,8 +45,6 @@
 #include "tlm/c_tlm_comp.h"
 #include "tlm/c_tlm_var.h"
 
-#define forward 0xF0
-#define reverse 0x00
 CAN_base_class my_can;
 sensor_class *sensor;
 motor_class *motor;
@@ -58,38 +56,48 @@ can_msg_t motor_throttle;
 can_msg_t motor_steer;
 can_msg_t heart_beat;
 
-int correctSpeed = forward;
-int previousSpeed = reverse;
 
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 #if 1
 
+
 void Obstruction_avoidance_algorithm(void)
 {
+	motor->get_motor_status();
+	sensor->lidar_threshold = 20+ motor->motor_rpm/2;
+	sensor->sensor_threshold = 15 + motor->motor_rpm /3;
+	if((sensor->lidar_threshold > 120) | (sensor->sensor_threshold > 80))
+	{
+		sensor->lidar_threshold = 120;
+		sensor->sensor_threshold = 80;
+	}
 	/*motor = motor_class::getInstance();*/
 	if (sensor->lidar < sensor->lidar_threshold )
 		{
-		if(sensor->lidar <lidar_hard_threshold)
+
+		if((sensor->left < sensor->sensor_threshold) && (sensor->right < sensor->sensor_threshold))
 			{
+			printf("stop\n");
+			motor->motor_steering = 0;
 			motor->stop();
-		//	motor->motor_throttle_payload.stop = 1;
-
 			}
-		else
-		{
-			 if (sensor->right < sensor->sensor_threshold)
-			 {
-				motor->motor_steering = 4; //left
-			 }
-			 else
-			 {
-				 motor->motor_steering = 1; //right
-			 }
-			 motor->custom_1();
 
-		}
+		else if (sensor->right < sensor->sensor_threshold)
+			 {
+			 motor->motor_steering = 4; //left
+			 motor->custom_1();
+			 }
+		else if(sensor->left <sensor->sensor_threshold)
+			 {
+			 motor->motor_steering = 1; //right
+			 motor->custom_1();
+			 }
+
+
+
+
 		}
 		else
 		{
@@ -108,8 +116,9 @@ void Obstruction_avoidance_algorithm(void)
 			motor->custom_1();
 		}
 
-	printf("motor steer %d\n", motor->motor_steering);
+	//printf("motor steer %d\n", motor->motor_steering);
 
+	printf("rpm is %d\n", motor->motor_rpm);
 	if(!motor->send_motor_steering())
 	{
 		printf("ERROR failed to send 21\n");

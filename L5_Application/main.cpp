@@ -28,7 +28,7 @@
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "file_logger.h"
-
+#include "io.hpp"
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.
@@ -73,6 +73,9 @@ int main(void)
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
+
+    Switches main_sw = Switches::getInstance();
+    while(!main_sw.getSwitch(1));
     #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif

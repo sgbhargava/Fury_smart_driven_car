@@ -21,7 +21,7 @@ public:
 	uint16_t lidar = 0;
 	uint16_t back = 0;
 	uint16_t lidar_threshold = 75;
-	uint16_t sensor_threshold = 30;
+	uint16_t sensor_threshold = 50;
 	bool get_sensor_reading();
 	bool sensor_class_init();
 

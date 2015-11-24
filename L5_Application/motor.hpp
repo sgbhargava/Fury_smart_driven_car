@@ -9,11 +9,6 @@
 #define L5_APPLICATION_SOURCE_MOTOR_HPP_
 #include "CAN_base_class.hpp"
 
-typedef struct {
-    uint32_t mid; ///< Message ID of the message
-    uint8_t  dlc; ///< Data length of the message
-} msg_hdr_t;
-
 /*typedef struct{
 
     uint8_t stop:1;        ///< B0:0  Min: 0 Max: 1   Destination: MOTOR
@@ -32,11 +27,9 @@ public:
 			uint16_t id_motor_status = 0x102;
 			uint16_t id_motor_throttle = 0x22;
 			uint16_t id_motor_steering = 0x21;
-			uint32_t motor_speed = 0;
-			uint32_t motor_rpm = 0;
+			uint16_t motor_speed = 0;
+			uint16_t motor_rpm = 0;
 			uint8_t motor_steering = 0;
-			can_msg_t motor_throttle_can_mess;
-			can_msg_t motor_steering_can_mess;
 			uint8_t throttle = 0;
 	static motor_class* getInstance();
 	bool motor_class_init();
@@ -47,6 +40,7 @@ public:
 	bool custom_1();
 	bool custom_2();
 	bool custom_3();
+	bool reverse();
 	motor_class();
 
 private:

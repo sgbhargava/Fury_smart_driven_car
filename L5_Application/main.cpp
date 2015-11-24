@@ -49,39 +49,7 @@
  *        In either case, you should avoid using this bus or interfacing to external components because
  *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
  */
-#if 0
-QueueHandle_t queueHandler = xQueueCreate(1, sizeof(bool));
-void initESCa()
-{
-    bool init_f = true;
-    xQueueSend(queueHandler, &init_f, 0);
-}
-class initMotorTask: public scheduler_task {
-    public:
-        initMotorTask(uint8_t priority):
-            scheduler_task("initMotorTask", 2048, priority) {
-        }
-        bool init(void) {
-            int port2_7 = 7;
-            eint3_enable_port2(port2_7, eint_rising_edge, initESCa);
-            return true;
-        }
-        bool run (void* p){
-            bool init_f = false;
-            if (xQueueReceive(queueHandler,&init_f, 1)){
-                if (init_f)
-                {
-                    SpeedCtrl* speed = SpeedCtrl::getInstance();
-                    speed->initESC();
-                    vTaskDelay(3000);
-                    speed->setSpeedPWM(FORWARD_SPEED);
-                }
 
-            }
-            return true;
-        }
-};
-#else
 class initMotorTask: public scheduler_task {
     public:
         initMotorTask(uint8_t priority):
@@ -99,10 +67,14 @@ class initMotorTask: public scheduler_task {
                 vTaskDelay(3000);
                 speed->setSpeedPWM(FORWARD_SPEED);
             }
+            else if (SW.getSwitch(2))
+            {
+                SpeedCtrl* speeda = SpeedCtrl::getInstance();
+                speeda->setSpeedCustom(true,1);
+            }
             return true;
         }
 };
-#endif
 int main(void)
 {
     /**
@@ -120,7 +92,7 @@ int main(void)
     //scheduler_add_task(new CANMsgTxTask(PRIORITY_HIGH));
     //scheduler_add_task(new CANMsgRxTask(PRIORITY_HIGH));
 
-    scheduler_add_task(new dispLCDTask(PRIORITY_LOW));
+   // scheduler_add_task(new dispLCDTask(PRIORITY_LOW));
 
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */

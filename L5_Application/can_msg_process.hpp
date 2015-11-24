@@ -27,56 +27,17 @@
 #define CAN_MSG_ID_GPS_COMPASS 0x162
 #define CAN_MSG_ID_GPS_GPS 0x164
 
-#define FORWARD_SPEED 8.68
+#define FORWARD_SPEED 8.66
 #define BACKWARD_SPEED 8.0
 
-//#define CAN_MSG_CLASS
-#define DBC_FILE
-#ifndef DBC_FILE
-typedef struct{
-    uint64_t turn:3;
-}dir_can_msg_t;
-
-typedef struct{
-    uint64_t backward:1;        // use the customized backward
-    uint64_t incrBackward:1;    // if backward is true, and incrBackward is true, it means increasing the speed.
-    uint64_t customBackward:2;  // if backward is true, this indicates the customized code
-                                // if backward is true, and incrBackward is false, this is 0x3 means decreasing
-    uint64_t forward:1;
-    uint64_t incrForward:1;
-    uint64_t customForward:2;
-}throttle_can_msg_t;
-
-#endif
 typedef struct{
     uint64_t speed:8;
     uint64_t rpm:8;
 }speed_can_msg_t;
 
-#ifdef CAN_MSG_CLASS
-class CANMsg
-{
-    public:
-        static CANMsg * getInstance();
-        void recvAndAnalysisCanMsg(void);
-        void sendSpeed(void);
-        void sendHeartBeat(void);
-        void sendTxCanMsg(void);
-
-    private:
-        CANMsg();
-        static CANMsg * m_pInstance;
-
-        SpeedCtrl *m_pSpeed;
-        DirectionCtrl *m_pDir;
-        SpeedMonitor *m_pSpeedMonitor;
-        int m_heartbeatCnt;
-};
-#else
 void can_msg_process_init(void);
 void sendSpeed(void);
 void sendHeartBeat(void);
 void recvAndAnalysisCanMsg(void);
 void readCANMsgs(void);
-#endif
 #endif /* L5_APPLICATION_CAN_MSG_PROCESS_HPP_ */

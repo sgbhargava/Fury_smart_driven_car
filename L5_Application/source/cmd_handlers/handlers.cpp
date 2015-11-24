@@ -678,9 +678,10 @@ CMD_HANDLER_FUNC(directionHandler)
 CMD_HANDLER_FUNC(speedMonHandler)
 {
     SpeedMonitor * monitor = SpeedMonitor::getInstance();
-    float rpm, speed;
+    int rpm;
+    float speed;
     monitor->getSpeed(&rpm, &speed);
-    printf("RPM: %.2f  Speed: %.2f\n", rpm, speed);
+    printf("RPM: %d  Speed: %.2f\n", rpm, speed);
     return true;
 }
 #if (SYS_CFG_ENABLE_TLM)

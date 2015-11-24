@@ -12,6 +12,9 @@
 #define MAX_DUTY_CYCLE 11
 #define MIN_DUTY_CYCLE 5.5
 #define BASE_DUTY_CYCLE ((MAX_DUTY_CYCLE+MIN_DUTY_CYCLE)/2)
+#define RPM_THERHOLD_1 25
+#define RPM_THERHOLD_2 50
+#define RPM_THERHOLD_3 100
 
 class DirectionCtrl
 {
@@ -45,17 +48,23 @@ class DirectionCtrl
 class SpeedCtrl
 {
     public:
-        float desiredSpeed = 0;
+        enum
+        {
+            goStop,
+            goForward,
+            goBackward
+        };
         float speedPWM = 0;
         static SpeedCtrl * getInstance();
         void initESC();
         bool checkPWM(float pwm);
-        void checkSpeed();
-        void setSpeedPWM(float pwm);
+        void selfTuningSpeed();
+        void setSpeedPWM(float pwm, bool selfTuning_f = false);
         void setSpeedCustom(bool forward, uint8_t speedSetting);
-        void incrSpeedPWM();
-        void descrSpeedPWM();
+        void incrSpeedPWM(int step = 1);
+        void descrSpeedPWM(int step = 1);
         void setStop();
+        int getGoDesiredDirection();
 
     private:
         SpeedCtrl();
@@ -64,16 +73,20 @@ class SpeedCtrl
         GPIO pin1_22;
         GPIO pin1_23;
         bool selfTuning = false;
-        const float PWMStep = 0.01;
+        int selfTuningTimer = 0;
+        int startSelfTuning;
+
+        const float PWMStep = 0.005;
         const float basePWM = BASE_DUTY_CYCLE;
         const float frontLimitPWM = MAX_DUTY_CYCLE;
         const float backLimitPWM = MIN_DUTY_CYCLE;
-        const float speed_forward_custom1 = 8.68;
-        const float speed_forward_custom2 = 8.7;
-        const float speed_forward_custom3 = 8.72;
-        const float speed_backward_custom1 = 8.0;
-        const float speed_backward_custom2 = 7.8;
-        const float speed_backward_custom3 = 7.6;
+        int desiredRpm;
+        int desiredCustom;
+        int desiredDirection;
+        float pwm_forward_custom[3] ={8.655, 8.7, 8.72}; //Level 2-3 requires tuning
+        const int rpm_forward_custom[3] ={120, 150, 170};
+        float pwm_backward_custom[3] ={7.8, 7.6, 7.4};
+        const int rpm_backward_custom[3] ={110, 140, 170};
 };
 
 
@@ -81,12 +94,14 @@ class SpeedMonitor
 {
     public:
         float m_speed = 0;
-        float m_rpm = 0;
+        int m_rpm = 0;
+        int m_rpmArray[50];
+        int m_rpmRecorded = 0;
         static SpeedMonitor * getInstance();
-        void setRpm(int rpmVal);
         void calSpeed();
         int getRpm();
-        void getSpeed(float* rpm, float* speed);
+        void getSpeed(int* rpm, float* speed);
+        void getSpeedEachSecond(int* rpm, float* speed);
 
     private:
         SpeedMonitor();

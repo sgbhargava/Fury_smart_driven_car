@@ -44,9 +44,6 @@
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4*2);
-#ifdef CAN_MSG_CLASS
-CANMsg * canMsgHandler = CANMsg::getInstance();
-#endif
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -65,43 +62,27 @@ bool period_reg_tlm(void)
     TLM_REG_VAR(tlm_component_get_by_name("disk"), speed->speedPWM, tlm_float);
     TLM_REG_VAR(tlm_component_get_by_name("disk"), dir->dirPWM, tlm_float);
     TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_speed, tlm_float);
-    TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_rpm, tlm_float);
+    TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_rpm, tlm_int);
 
     return true; // Must return true upon success
 }
 
 void period_1Hz(void)
 {
-#ifdef CAN_MSG_CLASS
-
-    canMsgHandler->sendSpeed();
-    //canMsgHandler->sendHeartBeat();
-#else
     sendSpeed();
     sendHeartBeat();
     readCANMsgs();
-#endif
+    SpeedCtrl::getInstance()->selfTuningSpeed();
 
 }
 
 void period_10Hz(void)
 {
-// using the number of the 1 0 and calculate the
 }
 
 void period_100Hz(void)
 {
-#ifdef CAN_MSG_CLASS
-    canMsgHandler->recvAndAnalysisCanMsg();
-#else
     recvAndAnalysisCanMsg();
-#endif
-    SpeedCtrl::getInstance()->checkSpeed();
-// if (actual is > desired)
-    // pwm --;
-    //else
-    //pwm ++;
-// if desire == 0 ; stop
 }
 
 void period_1000Hz(void)

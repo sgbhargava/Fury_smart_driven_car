@@ -53,8 +53,9 @@ void testCode(void *p)
     static uint8_t num = 0;
     while(1)
     {
+        num = getPresentChkPnt();
 
-        if(SW.getSwitch(1))
+        /*if(SW.getSwitch(1))
         {
             //g[0] = 0x02f423f7;
             //g[1] = 0x9f423f25;
@@ -71,7 +72,7 @@ void testCode(void *p)
             sendCompass_data(300.05, 345.25, chk, dist, calcDistToFinalDest(dist));
            //printf("%" PRIu64 "\n",g);
           // getdata();
-        }
+        }*/
         if(SW.getSwitch(3))
         {
             valid = updateToNxtChkPnt();

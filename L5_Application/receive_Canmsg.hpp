@@ -27,8 +27,8 @@ typedef union{
         struct{
         int8_t turnDecision     : 8;
         uint8_t checkpoint      : 8;
-        uint32_t dist_finaldest : 16;
-        uint32_t dist_nxtpnt    : 16;
+        uint32_t dist_finalDest : 16;
+        uint32_t dist_nxtPnt    : 16;
 }__attribute__((packed));
     uint64_t compass_dist_data;
 }compass_distance_info;

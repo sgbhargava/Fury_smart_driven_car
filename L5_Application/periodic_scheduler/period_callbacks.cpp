@@ -82,8 +82,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
-    //heartbeat();
-    //can_receive();
+    heartbeat();
 }
 
 void period_10Hz(void)
@@ -109,9 +108,6 @@ void period_10Hz(void)
         presentLat = gpsCurrentData.latitude;
         presentLon = gpsCurrentData.longitude;
 
-        //Sending GPS data to master.
-        sendGPS_data(&presentChkPnt,&presentLat,&presentLon);
-
         // latitude and longitude of checkpoint
         chkPntLat = getLatitude(presentChkPnt);
         chkPntLon = getLongitude(presentChkPnt);
@@ -125,7 +121,8 @@ void period_10Hz(void)
         distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
         distToDest = calcDistToFinalDest(distToChkPnt);
 
-        //Sending compass data to master.
+        //Sending GPS data and compass data to master.
+        sendGPS_data(&presentChkPnt,&presentLat,&presentLon);
         sendCompass_data(currentHeading, desiredHeading, presentChkPnt, distToChkPnt, distToDest);
 
         // check if the car has reached the checkpoint
@@ -152,16 +149,18 @@ void period_10Hz(void)
 
     if(SW.getSwitch(2))
     {
-        compassMode = 2;//0
+        compassMode = HEADINGMODE; //0
         LD.setNumber(10);
     }
     if(SW.getSwitch(1))
-        compassMode = 1;
+        compassMode = CALIBRATIONMODE;
 }
 
 
 void period_100Hz(void)
 {
+    can_receive();
+
     if(CAN_is_bus_off(can1))
         CAN_reset_bus(can1);
 }

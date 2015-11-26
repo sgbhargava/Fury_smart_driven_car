@@ -13,7 +13,7 @@
  * */
 
 
-#define  TESTCODE               0
+#define  TESTCODE               1
 #define  BEARINGMODE            0
 #define  CALIBRATIONMODE        1
 #define  HEADINGMODE            2
@@ -35,6 +35,7 @@
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_ZERO          0
 #define  MAGENTIC_DECLINTAION   14
+#define  SCALE                  30
 
 
 #endif /* L5_APPLICATION_HASHDEFINE_HPP_ */

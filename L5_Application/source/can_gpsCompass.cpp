@@ -34,7 +34,9 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
         }
         else if(traverseChkPnt->chkPntNo == num)
         {
-            return false;
+            prevChkPnt = traverseChkPnt->prev;
+            nextChkPnt = traverseChkPnt->next;
+            break;
         }
         else if((traverseChkPnt->chkPntNo > num) && (NULL != traverseChkPnt->prev))
         {

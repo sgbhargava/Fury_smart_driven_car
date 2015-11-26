@@ -52,6 +52,10 @@ uint8_t    presentChkPnt, compassMode = 0;
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+    CAN_init(can1,100,2,2,NULL,NULL);
+    bool canSetup = CAN_fullcan_add_entry(can1,CAN_gen_sid(can1,MASTER_GPSDATA_ID), CAN_gen_sid(can1,MASTER_RESET_ID));
+    CAN_reset_bus(can1);
+
     return true; // Must return true upon success
 }
 
@@ -78,7 +82,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
-    heartbeat();
+    //heartbeat();
     //can_receive();
 }
 
@@ -158,12 +162,8 @@ void period_10Hz(void)
 
 void period_100Hz(void)
 {
-#if CAN_USAGE
     if(CAN_is_bus_off(can1))
         CAN_reset_bus(can1);
-
-
-#endif
 }
 
 void period_1000Hz(void)

@@ -25,15 +25,13 @@ typedef union{
 
 typedef union{
         struct{
-        uint32_t current_angle  : 12;
-        uint32_t desired_angle  : 12;
-        uint8_t  checkpoint     : 8;
+        int8_t turnDecision     : 8;
+        uint8_t checkpoint      : 8;
         uint32_t dist_finaldest : 16;
         uint32_t dist_nxtpnt    : 16;
 }__attribute__((packed));
     uint64_t compass_dist_data;
 }compass_distance_info;
-
 
 void sendGPS_data(uint8_t *,double_t*, double_t*);
 

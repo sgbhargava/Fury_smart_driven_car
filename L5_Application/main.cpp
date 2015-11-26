@@ -140,7 +140,7 @@ int main(void)
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 1
+    #if 0
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 

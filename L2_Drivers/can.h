@@ -289,7 +289,7 @@ can_ext_id_t CAN_gen_eid(can_t can, uint32_t id);
 bool CAN_fullcan_add_entry(can_t can, can_std_id_t id1, can_std_id_t id2);
 
 /**
- * Once all the FulLCAN entries are added, and CAN filters are setup, you can get
+ * Once all the FullCAN entries are added, and CAN filters are setup, you can get
  * the pointer in memory where the actual CAN message (FullCAN entry) is stored in memory.
  * @param fc_id The FullCAN entry originally passed to CAN_fullcan_add_entry()
  */

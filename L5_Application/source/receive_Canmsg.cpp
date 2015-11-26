@@ -19,7 +19,9 @@
 lat_long_info          *receive_gpsdata      = new lat_long_info;
 lat_long_info          *transmit_gpsdata     = new lat_long_info;
 compass_distance_info  *transmit_compassdata = new compass_distance_info;
-
+can_fullcan_msg_t* ptr_toReadData;
+can_std_id_t toget_Master_MsgID;
+bool msgrec_master;
 
 void can_transmit(uint32_t msgID, uint64_t *updateGps_data, uint8_t dataLength)
 {
@@ -54,9 +56,15 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
 void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentChkPnt,
         float_t nxtChkPntDist, float_t finalDestDist)
 {
+    /** Positive number indicates the car has to car turn right.
+     *  Negative number indicates the car has to turn left.
+     *  Else head straight.
+     */
+
+    int8_t turn = ((desiredDir - currentDir)/30);
+
     transmit_compassdata->checkpoint        =   presentChkPnt;
-    transmit_compassdata->current_angle     =   (uint16_t) currentDir;
-    transmit_compassdata->desired_angle     =   (uint16_t) desiredDir;
+    transmit_compassdata->turnDecision      =   turn;
     transmit_compassdata->dist_nxtpnt       =   (uint16_t) nxtChkPntDist;
     transmit_compassdata->dist_finaldest    =   (uint16_t) finalDestDist;
 
@@ -68,8 +76,49 @@ void sendCompass_data(float_t currentDir, double_t desiredDir, uint8_t presentCh
 
 void can_receive()
 {
-    can_msg_t data;
+/*
+    toget_Master_MsgID = CAN_gen_sid(can1,MASTER_GPSDATA_ID);
+    CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1,MASTER_GPSDATA_ID));
+    msgrec_master = CAN_fullcan_read_msg_copy(&ptr_toReadData,&data_master);
 
+    if(msgrec_master == 1)
+    {
+        if(toget_Master_MsgID.id == MASTER_GPSDATA_ID)
+        {
+            receive_gpsdata = (lat_long_info*)  (ptr_toReadData.data.qword);
+            addChkPnts(receive_gpsdata->lat_dec,receive_gpsdata->long_dec,receive_gpsdata->long_dec,
+                                                            receive_gpsdata->long_float,receive_gpsdata->chkPoint);
+        }
+        else if(toget_Master_MsgID.id == MASTER_RESET_ID)
+            sys_reboot();
+
+        else
+            LD.setNumber(17);
+    }
+    else
+        LD.setNumber(15); // Indicates there is no new message in the CAN RAM
+*/
+
+
+    can_fullcan_msg_t* data_gpsUpdate = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, MASTER_GPSDATA_ID));
+    can_fullcan_msg_t* data_sysReboot = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, MASTER_RESET_ID));
+
+
+    if(CAN_fullcan_read_msg_copy(ptr_toReadData,data_gpsUpdate))
+    {
+        receive_gpsdata = (lat_long_info*) (ptr_toReadData->data.qword);
+        addChkPnts(receive_gpsdata->lat_dec,receive_gpsdata->long_dec,receive_gpsdata->long_dec,
+                                                                    receive_gpsdata->long_float,receive_gpsdata->chkPoint);
+    }
+
+    if(CAN_fullcan_read_msg_copy(ptr_toReadData,data_sysReboot))
+    {
+        sys_reboot();
+    }
+
+
+#if 0
+    can_msg_t data;
     CAN_rx(can1, &data, 1);
 
     // START of checkpoints that resets all the checkpoint
@@ -85,7 +134,7 @@ void can_receive()
 
     else
         LD.setNumber(17);
-
+#endif
 }
 
 void heartbeat()

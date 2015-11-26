@@ -27,7 +27,6 @@ I2C2 &compass = I2C2::getInstance();
 
 uint8_t compassBearing_fullCircle()
 {
-//    LE.off(1);LE.off(1);
     uint8_t data;
     data = compass.readReg(0xc0, 1);
     return data;
@@ -43,8 +42,7 @@ float_t compassBearing_inDeg()
 
     compassangle = (shiftreg1 << 0) + (shiftreg << 8);
 
-    //14 deg is added to compensate the magnetic declination.
-    return fmodf(((compassangle/10) + 14 ), 360);
+    return fmodf(((compassangle/10) + MAGENTIC_DECLINTAION ), 360);
 }
 
 #if 0
@@ -75,7 +73,6 @@ void temperature()
 uint8_t compass_calibrationMode(uint8_t compassMode)
 {
     /**Here register address 0 indicates its a command register**/
-    // LE.on(1);LE.off(2);
      compass.writeReg(0xC0,0,0xF0);
      delay_ms(20);
      compass.writeReg(0xC0,0,0xF5);

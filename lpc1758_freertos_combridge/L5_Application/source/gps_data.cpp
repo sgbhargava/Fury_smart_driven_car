@@ -203,7 +203,7 @@ void bridge_canTx()
                 do
                 {
                     canData.frame_fields.data_len = 8;
-                    canData.msg_id = location ; // sending latitude  to to master
+                    canData.msg_id = location ; // sending latitude  to master
 
                     canData.data.qword =  *(uint64_t *)(&gGpsData[i].longLatdata);
 

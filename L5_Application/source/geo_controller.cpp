@@ -15,6 +15,16 @@ geo_controller_class* geo_controller_class::getInstance()
 	return single;
 }
 
+bool geo_controller_class::get_heartbeat()
+{
+	uint64_t temp;
+	if(get_data(id_heart_beat, &temp))
+	{
+		return true;
+	}
+	return false;
+}
+
 bool geo_controller_class::geo_controller_class_init()
 {
 	add_can_id(id_heart_beat,id_gps_distance);

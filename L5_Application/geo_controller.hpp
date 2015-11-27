@@ -42,6 +42,7 @@ public:
 	compass *compass_data = new compass;
 	long_lat *lat_long_data = new long_lat;
 
+	bool get_heartbeat();
 	bool get_coordinates();
 	bool get_compass_data();
 	bool get_checkpoint_req();

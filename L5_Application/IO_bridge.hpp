@@ -21,6 +21,7 @@ public:
 		long_lat *lat_long_from_IO = new long_lat;
 		uint8_t drive_auth =0;
 
+		bool get_heartbeat();
 		bool IO_base_class_init();
 		bool get_drive_authotization();
 		bool get_location_details();

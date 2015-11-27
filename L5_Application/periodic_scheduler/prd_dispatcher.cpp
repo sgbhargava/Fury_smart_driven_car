@@ -47,7 +47,7 @@ void period_task_1000Hz(void *p) { while (xSemaphoreTake(sems[prd_1000Hz], portM
 /// @}
 
 periodicSchedulerTask::periodicSchedulerTask(void) :
-    scheduler_task("dispatcher", 512 * 3, PRIORITY_CRITICAL + PRIORITY_CRITICAL + 5)
+    scheduler_task("dispatcher", 512 * 5, PRIORITY_CRITICAL + PRIORITY_CRITICAL + 5)
 {
     setRunDuration(1);
     setStatUpdateRate(0);

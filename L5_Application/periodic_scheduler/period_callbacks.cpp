@@ -44,144 +44,128 @@
 #include "geo_controller.hpp"
 #include "tlm/c_tlm_comp.h"
 #include "tlm/c_tlm_var.h"
+#include "can_gpsCompass.hpp"
 
 CAN_base_class my_can;
 sensor_class *sensor;
 motor_class *motor;
 geo_controller_class *geo_controller;
 IO_base_class *IO_controller;
-
-
+checkPointData_t checkPoints;
 can_msg_t motor_throttle;
 can_msg_t motor_steer;
 can_msg_t heart_beat;
-
-
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 #if 1
 
-
-void Obstruction_avoidance_algorithm(void)
-{
+void Obstruction_avoidance_algorithm(void) {
 	motor->get_motor_status();
-	sensor->lidar_threshold = 20+ motor->motor_rpm/2;
-	sensor->sensor_threshold = 15 + motor->motor_rpm /3;
-	if((sensor->lidar_threshold > 120) | (sensor->sensor_threshold > 80))
-	{
+	sensor->lidar_threshold = 20 + motor->motor_rpm / 2;
+	sensor->sensor_threshold = 15 + motor->motor_rpm / 3;
+
+	if ((sensor->lidar_threshold > 120) | (sensor->sensor_threshold > 80)) {
 		sensor->lidar_threshold = 120;
 		sensor->sensor_threshold = 80;
 	}
 	/*motor = motor_class::getInstance();*/
-	if (sensor->lidar < sensor->lidar_threshold )
-		{
+	if (sensor->lidar < sensor->lidar_threshold) {
 
-		if((sensor->left < sensor->sensor_threshold) && (sensor->right < sensor->sensor_threshold))
-			{
+		if ((sensor->left < sensor->sensor_threshold)
+				&& (sensor->right < sensor->sensor_threshold)) {
 			printf("stop\n");
 			motor->motor_steering = 0;
 			motor->stop();
-			}
-
-		else if (sensor->right < sensor->sensor_threshold)
-			 {
-			 motor->motor_steering = 4; //left
-			 motor->custom_1();
-			 }
-		else if(sensor->left <sensor->sensor_threshold)
-			 {
-			 motor->motor_steering = 1; //right
-			 motor->custom_1();
-			 }
-
-
-
-
 		}
-		else
-		{
-			if (sensor->right < sensor->sensor_threshold)
-			{
-				motor->motor_steering = 3;
-			}
-			else if (sensor->left < sensor->sensor_threshold)
-			{
-				motor->motor_steering =2;
-			}
-			else
-			{
-				motor->motor_steering =0;
-			}
+
+		else if (sensor->right < sensor->sensor_threshold) {
+			motor->motor_steering = 4; //left
+			motor->custom_1();
+		} else if (sensor->left < sensor->sensor_threshold) {
+			motor->motor_steering = 1; //right
 			motor->custom_1();
 		}
+
+	} else {
+		if (sensor->right < sensor->sensor_threshold) {
+			motor->motor_steering = 3;
+		} else if (sensor->left < sensor->sensor_threshold) {
+			motor->motor_steering = 2;
+		} else {
+			motor->motor_steering = 0;
+		}
+		motor->custom_1();
+	}
 
 	//printf("motor steer %d\n", motor->motor_steering);
 
 	printf("rpm is %d\n", motor->motor_rpm);
-	if(!motor->send_motor_steering())
-	{
+	if (!motor->send_motor_steering()) {
 		printf("ERROR failed to send 21\n");
 	}
 
-	if(!motor->send_motor_throttle())
+	if (!motor->send_motor_throttle())
 		printf("ERROR failed to send 22\n");
 }
 
 #endif
 
-
-
 /// Called once before the RTOS is started, this is a good place to initialize things once
-bool period_init(void)
-{
+bool period_init(void) {
 	motor = motor_class::getInstance();
 	sensor = sensor_class::getInstance();
 	geo_controller = geo_controller_class::getInstance();
 	IO_controller = IO_base_class::get_Instance();
 	my_can.CAN_base_class_init();
+	/*if(IO_controller->get_location_details())
+	{
+		while(!IO_controller->lat_long_from_IO->bIsFinal)
+		{
+			addChkPnts(IO_controller->lat_long_from_IO);
+			geo_controller->geo_controller_send_coordinates();
+		}
+	}
+	printf("done sending\n");*/
 
-    return true; // Must return true upon success
+	return true; // Must return true upon success
 }
 
 //Register any telemetry variables
-bool period_reg_tlm(void)
-{
+bool period_reg_tlm(void) {
 
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->left,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->right,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->lidar,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->back,tlm_int);
-   TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,tlm_int);
-  // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.sensor_threshold,tlm_int);
-  // TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar_threshold,tlm_int);
-   return true; // Must return true upon success
+	// Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->left, tlm_int);
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->right, tlm_int);
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->lidar, tlm_int);
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->back, tlm_int);
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,
+			tlm_int);
+	// TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.sensor_threshold,tlm_int);
+	// TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar_threshold,tlm_int);
+	return true; // Must return true upon success
 }
-
 
 void period_1Hz(void) {
 	/*if(sensor.get_sensor_reading())
-			u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
-		else
-			u0_dbg_printf("no sensor\n");*/
+	 u0_dbg_printf("left is %x \t right is \t %x lidar is %x\n",sensor.left, sensor.right, sensor.lidar);
+	 else
+	 u0_dbg_printf("no sensor\n");*/
+	geo_controller->reset();
 }
-
 
 void period_10Hz(void) {
 
-	if(!sensor->get_sensor_reading())
+	if (!sensor->get_sensor_reading())
 		u0_dbg_printf("ERROR failed to get sensor data\n");
 	Obstruction_avoidance_algorithm();
 
 }
 
-
 void period_100Hz(void) {
-
 
 }
 
 void period_1000Hz(void) {
-	//LE.toggle(4);
+	LE.toggle(4);
 }

@@ -49,5 +49,30 @@ bool geo_controller_class::get_coordinates()
 	if(!get_data(id_gps_coordinates, &temp))
 		return false;
 	lat_long_data = (long_lat*) temp;
+	return true;
 }
 
+bool geo_controller_class::geo_controller_send_coordinates()
+{
+	can_msg_t geo_controller_can_mess;
+	geo_controller_can_mess.msg_id = id_gps_coordinates;
+	geo_controller_can_mess.data.qword = *(uint64_t *)lat_long_data;
+	geo_controller_can_mess.frame_fields.data_len = 8;
+	geo_controller_can_mess.frame_fields.is_29bit = 0;
+	if(!CAN_tx(can1, &geo_controller_can_mess,0))
+		return false;
+	return true;
+}
+
+bool geo_controller_class:: reset()
+{
+	can_msg_t geo_controller_can_mess;
+		geo_controller_can_mess.msg_id = id_reset;
+		geo_controller_can_mess.data.bytes[0] = 0x00;
+		geo_controller_can_mess.frame_fields.data_len = 1;
+		geo_controller_can_mess.frame_fields.is_29bit = 0;
+		if(!CAN_tx(can1, &geo_controller_can_mess,0))
+			return false;
+		return true;
+
+}

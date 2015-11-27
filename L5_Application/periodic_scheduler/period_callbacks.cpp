@@ -118,15 +118,7 @@ bool period_init(void) {
 	geo_controller = geo_controller_class::getInstance();
 	IO_controller = IO_base_class::get_Instance();
 	my_can.CAN_base_class_init();
-	/*if(IO_controller->get_location_details())
-	{
-		while(!IO_controller->lat_long_from_IO->bIsFinal)
-		{
-			addChkPnts(IO_controller->lat_long_from_IO);
-			geo_controller->geo_controller_send_coordinates();
-		}
-	}
-	printf("done sending\n");*/
+
 
 	return true; // Must return true upon success
 }
@@ -167,5 +159,5 @@ void period_100Hz(void) {
 }
 
 void period_1000Hz(void) {
-	LE.toggle(4);
+	//LE.toggle(4);
 }

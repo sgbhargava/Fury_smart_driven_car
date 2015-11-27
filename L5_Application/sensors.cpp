@@ -8,7 +8,7 @@
 bool sensor_class::get_sensor_reading()
 {
 	uint64_t temp;
-	if(get_data(sensors, &temp))
+	if(get_data(id_sensors, &temp))
 	{
 		lidar = getword(temp,0);
 		left = getword(temp, 1);
@@ -22,8 +22,8 @@ bool sensor_class::get_sensor_reading()
 bool sensor_class::sensor_class_init()
 {
 
-	add_can_id(heart_beat,sensors);
-	add_can_id(battery, 0xFF);
+	add_can_id(id_heart_beat,id_sensors);
+	add_can_id(id_battery, 0xFF);
 	return true;
 }
 sensor_class* sensor_class::single = NULL;
@@ -37,4 +37,12 @@ sensor_class* sensor_class::getInstance()
 	return single;
 }
 
-
+bool sensor_class::get_heartbeat()
+{
+	uint64_t temp;
+	if(!get_data(id_heart_beat, &temp))
+	{
+		return false;
+	}
+	return true;
+}

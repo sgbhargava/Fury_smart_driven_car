@@ -23,14 +23,9 @@
 class motor_class:public CAN_base_class
 {
 public:
-	uint16_t id_heart_beat = 0x100;
-			uint16_t id_motor_status = 0x102;
-			uint16_t id_motor_throttle = 0x22;
-			uint16_t id_motor_steering = 0x21;
-			uint16_t motor_speed = 0;
-			uint16_t motor_rpm = 0;
-			uint8_t motor_steering = 0;
-			uint8_t throttle = 0;
+	uint16_t motor_rpm = 0;
+	uint8_t motor_steering = 0;
+	uint8_t throttle = 0;
 	static motor_class* getInstance();
 	bool motor_class_init();
 	bool get_motor_status();
@@ -41,10 +36,17 @@ public:
 	bool custom_2();
 	bool custom_3();
 	bool reverse();
+	bool get_heartbeat();
 	motor_class();
 
 private:
 	static motor_class *single;
+	uint16_t id_heart_beat = 0x100;
+	uint16_t id_motor_status = 0x102;
+	uint16_t id_motor_throttle = 0x22;
+	uint16_t id_motor_steering = 0x21;
+	uint16_t motor_speed = 0;
+
 };
 
 #endif /* L5_APPLICATION_SOURCE_MOTOR_HPP_ */

@@ -14,6 +14,15 @@ IO_base_class* IO_base_class::get_Instance()
 	return single;
 }
 
+bool IO_base_class::get_heartbeat()
+{
+	uint64_t temp;
+	if(get_data(id_heart_beat, &temp))
+	{
+		return true;
+	}
+	return false;
+}
 bool IO_base_class::IO_base_class_init()
 {
 	add_can_id(id_heart_beat, id_drive_mode);

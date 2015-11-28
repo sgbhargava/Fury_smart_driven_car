@@ -40,6 +40,7 @@
 #include "tlm/c_tlm_comp.h"
 #include "tlm/c_tlm_var.h"
 #include "receive_Canmsg.hpp"
+#include "lpc_sys.h"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -52,10 +53,8 @@ uint8_t    presentChkPnt, compassMode = 0;
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-    CAN_init(can1,100,2,2,NULL,NULL);
-    bool canSetup = CAN_fullcan_add_entry(can1,CAN_gen_sid(can1,MASTER_GPSDATA_ID), CAN_gen_sid(can1,MASTER_RESET_ID));
-    CAN_reset_bus(can1);
 
+    can_communicationInit();
     return true; // Must return true upon success
 }
 
@@ -82,6 +81,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
+    can_receive();
     heartbeat();
 }
 
@@ -117,16 +117,18 @@ void period_10Hz(void)
         if(BEARINGMODE == compassMode)
             currentHeading = compassBearing_inDeg();
 
+        int8_t turn = ((desiredHeading - currentHeading) / SCALE);
+
         // Distance of checkpoint and final distance
         distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
         distToDest = calcDistToFinalDest(distToChkPnt);
 
-        //Sending GPS data and compass data to master.
-        sendGPS_data(&presentChkPnt,&presentLat,&presentLon);
-        sendCompass_data(currentHeading, desiredHeading, presentChkPnt, distToChkPnt, distToDest);
-
         // check if the car has reached the checkpoint
         finalChkPnt_b = checkPntReached(distToChkPnt);
+
+        //Sending GPS data and compass data to master.
+        sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
+        sendCompass_data(turn, presentChkPnt, distToChkPnt, distToDest);
 
         if(finalChkPnt_b)
             destReached();
@@ -138,12 +140,19 @@ void period_10Hz(void)
         LE.toggle(2);
     }
 
+    presentChkPnt = 2;
+    presentLat = 37.33345;
+    presentLon = 121.33345;
+    finalChkPnt_b = 0;
+    distToChkPnt = 34;
+    distToDest = 189;
+    sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
+    sendCompass_data(2, presentChkPnt, distToChkPnt, distToDest);
+
     if(CALIBRATIONMODE == compassMode)
         compassMode = compass_calibrationMode(compassMode); //calibration mode
-
     else if(HEADINGMODE == compassMode)
         compassMode = compass_headingMode();   //To get back to bearing compassMode
-
     else
         LD.setNumber(13);
 
@@ -159,10 +168,7 @@ void period_10Hz(void)
 
 void period_100Hz(void)
 {
-    can_receive();
 
-    if(CAN_is_bus_off(can1))
-        CAN_reset_bus(can1);
 }
 
 void period_1000Hz(void)

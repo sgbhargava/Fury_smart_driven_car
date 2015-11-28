@@ -55,24 +55,24 @@ void testCode(void *p)
     {
         num = getPresentChkPnt();
 
-        /*if(SW.getSwitch(1))
+        if(SW.getSwitch(1))
         {
             //g[0] = 0x02f423f7;
             //g[1] = 0x9f423f25;
 
             float longitude, latitude;
             printf("%f, %f\n", getLatitude(num), getLongitude(num));
-            float dist = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
-            printf("distance to ckpnt : %f, total: %f", dist, calcDistToFinalDest(dist));
+            //float dist = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
+            printf("total checkpoints: %d\n", getNumOfChkPnts());
 
             double_t chklat = 37.999999;
             double_t chklon = 121.999999;
             uint8_t chk = 2;
-            sendGPS_data(&chk,&chklat,&chklon);
-            sendCompass_data(300.05, 345.25, chk, dist, calcDistToFinalDest(dist));
+            //sendGPS_data(&chk,&chklat,&chklon);
+            //sendCompass_data(300.05, 345.25, chk, dist, calcDistToFinalDest(dist));
            //printf("%" PRIu64 "\n",g);
           // getdata();
-        }*/
+        }
         if(SW.getSwitch(3))
         {
             valid = updateToNxtChkPnt();
@@ -141,7 +141,7 @@ int main(void)
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 0
+    #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
 
@@ -149,11 +149,11 @@ int main(void)
     /*
      * Testing purpose
      */
-    addChkPnts(37, 334429, 121, 883402, 1); // latitude: 37.33422, longitude: 121.8834
+    /*addChkPnts(37, 334429, 121, 883402, 1); // latitude: 37.33422, longitude: 121.8834
     addChkPnts(37, 334453, 121, 883290, 2); // latitude: 3720.06544, longitude: 12152.98048
     addChkPnts(37, 334642, 121, 882854, 3); // latitude: 3720.07426, longitude: 12152.9776
     addChkPnts(37, 334804, 121, 882389, 4); // latitude: 3720.08884, longitude: 12152.94292
-    addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942
+    addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942*/
 
     xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
 #endif

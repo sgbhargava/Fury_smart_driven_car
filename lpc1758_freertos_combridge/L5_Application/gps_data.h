@@ -26,21 +26,35 @@ typedef struct {
         uint32_t lattitude_float :20;
         uint32_t longitude_dec :8;
         uint32_t longitude_float :20;
-        uint32_t checkpoint:8;
+        uint32_t checkpoint:7;
+        uint32_t bIsFinal:1;
 } __attribute__((packed)) long_lat_data ;
+
+typedef union {
+        long_lat_data data;
+        uint64_t dWord;
+} CAN_Gps_data;
 
 typedef struct gps_data{
 
       uint8_t cmd;
       long_lat_data longLatdata;
       uint8_t bDestination;
-      uint16_t distance;
 
 } gps_data;
+
+typedef struct cmd_data
+{
+        uint16_t cmd;
+        uint8_t index;
+} cmd_data;
 
 void initForGPSData(void);
 void getDataFromBluetooth();
 void bridge_canTx();
+bool SendHeartBeat();
+bool GPS_SendDataToCANTx();
+
 #ifdef __cplusplus
 }
 #endif

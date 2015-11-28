@@ -54,7 +54,8 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
-    // to send heart beat
+    SendHeartBeat();
+    GPS_SendDataToCANTx();
 }
 
 void period_10Hz(void)

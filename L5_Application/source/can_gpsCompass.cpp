@@ -19,6 +19,7 @@ static uint8_t numberOfChkPnts = 0;
 
 bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
 {
+    bool chkPntAdded = false;
     double_t calcLat, calcLong;
 
     checkPointData_t *traverseChkPnt = NULL;
@@ -81,6 +82,7 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
         newChkPnt->prev = prevChkPnt;
         newChkPnt->next = nextChkPnt;
         ++numberOfChkPnts;
+        chkPntAdded = true;
 
             if(NULL == newChkPnt->prev)
             {
@@ -102,7 +104,7 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
                 nextChkPnt->prev = newChkPnt;
             }
     }
-    return true;
+    return chkPntAdded;
 }
 
 double_t convertLatitudeToDegree(uint8_t latDec, uint32_t latFloat)

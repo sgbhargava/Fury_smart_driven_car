@@ -37,8 +37,8 @@
 // Message IDs and data length for CAN communication
 #define  HEARTBEAT_ID           0x160
 #define  COMPASS_DIST_ID        0x162
-#define  GPS_DATA_ID            0x164
-#define  MASTER_GPSDATA_ID      0x321
+#define  GPS_DATA_ID            0x461
+#define  COMM_GPSDATA_ID        0x382
 #define  MASTER_RESET_ID        0x320
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_SIX           6

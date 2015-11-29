@@ -16,24 +16,34 @@
 #include  "lpc_sys.h"
 
 // Generally, pointer is initialized to NULL and in the init() function they get new type
+
 lat_long_info          *receive_gpsData      = new lat_long_info;
 lat_long_info          *transmit_gpsData     = new lat_long_info;
 compass_distance_info  *transmit_compassData = new compass_distance_info;
 
+
 bool can_communicationInit()
 {
-    CAN_init(can1, 100, 10, 10, can_checkBusOff, NULL);
+    bool ok = CAN_init(can1, 100, 10, 10, can_checkBusOff, NULL);
 
-    CAN_reset_bus(can1);
-
-    bool canSetup = CAN_fullcan_add_entry(can1,
-            CAN_gen_sid(can1, MASTER_GPSDATA_ID),
-            CAN_gen_sid(can1, MASTER_RESET_ID));
-
-    //CAN_gen_sid(can1, MASTER_RESET_ID)
-    if(canSetup)
+    if(ok)
     {
         printf("can init\n");
+    }
+
+    return ok;
+
+}
+
+bool can_addMsgIDs(uint16_t id1, uint16_t id2)
+{
+    bool canSetup = CAN_fullcan_add_entry(can1,
+                CAN_gen_sid(can1, id1),
+                CAN_gen_sid(can1, id2));
+
+    if(canSetup)
+    {
+        printf("Msges added\n");
     }
 
     return canSetup;
@@ -90,34 +100,37 @@ void sendCompass_data(int8_t turn, uint8_t presentChkPnt,
     can_transmit(msgID, &presentCompassDist_data, DATA_LEN_SIX);
 }
 
-void can_receive()
+bool can_receive(uint16_t id, uint64_t *data)
 {
-    can_fullcan_msg_t ptr_toReadData;
 
-    can_fullcan_msg_t *data_gpsUpdate = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, MASTER_GPSDATA_ID));
-    can_fullcan_msg_t *data_sysReboot = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, MASTER_RESET_ID));
+    bool received = false;
+    can_fullcan_msg_t temp;
+    can_fullcan_msg_t *data_updated = CAN_fullcan_get_entry_ptr(CAN_gen_sid(can1, id));
 
-    //printf("id: %d, no of can entries: %d\n", data_gpsUpdate->msg_id, CAN_fullcan_get_num_entries());
+    received = CAN_fullcan_read_msg_copy(data_updated, &temp);
 
-    if(CAN_fullcan_read_msg_copy(data_gpsUpdate, &ptr_toReadData))
+    if(received)
     {
-        receive_gpsData = (lat_long_info*) (ptr_toReadData.data.qword);
-        addChkPnts(receive_gpsData->lat_dec,receive_gpsData->long_dec,receive_gpsData->long_dec,
-                                           receive_gpsData->long_float,receive_gpsData->chkPoint);
+        data = (uint64_t *)temp.data.qword;
     }
 
-    if(CAN_fullcan_read_msg_copy(data_sysReboot, &ptr_toReadData))
-    {
-        //printf("a\n");
-        if(ptr_toReadData.data.bytes[0] == 1)
-            sys_reboot();
-    }
+    return received;
+}
+
+bool can_addGPSData(uint64_t *data)
+{
+    bool added;
+    receive_gpsData = (lat_long_info*) (data);
+    added =  addChkPnts(receive_gpsData->lat_dec,receive_gpsData->long_dec,receive_gpsData->long_dec,
+                                      receive_gpsData->long_float,receive_gpsData->chkPoint);
+
+    return added;
 }
 
 void heartbeat()
 {
     uint64_t data = 0;
-    can_transmit(HEARTBEAT_ID, &data, 1);
+    can_transmit(HEARTBEAT_ID, &data, DATA_LEN_ZERO);
 }
 
 void can_checkBusOff(uint32_t a)

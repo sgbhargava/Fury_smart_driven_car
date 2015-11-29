@@ -11,6 +11,7 @@
 #include "scheduler_task.hpp"
 #include "math.h"
 
+
 typedef struct {
         uint32_t lat_dec :8;
         uint32_t lat_float :20;
@@ -28,8 +29,12 @@ typedef struct{
         uint32_t dist_nxtPnt    : 16;
 }__attribute__((packed)) compass_distance_info;
 
+
 // function to initialize can1 for communication with other modules
 bool can_communicationInit();
+
+// function to add messages
+bool can_addMsgIDs(uint16_t id1, uint16_t id2);
 
 /*
  * Function to pack the GPS data in a structure and transmit over CAN
@@ -50,7 +55,7 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
 void sendCompass_data(int8_t turn, uint8_t presentChkPnt, float_t nxtChkPntDist, float_t finalDestDist);
 
 /*Receives data from CANBUS*/
-void can_receive();
+bool can_receive(uint16_t id, uint64_t *data);
 
 /* Transmits data to master
  * @msgID       :   Message ID
@@ -63,5 +68,8 @@ void can_transmit(uint32_t msgID, uint64_t *data, uint8_t dataLength);
 void heartbeat();
 
 void can_checkBusOff(uint32_t a);
+
+//Parse data into checkpoints
+bool can_addGPSData(uint64_t *data);
 
 #endif /* RECEIVE_CANMSG_HPP_ */

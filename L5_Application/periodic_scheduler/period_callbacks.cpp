@@ -50,11 +50,19 @@ float_t    distToDest, distToChkPnt, currentHeading;
 double_t   chkPntLat, chkPntLon, desiredHeading;
 uint8_t    presentChkPnt, compassMode = 0;
 
+#if TESTCODE
+float_t test_chkPntLat[5], test_chkPntLong[5];
+#endif
+
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
 
     can_communicationInit();
+    can_addMsgIDs(MASTER_RESET_ID, COMM_GPSDATA_ID);
+
+    CAN_reset_bus(can1);
+
     return true; // Must return true upon success
 }
 
@@ -75,13 +83,35 @@ bool period_reg_tlm(void)
     TLM_REG_VAR(gpsCompass_cmp, desiredHeading, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, currentHeading, tlm_float);
 
+#if TESTCODE
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[0], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[0], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[1], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[1], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[2], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[2], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[3], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[3], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[4], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[4], tlm_float);
+#endif
+
     return true; // Must return true upon success
 }
 
 
 void period_1Hz(void)
 {
-    can_receive();
+#if TESTCODE
+    uint8_t num = getNumOfChkPnts(), i = 0;
+    if(i < num)
+    {
+        test_chkPntLat[i] = getLatitude(i+1);
+        test_chkPntLong[i] = getLongitude(i+1);
+
+        i++;
+    }
+#endif
     heartbeat();
 }
 
@@ -163,12 +193,23 @@ void period_10Hz(void)
     }
     if(SW.getSwitch(1))
         compassMode = CALIBRATIONMODE;
+
 }
 
 
 void period_100Hz(void)
 {
+    bool ok;
+    uint64_t data = 0;
 
+    if(can_receive(COMM_GPSDATA_ID, &data))
+    {
+        if(!can_addGPSData(&data))
+            sys_reboot();
+    }
+
+    if(can_receive(MASTER_RESET_ID, &data))
+        sys_reboot();
 }
 
 void period_1000Hz(void)

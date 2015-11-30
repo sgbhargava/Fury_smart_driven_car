@@ -26,6 +26,7 @@
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "sonic_sensor.hpp"
+#include "battery.hpp"
 
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
@@ -59,6 +60,7 @@ int main(void)
     //scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
     scheduler_add_task(new SonicSensorTask(PRIORITY_HIGH));
+    scheduler_add_task(new BatteryTask(PRIORITY_MEDIUM));
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
     #if 1

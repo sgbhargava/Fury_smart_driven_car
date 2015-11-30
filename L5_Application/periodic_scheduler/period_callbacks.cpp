@@ -40,13 +40,12 @@
 #include "can.h"
 #include "i2c2_device.hpp"
 #include "SensorDirection.hpp"
-#include "battery.hpp"
 
 /// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 can_msg_t can_tx_data;
 SonicSensors_t sensor_data;
-uint16_t BatterySensor;
+BatterySensors_t batt_data;
 
 QueueHandle_t my_queue = xQueueCreate(1, sizeof(int));
 
@@ -69,8 +68,6 @@ bool period_init(void)
      can_tx_data.frame_fields.is_29bit = 0; // Using 11-bit Format
      can_tx_data.frame_fields.data_len = 1; // Sending 1 byte of data
 
-     initBattery(); //Initialize battery
-
     return true; // Must return true upon success
 }
 
@@ -91,14 +88,20 @@ void period_1Hz(void)
     CAN_tx(can1, &can_tx_data, 10);
 
     //Send battery message
-    BatterySensor = GetBatteryValueADC();
-    can_tx_data.msg_id = 0x144;
-    can_tx_data.frame_fields.data_len = 2;
-    can_tx_data.data.bytes[0] = ((BatterySensor >> 8) & 0xff);
-    can_tx_data.data.bytes[1] = ((BatterySensor >> 0) & 0xff);
-    CAN_tx(can1, &can_tx_data, 10);
+    static QueueHandle_t battery_data_q = scheduler_task::getSharedObject("battery_queue");
+    if(xQueueReceive(battery_data_q, &batt_data, 0))
+    {
+        can_tx_data.msg_id = 0x144;
+        can_tx_data.frame_fields.data_len = 3;
+        can_tx_data.data.bytes[0] = batt_data.MotorBattery;
+        can_tx_data.data.bytes[1] = batt_data.BoardBattery;
+        can_tx_data.data.bytes[2] = batt_data.BatteryFlag;
+        CAN_tx(can1, &can_tx_data, 10);
+        LD.setNumber(batt_data.BoardBattery);
+        LE.toggle(1);
+    }
 
-#if 0
+ #if 0
      uint8_t direction;
      direction = RCdirection(sensor_data, LidarData);
      can_tx_data.msg_id = 0x021 ;
@@ -121,7 +124,7 @@ void period_10Hz(void)
          if(xQueueReceive(sensor_data_q, &sensor_data, 0))
           {
               //u0_dbg_printf("Sensors data: \n1)%x\n2)%x\n3)%x\n", sensor_data.SonicSensor1, sensor_data.SonicSensor2, sensor_data.SonicSensor3);
-             //u0_dbg_printf("direction %d\n", RCdirection(sensor_data));
+              //u0_dbg_printf("direction %d\n", RCdirection(sensor_data));
               can_tx_data.msg_id = 0x142 ;
               can_tx_data.frame_fields.data_len = 8; // Sending 6 byte of data
               can_tx_data.data.bytes[0] = ((sensor_data.LIDAR >> 8) & 0xff);
@@ -133,7 +136,7 @@ void period_10Hz(void)
               can_tx_data.data.bytes[6] = ((sensor_data.SonicSensor3 >> 8) & 0xff);
               can_tx_data.data.bytes[7] = ((sensor_data.SonicSensor3 >> 0) & 0xff);
               CAN_tx(can1, &can_tx_data, 10);
-              LE.toggle(1);
+              LE.toggle(2);
           }
     #endif
 }

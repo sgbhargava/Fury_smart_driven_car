@@ -17,9 +17,14 @@
 uint8_t BoardBatteryFlag = 0;
 
 //If voltage drops below 5% of 5V flag bit will be set by regulator
-void BoardBattery_isr(void)
+void BoardBatterySET_isr(void)
 {
     BoardBatteryFlag = 0xFF;
+}
+
+void BoardBatteryCLR_isr(void)
+{
+    BoardBatteryFlag = 0;
 }
 
 class BatteryTask : public scheduler_task
@@ -37,7 +42,8 @@ class BatteryTask : public scheduler_task
             addSharedObject("battery_queue", battery_data_q);
 
             //Interrupt for Sensor 1
-            eint3_enable_port2(6, eint_rising_edge, BoardBattery_isr);
+            eint3_enable_port2(6, eint_rising_edge, BoardBatterySET_isr);
+            eint3_enable_port2(6, eint_falling_edge, BoardBatteryCLR_isr);
 
             LPC_PINCON->PINSEL3 |= (3<<28); //PIN 1.30
             LPC_PINCON->PINSEL3 |= (3<<30); //PIN 1.31

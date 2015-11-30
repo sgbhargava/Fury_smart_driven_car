@@ -18,6 +18,7 @@ public:
 		uint16_t id_heart_beat = 0x180;
 		uint16_t id_drive_mode = 0x181;
 		uint16_t id_location = 0x182;
+		uint16_t id_reset = 0x420;
 		long_lat *lat_long_from_IO = new long_lat;
 		uint8_t drive_auth =0;
 
@@ -25,6 +26,7 @@ public:
 		bool IO_base_class_init();
 		bool get_drive_authotization();
 		bool get_location_details();
+		bool reset();
 
 private:
 		static IO_base_class *single;

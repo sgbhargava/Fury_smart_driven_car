@@ -37,6 +37,7 @@ public:
 	bool custom_3();
 	bool reverse();
 	bool get_heartbeat();
+	bool reset();
 	motor_class();
 
 private:
@@ -45,6 +46,7 @@ private:
 	uint16_t id_motor_status = 0x102;
 	uint16_t id_motor_throttle = 0x22;
 	uint16_t id_motor_steering = 0x21;
+	uint16_t id_reset = 0x20;
 	uint16_t motor_speed = 0;
 
 };

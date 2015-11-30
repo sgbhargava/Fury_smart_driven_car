@@ -12,34 +12,28 @@
 class sensor_class:public CAN_base_class
 {
 public:
-<<<<<<< HEAD
+
+	static sensor_class* getInstance();
+
+	uint16_t id_reset = 0x221;
 	uint16_t left = 0;
 	uint16_t right = 0;
 	uint16_t lidar = 0;
 	uint16_t back = 0;
 	uint16_t lidar_threshold = 75;
 	uint16_t sensor_threshold = 50;
-	static sensor_class* getInstance();
-=======
-	static sensor_class* getInstance();
-	uint16_t heart_beat = 0x140;
-		uint16_t sensors = 0x142;
-		uint16_t battery = 0x144;
-		uint16_t left = 0;
-		uint16_t right = 0;
-		uint16_t lidar = 0;
-		uint16_t back = 0;
-		uint16_t lidar_threshold = 75;
-		uint16_t sensor_threshold = 50;
->>>>>>> f46687c8b871527fa0b92b1f93e08a2d69979cbf
+	uint8_t battery = 0;
 	bool get_sensor_reading();
 	bool sensor_class_init();
 	bool get_heartbeat();
+	bool get_battery();
+	bool reset();
 private:
 	static sensor_class *single;
 	uint16_t id_heart_beat = 0x140;
 	uint16_t id_sensors = 0x142;
 	uint16_t id_battery = 0x144;
+
 
 };
 

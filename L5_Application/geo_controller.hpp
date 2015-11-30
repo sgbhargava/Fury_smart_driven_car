@@ -30,7 +30,7 @@ class geo_controller_class: public CAN_base_class
 {
 public:
 	static geo_controller_class* getInstance();
-	uint16_t id_heart_beat = 0x160;
+	uint16_t id_heartbeat = 0x160;
 	uint16_t id_compass_heading_data =0x162;
 	uint16_t id_gps_coordinates = 0x164;
 	uint16_t id_gps_distance =0x165;

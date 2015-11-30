@@ -20,7 +20,7 @@ public:
 
 	static master_class* getInstance();
 	bool master_class_init();
-	bool car_init();
+	bool heartbeat();
 
 private:
 	static master_class *single;

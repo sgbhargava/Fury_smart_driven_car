@@ -9,10 +9,12 @@
 #include "sensors.hpp"
 #include "IO_bridge.hpp"
 #include "geo_controller.hpp"
+#include "master_class.hpp"
 #define first 0
 #define second 16
 #define third 32
 #define fourth 48
+
 
 bool CAN_base_class::get_data(uint16_t id, uint64_t *data)
 {
@@ -74,8 +76,12 @@ void data_ovr_cb(uint32_t arg)
 
 void CAN_base_class::CAN_base_class_init()
 {
-motor_class *motor;
-sensor_class *sensor;
+	motor_class *motor;
+	sensor_class *sensor;
+	geo_controller_class *geo_controller;
+	IO_base_class *IO_bridge;
+	master_class *master;
+
 	printf("can constructor\n");
 
 	if(CAN_init(can1, 100, 5, 5, bus_off_cb,data_ovr_cb))
@@ -87,7 +93,15 @@ sensor_class *sensor;
 	sensor = sensor_class::getInstance();
 	sensor->sensor_class_init();
 
+	geo_controller = geo_controller_class::getInstance();
+	geo_controller->geo_controller_class_init();
 
+	IO_bridge = IO_base_class::get_Instance();
+	IO_bridge->IO_base_class_init();
+
+	master = master_class::getInstance();
+
+	printf("exiting init\n");
 }
 
 bool CAN_base_class::add_can_id(uint16_t id1, uint16_t id2){

@@ -18,7 +18,7 @@ geo_controller_class* geo_controller_class::getInstance()
 bool geo_controller_class::get_heartbeat()
 {
 	uint64_t temp;
-	if(get_data(id_heart_beat, &temp))
+	if(get_data(id_heartbeat, &temp))
 	{
 		return true;
 	}
@@ -27,9 +27,12 @@ bool geo_controller_class::get_heartbeat()
 
 bool geo_controller_class::geo_controller_class_init()
 {
-	add_can_id(id_heart_beat,id_gps_distance);
-	add_can_id(id_gps_coordinates, id_gps_checkpoint_req);
-	add_can_id(id_compass_heading_data, 0xFF);
+	if(!add_can_id(id_heartbeat,id_compass_heading_data ))
+		printf("unable to add HB id\n");
+	add_can_id(id_gps_coordinates,id_gps_distance );
+	add_can_id(id_gps_checkpoint_req, 0x170);
+
+	printf("geo add added\n");
 	return true;
 }
 

@@ -98,3 +98,15 @@ bool motor_class::get_heartbeat()
 		return false;
 	return true;
 }
+
+bool motor_class::reset()
+{
+	can_msg_t motor_can_mess;
+	motor_can_mess.msg_id = id_reset;
+	motor_can_mess.data.bytes[0] = 0x00;
+	motor_can_mess.frame_fields.data_len = 1;
+	motor_can_mess.frame_fields.is_29bit = 0;
+	if(!CAN_tx(can1, &motor_can_mess,0))
+		return false;
+	return true;
+}

@@ -23,7 +23,7 @@ bool sensor_class::sensor_class_init()
 {
 
 	add_can_id(id_heart_beat,id_sensors);
-	add_can_id(id_battery, 0xFF);
+	add_can_id(id_battery, 0x150);
 	return true;
 }
 sensor_class* sensor_class::single = NULL;
@@ -45,4 +45,26 @@ bool sensor_class::get_heartbeat()
 		return false;
 	}
 	return true;
+}
+
+bool sensor_class::reset()
+{
+	can_msg_t sensor_can_mess;
+	sensor_can_mess.msg_id = id_reset;
+	sensor_can_mess.data.bytes[0] = 0x00;
+	sensor_can_mess.frame_fields.data_len = 1;
+	sensor_can_mess.frame_fields.is_29bit = 0;
+	if(!CAN_tx(can1, &sensor_can_mess,0))
+		return false;
+	return true;
+}
+
+bool sensor_class::get_battery()
+{
+	uint64_t temp;
+	if(get_data(id_battery, &temp))
+	{
+		battery = getbyte(temp,1);
+		return true;
+	}
 }

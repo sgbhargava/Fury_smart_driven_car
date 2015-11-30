@@ -26,7 +26,7 @@ bool IO_base_class::get_heartbeat()
 bool IO_base_class::IO_base_class_init()
 {
 	add_can_id(id_heart_beat, id_drive_mode);
-	add_can_id(id_location, 0xFF);
+	add_can_id(id_location, 0xFFFF);
 	return false;
 }
 
@@ -48,4 +48,14 @@ bool IO_base_class::get_location_details()
 	return true;
 }
 
-
+bool IO_base_class::reset()
+{
+	can_msg_t IO_controller_can_mess;
+	IO_controller_can_mess.msg_id = id_reset;
+	IO_controller_can_mess.data.bytes[0] = 0x00;
+	IO_controller_can_mess.frame_fields.data_len = 1;
+	IO_controller_can_mess.frame_fields.is_29bit = 0;
+	if(!CAN_tx(can1, &IO_controller_can_mess,0))
+		return false;
+	return true;
+}

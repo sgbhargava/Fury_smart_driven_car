@@ -39,12 +39,3 @@ bool master_class::master_class_init()
 	return true;
 }
 
-bool master_class::car_init()
-{
-	if(!sensor->get_heartbeat())
-		return false;
-	if(!motor->get_heartbeat())
-		return false;
-
-
-}

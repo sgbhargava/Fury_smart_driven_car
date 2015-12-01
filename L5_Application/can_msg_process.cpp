@@ -152,10 +152,10 @@ void readCANMsgs(void)
 }
 void sendSpeed(void)
 {
-    int rpm = 0;
+    float rpm = 0;
     float speed = 0;
     SpeedMonitor* speedMonitor = SpeedMonitor::getInstance();
-    speedMonitor->getSpeedEachSecond(&rpm, &speed);
+    speedMonitor->getSpeed(&rpm, &speed);
 
     can_msg_t msg;
     //MOTOR_TX_SPEED_t speedMsg;
@@ -176,7 +176,7 @@ void sendSpeed(void)
     bool stop = desiredDir == SpeedCtrl::goStop;
     bool isForward = desiredDir == SpeedCtrl::goForward;
     Uart2::getInstance().putline("$CLR_SCR");
-    Uart2::getInstance().printf("RPM: %d\nAction: %s\n", rpm, stop? "Stop": (isForward? "Forward": "Backward"));
+    Uart2::getInstance().printf("RPM: %f\nAction: %s\n", rpm, stop? "Stop": (isForward? "Forward": "Backward"));
 
 }
 

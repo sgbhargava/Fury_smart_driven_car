@@ -51,26 +51,57 @@
  */
 
 class initMotorTask: public scheduler_task {
+    private:
+        SpeedCtrl* speed;
     public:
         initMotorTask(uint8_t priority):
-            scheduler_task("initMotorTask", 2048, priority) {
+            scheduler_task("initMotorTask", 1024, priority) {
         }
         bool init(void) {
             SW.init();
+            speed = SpeedCtrl::getInstance();
             return true;
         }
         bool run (void* p){
-            if (SW.getSwitchValues() & 0x1)
+            int value = SW.getSwitchValues();
+            if ( value & 0x1)
             {
-                SpeedCtrl* speed = SpeedCtrl::getInstance();
                 speed->initESC();
                 vTaskDelay(3000);
-                speed->setSpeedPWM(FORWARD_SPEED);
             }
-            else if (SW.getSwitch(2))
+            else if (value & 0x2)
             {
-                SpeedCtrl* speeda = SpeedCtrl::getInstance();
-                speeda->setSpeedCustom(true,1);
+                speed->setSpeedCustom(true,1);
+            }
+            return true;
+        }
+};
+QueueHandle_t mChangeDirection_QueueHandler = xQueueCreate(1, sizeof(float));
+class changeDirectionTask: public scheduler_task {
+    private:
+        SpeedCtrl* speed;
+    public:
+        changeDirectionTask(uint8_t priority):
+            scheduler_task("backwardTask", 1024, priority) {
+        }
+        bool init(void) {
+            addSharedObject(shared_directionQueue, mChangeDirection_QueueHandler);
+            mChangeDirection_QueueHandler = getSharedObject(shared_directionQueue);
+
+            speed = SpeedCtrl::getInstance();
+            return true;
+        }
+        bool run (void* p){
+            float pwm;
+            if (xQueueReceive(mChangeDirection_QueueHandler, &pwm, portMAX_DELAY)) {
+#if 1
+                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE-0.3);
+                vTaskDelay(1000);
+                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE);
+                vTaskDelay(1000);
+                speed->setSpeedPWM(pwm, true);
+                printf("PWM %f", pwm);
+#endif
             }
             return true;
         }
@@ -103,6 +134,7 @@ int main(void)
     #if 1
     scheduler_add_task(new periodicSchedulerTask());
     #endif
+    scheduler_add_task(new changeDirectionTask(PRIORITY_HIGH));
 
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));

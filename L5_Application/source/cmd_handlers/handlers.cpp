@@ -644,6 +644,9 @@ CMD_HANDLER_FUNC(speedHandler)
             ctrl->setSpeedCustom(false, (int)atoi(value));
         }
     }
+    else if(cmdParams.beginsWithIgnoreCase("stop")) {
+        ctrl->setStop();
+    }
     return true;
 }
 
@@ -678,10 +681,10 @@ CMD_HANDLER_FUNC(directionHandler)
 CMD_HANDLER_FUNC(speedMonHandler)
 {
     SpeedMonitor * monitor = SpeedMonitor::getInstance();
-    int rpm;
+    float rpm;
     float speed;
     monitor->getSpeed(&rpm, &speed);
-    printf("RPM: %d  Speed: %.2f\n", rpm, speed);
+    printf("RPM: %f  Speed: %.2f\n", rpm, speed);
     return true;
 }
 #if (SYS_CFG_ENABLE_TLM)

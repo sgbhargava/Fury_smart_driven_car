@@ -7,14 +7,14 @@
 #define STANDARD_FREQ 55
 #define PI 3.1415
 #define DIAMETER 0.1 //meter
-#define KM_TO_MILES 1/1.60934
 #define MS_TO_MINS 1/(1000 * 60)
 #define MAX_DUTY_CYCLE 11
 #define MIN_DUTY_CYCLE 5.5
 #define BASE_DUTY_CYCLE ((MAX_DUTY_CYCLE+MIN_DUTY_CYCLE)/2)
-#define RPM_THERHOLD_1 25
-#define RPM_THERHOLD_2 50
-#define RPM_THERHOLD_3 100
+#define RPM_THERHOLD_1 60
+#define RPM_THERHOLD_2 120
+#define RPM_THERHOLD_3 180
+#define RPM_THERHOLD_4 240
 
 class DirectionCtrl
 {
@@ -65,6 +65,9 @@ class SpeedCtrl
         void descrSpeedPWM(int step = 1);
         void setStop();
         int getGoDesiredDirection();
+        void checkSlope();
+        void setSelfTuning(bool tune);
+        void setSpeedPWMDirect(float pwm);
 
     private:
         SpeedCtrl();
@@ -75,6 +78,9 @@ class SpeedCtrl
         bool selfTuning = false;
         int selfTuningTimer = 0;
         int startSelfTuning;
+        int lastSelfTuning = 0;
+        bool incline = false;
+        bool decline = false;
 
         const float PWMStep = 0.005;
         const float basePWM = BASE_DUTY_CYCLE;
@@ -84,9 +90,9 @@ class SpeedCtrl
         int desiredCustom;
         int desiredDirection;
         float pwm_forward_custom[3] ={8.655, 8.7, 8.72}; //Level 2-3 requires tuning
-        const int rpm_forward_custom[3] ={120, 150, 170};
+        const int rpm_forward_custom[3] ={220, 150, 170};
         float pwm_backward_custom[3] ={7.8, 7.6, 7.4};
-        const int rpm_backward_custom[3] ={110, 140, 170};
+        const int rpm_backward_custom[3] ={220, 140, 170};
 };
 
 
@@ -94,14 +100,17 @@ class SpeedMonitor
 {
     public:
         float m_speed = 0;
-        int m_rpm = 0;
+        float m_rpm = 0;
+        int m_rpmCounter = 0;
+        int m_rpmCounterRpm = 0;
         int m_rpmArray[50];
         int m_rpmRecorded = 0;
         static SpeedMonitor * getInstance();
-        void calSpeed();
         int getRpm();
-        void getSpeed(int* rpm, float* speed);
-        void getSpeedEachSecond(int* rpm, float* speed);
+        void getSpeed(float* rpm, float* speed);
+
+        void addRpmCounter();
+        int getRpmCounter();
 
     private:
         SpeedMonitor();

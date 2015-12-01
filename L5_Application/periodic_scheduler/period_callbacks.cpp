@@ -43,7 +43,7 @@
 #include "tlm/c_tlm_var.h"
 
 /// This is the stack size used for each of the period tasks
-const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4*2);
+const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (1024 * 4);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -62,22 +62,32 @@ bool period_reg_tlm(void)
     TLM_REG_VAR(tlm_component_get_by_name("disk"), speed->speedPWM, tlm_float);
     TLM_REG_VAR(tlm_component_get_by_name("disk"), dir->dirPWM, tlm_float);
     TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_speed, tlm_float);
-    TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_rpm, tlm_int);
+    TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_rpm, tlm_float);
+    TLM_REG_VAR(tlm_component_get_by_name("disk"), spdsensor->m_rpmCounter, tlm_int);
 
     return true; // Must return true upon success
 }
 
 void period_1Hz(void)
 {
-    sendSpeed();
     sendHeartBeat();
     readCANMsgs();
-    SpeedCtrl::getInstance()->selfTuningSpeed();
 
 }
-
+int counter = 0;
 void period_10Hz(void)
 {
+    //SpeedCtrl::getInstance()->checkSlope();
+    if (counter >= 5)
+    {
+        SpeedCtrl::getInstance()->selfTuningSpeed();
+        sendSpeed();
+        counter = 1;
+    }
+    else
+    {
+        counter ++;
+    }
 }
 
 void period_100Hz(void)

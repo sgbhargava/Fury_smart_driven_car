@@ -36,6 +36,7 @@ enum {
     shared_learnSemaphore, ///< Terminal command gives this semaphore to remoteTask (IR sensor task)
     shared_CANTxmsg, //< Shared can TX message
     shared_CANRxmsg, //< Shared can RX message
+    shared_directionQueue //<Shared backwardSemaphore
 };
 
 

@@ -9,7 +9,10 @@
 #include "can.h"
 #include "file_logger.h"
 #include "uart2.hpp"
+#include "lpc_sys.h"
 #include "semphr.h"
+#include "switches.hpp"
+#include "utilities.h"
 
 /****************************************************************************************************************/
 /* gloabal variables*/
@@ -26,7 +29,7 @@ static int  gChrCnt =0;
 
 void initForGPSData(void)
 {
-    const can_std_id_t slist[] = { CAN_gen_sid(can1,rx_init)};
+    const can_std_id_t slist[] = { CAN_gen_sid(can1,reset)};
     int count_slist = sizeof(slist);
     /* queue to transmit GPS data from Bridge module to GPS module */
 
@@ -40,6 +43,8 @@ void initForGPSData(void)
     {
         LOG_DEBUG("can initialized\n");
         CAN_reset_bus(can1);
+        delay_us(100);
+        SendHeartBeat();
     }
 
     if( CAN_setup_filter(slist,count_slist,0,0,0,0,0,0))
@@ -56,13 +61,22 @@ bool SendHeartBeat()
     msg.frame_fields.data_len =0;
     msg.msg_id = heartbeat;
 
-    if( CAN_tx(can1, &msg, 0))
+    if(!Switches::getInstance().getSwitch(1))
     {
-       printf("Heart beat Txted\n");
+        if( CAN_tx(can1, &msg, 0))
+        {
+          //  printf("Heart beat Txted\n");
+            return 1;
+        }
+        else
+        {
+            printf("Heart Beat failed\n");
+        }
     }
     else
     {
       printf("Heart Beat failed\n");
+      return 0;
     }
 
 }
@@ -230,6 +244,7 @@ void getDataFromBluetooth()
 
     if( u2.getChar(&c,0))
     {
+      //  printf("%c\n",c);
         if(c == '$')
         {
             gData[gChrCnt]=0;
@@ -252,7 +267,7 @@ void getDataFromBluetooth()
 
 void bridge_canTx()
 {
-    can_msg_t canData;
+    can_msg_t canData ={0};
     cmd_data nCmd  ={0};
     int i=0;
     CAN_Gps_data data={0};
@@ -268,7 +283,7 @@ void bridge_canTx()
                     i = nCmd.index;
 
                    data.data = gGpsData[i].longLatdata;
-#if 0
+#if 1
                    printf("lat:%u.%d,long:%u.%d,chk:%d,dest:%d \n",data.data.lattitude_dec,
                            data.data.lattitude_float,
                            data.data.longitude_dec,
@@ -282,11 +297,15 @@ void bridge_canTx()
                    {
                        printf("CAN_Tx:data txted\n");
                    }
+                   else
+                   {
+                       printf("CAN_Tx failed\n");
+                   }
 
                     if( gGpsData[i].bDestination)
                     {
-                        gChrCnt =0;
-                        sendStatusFlag =0;
+                      Uart2_flushData();
+                      sendStatusFlag =0;
                     }
 
             }
@@ -345,7 +364,7 @@ bool SendDataOverBluetooth(void)
 void bridge_canRx()
 {
    can_msg_t msg ={0};
-   uint8_t nCmd = 0;
+   uint16_t nCmd = 0;
    long_lat_data data = {0};
 
    if( CAN_rx(can1,&msg,0))
@@ -355,7 +374,9 @@ void bridge_canRx()
            case rx_init:
            {
                data = *(long_lat_data *)(&msg.data.qword);
+
                nCmd = gps_init_loc;
+
                sprintf(rxData,"init %u.%6d -%u.%6d",data.lattitude_dec,data.lattitude_float,
                        data.longitude_dec,data.longitude_float);
 
@@ -376,7 +397,19 @@ void bridge_canRx()
                }
            }
            break;
+
+           case reset:
+           {
+               printf("Heart beat failed!! Reset!!\n");
+               LOG_DEBUG("Heart beat failed!! Reset!!\n");
+               sys_reboot();
+           }
+           break;
        }
+   }
+   else
+   {
+     //  printf("CAN RX failed!!\n");
    }
 
 }

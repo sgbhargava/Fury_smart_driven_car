@@ -6,6 +6,10 @@
 extern "C" {
 #endif
 
+
+#define BLUETOOTH_NODE 102
+#define CAN_WIRELESS_NODE 103
+
 typedef enum {
     check,
     start,
@@ -16,8 +20,9 @@ typedef enum {
 typedef enum{
     heartbeat= 0x180,
     drive_mode = 0x181,
-    location = 0x182,
-    rx_init = 0x162
+    location = 0x382,
+    rx_init = 0x162,
+    reset = 0x420
 
 } CAN_MSG_ID_T;
 
@@ -54,6 +59,7 @@ void getDataFromBluetooth();
 void bridge_canTx();
 bool SendHeartBeat();
 bool GPS_SendDataToCANTx();
+void bridge_canRx();
 
 #ifdef __cplusplus
 }

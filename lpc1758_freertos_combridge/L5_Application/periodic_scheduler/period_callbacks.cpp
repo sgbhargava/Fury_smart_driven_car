@@ -61,6 +61,7 @@ void period_1Hz(void)
 void period_10Hz(void)
 {
     bridge_canTx();
+    bridge_canRx();
 }
 
 void period_100Hz(void)

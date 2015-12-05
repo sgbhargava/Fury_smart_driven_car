@@ -17,7 +17,7 @@ static checkPointData_t *firstChkPnt = NULL;
 static checkPointData_t *giveCheckPoint = NULL;
 static uint8_t numberOfChkPnts = 0;
 
-bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num)
+bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num, bool isFinal)
 {
     bool chkPntAdded = false;
     double_t calcLat, calcLong;
@@ -77,10 +77,11 @@ bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonF
 
         // Storing the values in a structure.
         newChkPnt->chkPntLat = calcLat;
-        newChkPnt->chkPntLong = calcLong;
+        newChkPnt->chkPntLong = calcLong * -1;
         newChkPnt->chkPntNo = num;
         newChkPnt->prev = prevChkPnt;
         newChkPnt->next = nextChkPnt;
+        newChkPnt->isFinal = isFinal;
         ++numberOfChkPnts;
         chkPntAdded = true;
 
@@ -132,13 +133,30 @@ uint8_t getNumOfChkPnts()
     return numberOfChkPnts;
 }
 
+bool isFinal()
+{
+    if(numberOfChkPnts == 0)
+        return 0;
+    else
+        return giveCheckPoint->isFinal;
+}
+
 uint8_t getPresentChkPnt()
 {
+    if(numberOfChkPnts == 0)
+        return 0;
+
+    if(giveCheckPoint->chkPntNo == 0)
+        updateToNxtChkPnt();
+
     return giveCheckPoint->chkPntNo;
 }
 
 double_t getLongitude(uint8_t longitudeNumber)
 {
+    if(numberOfChkPnts == 0)
+        return 0;
+
     checkPointData_t *pntToGetLong = NULL;
     pntToGetLong = firstChkPnt;
 
@@ -154,6 +172,9 @@ double_t getLongitude(uint8_t longitudeNumber)
 
 double_t getLatitude(uint8_t latitudeNumber)
 {
+    if(numberOfChkPnts == 0)
+        return 0;
+
     checkPointData_t *pntToGetLat = NULL;
     pntToGetLat = firstChkPnt;
 
@@ -169,7 +190,7 @@ double_t getLatitude(uint8_t latitudeNumber)
 
 bool updateToNxtChkPnt()
 {
-    if(giveCheckPoint->next != NULL)
+    if(giveCheckPoint->next != NULL && (numberOfChkPnts > 0))
     {
         giveCheckPoint = giveCheckPoint->next;
         return true;
@@ -180,7 +201,7 @@ bool updateToNxtChkPnt()
 
 bool updateToPrevChkPnt()
 {
-    if (giveCheckPoint->prev != NULL)
+    if (giveCheckPoint->prev != NULL && (numberOfChkPnts > 0))
     {
         giveCheckPoint = giveCheckPoint->prev;
         return true;

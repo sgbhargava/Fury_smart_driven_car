@@ -82,7 +82,7 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
 }
 
 void sendCompass_data(int8_t turn, uint8_t presentChkPnt,
-                                        float_t nxtChkPntDist, float_t finalDestDist)
+                                        float_t nxtChkPntDist, float_t finalDestDist, bool isFinal)
 {
     /** Positive number indicates the car has to car turn right.
      *  Negative number indicates the car has to turn left.
@@ -93,6 +93,7 @@ void sendCompass_data(int8_t turn, uint8_t presentChkPnt,
     transmit_compassData->turnDecision      =   turn;
     transmit_compassData->dist_nxtPnt       =   (uint16_t) nxtChkPntDist;
     transmit_compassData->dist_finalDest    =   (uint16_t) finalDestDist;
+    transmit_compassData->isFinal           =   isFinal;
 
     uint64_t presentCompassDist_data = *(uint64_t *) (transmit_compassData);
     uint32_t msgID = COMPASS_DIST_ID;
@@ -111,7 +112,7 @@ bool can_receive(uint16_t id, uint64_t *data)
 
     if(received)
     {
-        data = (uint64_t *)temp.data.qword;
+        *data = temp.data.qword;
     }
 
     return received;
@@ -120,11 +121,24 @@ bool can_receive(uint16_t id, uint64_t *data)
 bool can_addGPSData(uint64_t *data)
 {
     bool added;
-    receive_gpsData = (lat_long_info*) (data);
-    added =  addChkPnts(receive_gpsData->lat_dec,receive_gpsData->long_dec,receive_gpsData->long_dec,
-                                      receive_gpsData->long_float,receive_gpsData->chkPoint);
+    receive_gpsData->gpsData =  *(data);
+    //printf("%d  %d %d  %d  %d\n", receive_gpsData->lat_dec, receive_gpsData->lat_float, receive_gpsData->long_dec,
+            //receive_gpsData->long_float, receive_gpsData->chkPoint);
+    added =  addChkPnts(receive_gpsData->lat_dec,receive_gpsData->lat_float,receive_gpsData->long_dec,
+                                      receive_gpsData->long_float,receive_gpsData->chkPoint, receive_gpsData->bIsFinal);
+
+    if(receive_gpsData->bIsFinal)
+    {
+        can_sendAck();
+    }
 
     return added;
+}
+
+void can_sendAck()
+{
+    uint64_t data = 0;
+    can_transmit(COMM_RECACK_ID, &data, DATA_LEN_ZERO);
 }
 
 void heartbeat()

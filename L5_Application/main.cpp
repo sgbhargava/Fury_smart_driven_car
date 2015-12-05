@@ -62,16 +62,13 @@ void testCode(void *p)
 
             float longitude, latitude;
             printf("%f, %f\n", getLatitude(num), getLongitude(num));
-            //float dist = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
+            float dist1 = calcDistToNxtChkPnt(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
+            float dist2 = calcDistToNxtChkPnt(getLatitude(num+1), getLongitude(num+1), getLatitude(num+2), getLongitude(num+2));
             printf("total checkpoints: %d\n", getNumOfChkPnts());
+            printf("distance = %f, %f, total dist = %f\n", dist1, dist2, calcDistToFinalDest(dist1));
+            float heading = headingdir(getLatitude(num), getLongitude(num), getLatitude(num+1), getLongitude(num+1));
+            printf("angle = %f\n", heading);
 
-            double_t chklat = 37.999999;
-            double_t chklon = 121.999999;
-            uint8_t chk = 2;
-            //sendGPS_data(&chk,&chklat,&chklon);
-            //sendCompass_data(300.05, 345.25, chk, dist, calcDistToFinalDest(dist));
-           //printf("%" PRIu64 "\n",g);
-          // getdata();
         }
         if(SW.getSwitch(3))
         {
@@ -128,13 +125,6 @@ int main(void)
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
-    /* Initialization of can1 */
-    #if CAN_USAGE
-        CAN_init(can1,100,2,2,NULL,NULL);
-        CAN_bypass_filter_accept_all_msgs();
-        CAN_reset_bus(can1);
-
-    #endif
     /* Used to calculate the present location. connect the GPS module to UART2 */
     #if GPSMODULE
         scheduler_add_task(new gps_data(PRIORITY_MEDIUM));
@@ -149,13 +139,16 @@ int main(void)
     /*
      * Testing purpose
      */
-    /*addChkPnts(37, 334429, 121, 883402, 1); // latitude: 37.33422, longitude: 121.8834
-    addChkPnts(37, 334453, 121, 883290, 2); // latitude: 3720.06544, longitude: 12152.98048
-    addChkPnts(37, 334642, 121, 882854, 3); // latitude: 3720.07426, longitude: 12152.9776
-    addChkPnts(37, 334804, 121, 882389, 4); // latitude: 3720.08884, longitude: 12152.94292
-    addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942*/
+
+    /*
+    addChkPnts(37, 335382, 121, 881242, 1, 0); // latitude: 37.33422, longitude: 121.8834
+    addChkPnts(37, 336042, 121, 881841, 2, 0); // latitude: 3720.06544, longitude: 12152.98048
+    addChkPnts(37, 337318, 121, 882753, 3, 1); // latitude: 3720.07426, longitude: 12152.9776
+    //addChkPnts(37, 334804, 121, 882389, 4); // latitude: 3720.08884, longitude: 12152.94292
+    //addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942
 
     xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
+*/
 #endif
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));

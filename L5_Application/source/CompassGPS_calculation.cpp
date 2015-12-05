@@ -20,7 +20,7 @@ float_t calcDistToNxtChkPnt(double_t currentLat, double_t currentLong, double_t 
 {
     // If checkpoints are not defined then return with 0.
     if(!chkPntLat || !chkPntLong)
-        return 0;
+        return 0.0;
 
     float_t dist;
     double_t intrmdtCalc;
@@ -45,7 +45,7 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 {
     static float_t restOfChkPntDist;
     float_t finalDist;
-    uint8_t chkPnt = getPresentChkPnt() + 1;
+    uint8_t chkPnt = getPresentChkPnt()+1;
     uint8_t totalChkPnts = getNumOfChkPnts();
     static uint8_t prevChkPnt = getPresentChkPnt();
 
@@ -53,9 +53,9 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
     if(prevChkPnt != chkPnt){
         restOfChkPntDist = 0.0;
         prevChkPnt = chkPnt;
-        for (uint8_t i = chkPnt; i < totalChkPnts; i++)
+        for (uint8_t i = chkPnt; i <= totalChkPnts; i++)
         {
-            restOfChkPntDist += calcDistToNxtChkPnt(getLongitude(i), getLatitude(i), getLongitude(i+1), getLatitude(i+1));
+            restOfChkPntDist += calcDistToNxtChkPnt(getLatitude(i), getLongitude(i), getLatitude(i+1), getLongitude(i+1));
         }
     }
 
@@ -81,14 +81,14 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
     longitude2 = TO_RAD * (longitude2);
 
     // heading angle calculation
-    delta_longitude = fabs(longitude2 - longitude1);
+    delta_longitude = (longitude2 - longitude1);
 
     firstterm = sin(delta_longitude) * cos(latitude2);
     firstproduct = cos(latitude1) * sin(latitude2);
     secondproduct = (sin(latitude1)*cos(latitude2) * cos(delta_longitude));
     secondterm = firstproduct - secondproduct;
 
-    headingdirection = atan2(firstterm,secondterm) * TO_DEG;
+    headingdirection = atan2(firstterm, secondterm) * TO_DEG;
 
     return fmodf((headingdirection+360),360);
 }
@@ -98,7 +98,7 @@ bool checkPntReached(float_t distance)
     static bool intermediateChkPnt = true;
 
     if (distance <= TWO_METERS)
-        intermediateChkPnt = updateToNxtChkPnt();
+        intermediateChkPnt = updateToNxtChkPnt() && !isFinal();
 
     if (intermediateChkPnt)
         return false;

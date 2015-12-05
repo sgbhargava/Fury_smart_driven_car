@@ -11,23 +11,33 @@
 #include "scheduler_task.hpp"
 #include "math.h"
 
+typedef union
+{
+        struct
+        {
+                uint32_t lat_dec :8;
+                uint32_t lat_float :20;
+                uint32_t long_dec :8;
+                uint32_t long_float :20;
+                uint32_t chkPoint :7;
+                uint32_t bIsFinal :1;
+        }__attribute__((packed));
+        uint64_t gpsData;
+} lat_long_info;
 
-typedef struct {
-        uint32_t lat_dec :8;
-        uint32_t lat_float :20;
-        uint32_t long_dec :8;
-        uint32_t long_float :20;
-        uint32_t chkPoint:7;
-        uint32_t bIsFinal:1;
-} __attribute__((packed)) lat_long_info ;
 
-
-typedef struct{
-        int8_t turnDecision     : 8;
-        uint8_t checkpoint      : 8;
-        uint32_t dist_finalDest : 16;
-        uint32_t dist_nxtPnt    : 16;
-}__attribute__((packed)) compass_distance_info;
+typedef union
+{
+        struct
+        {
+                int32_t turnDecision     : 8;
+                uint32_t checkpoint      : 7;
+                uint32_t isFinal         : 1;
+                uint32_t dist_finalDest : 16;
+                uint32_t dist_nxtPnt    : 16;
+        }__attribute__((packed));
+        uint64_t compassData;
+} compass_distance_info;
 
 
 // function to initialize can1 for communication with other modules
@@ -52,7 +62,7 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
  * @nxtChkOntDist : distance to next check point
  * @finalDestDist : distance to final destination.
  */
-void sendCompass_data(int8_t turn, uint8_t presentChkPnt, float_t nxtChkPntDist, float_t finalDestDist);
+void sendCompass_data(int8_t turn, uint8_t presentChkPnt, float_t nxtChkPntDist, float_t finalDestDist, bool isFinal);
 
 /*Receives data from CANBUS*/
 bool can_receive(uint16_t id, uint64_t *data);
@@ -71,5 +81,8 @@ void can_checkBusOff(uint32_t a);
 
 //Parse data into checkpoints
 bool can_addGPSData(uint64_t *data);
+
+// Transmit Ack message to comm
+void can_sendAck();
 
 #endif /* RECEIVE_CANMSG_HPP_ */

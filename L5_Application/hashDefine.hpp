@@ -40,6 +40,7 @@
 #define  GPS_DATA_ID            0x461
 #define  COMM_GPSDATA_ID        0x382
 #define  MASTER_RESET_ID        0x320
+#define  COMM_RECACK_ID         0x47F
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_SIX           6
 #define  DATA_LEN_ZERO          0

@@ -46,12 +46,14 @@
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 gpsData_t  gpsCurrentData;
-float_t    distToDest, distToChkPnt, currentHeading;
-double_t   chkPntLat, chkPntLon, desiredHeading;
-uint8_t    presentChkPnt, compassMode = 0;
+float_t    distanceToDest = 0, distanceToChkPnt = 0, currentHeading = 0;
+double_t   chkPntLat = 0, chkPntLon = 0, desiredHeading = 0;
+uint8_t    presentChkPnt = 0, compassMode = 0;
+bool       finalChkPnt_b = false;
+int8_t     turn;
 
 #if TESTCODE
-float_t test_chkPntLat[5], test_chkPntLong[5];
+double_t test_chkPntLat[5], test_chkPntLong[5];
 #endif
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
@@ -60,8 +62,11 @@ bool period_init(void)
 
     can_communicationInit();
     can_addMsgIDs(MASTER_RESET_ID, COMM_GPSDATA_ID);
+    //can_addMsgIDs(, 0xFFFF);
 
     CAN_reset_bus(can1);
+
+    heartbeat();
 
     return true; // Must return true upon success
 }
@@ -77,23 +82,25 @@ bool period_reg_tlm(void)
     TLM_REG_VAR(gpsCompass_cmp, gpsCurrentData.longitude, tlm_float);
     TLM_REG_VAR(gpsCompass_cmp, chkPntLat, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, chkPntLon, tlm_double);
-    TLM_REG_VAR(gpsCompass_cmp, distToChkPnt, tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, distToDest, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, distanceToChkPnt, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, distanceToDest, tlm_float);
     TLM_REG_VAR(gpsCompass_cmp, compassMode, tlm_uint);
     TLM_REG_VAR(gpsCompass_cmp, desiredHeading, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, currentHeading, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, finalChkPnt_b, tlm_bit_or_bool);
+    TLM_REG_VAR(gpsCompass_cmp, turn, tlm_int);
 
 #if TESTCODE
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[0], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[0], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[1], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[1], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[2], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[2], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[3], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[3], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[4], tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[4], tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[0], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[0], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[1], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[1], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[2], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[2], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[3], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[3], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[4], tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, test_chkPntLong[4], tlm_double);
 #endif
 
     return true; // Must return true upon success
@@ -103,13 +110,23 @@ bool period_reg_tlm(void)
 void period_1Hz(void)
 {
 #if TESTCODE
-    uint8_t num = getNumOfChkPnts(), i = 0;
-    if(i < num)
+    uint8_t i = 0;
+
+    static int8_t j = -5;
+    if(j < 5)
+    {
+        turn = j;
+        j++;
+    }
+    else
+    {
+        j = -5;
+    }
+    //printf("chkpnt: %d, distToChkPnt: %d, distToFinalDest: %d\n", presentChkPnt, distToChkPnt, distanceToDest);
+    for(i = 0; (i < getNumOfChkPnts() && i < 5); i++)
     {
         test_chkPntLat[i] = getLatitude(i+1);
         test_chkPntLong[i] = getLongitude(i+1);
-
-        i++;
     }
 #endif
     heartbeat();
@@ -119,8 +136,6 @@ void period_10Hz(void)
 {
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     double_t presentLat, presentLon;
-    static bool finalChkPnt_b = false;
-    bool chkPntRchd_b = false;
 
     if(NULL == gpsCurrData_q)
     {
@@ -147,18 +162,19 @@ void period_10Hz(void)
         if(BEARINGMODE == compassMode)
             currentHeading = compassBearing_inDeg();
 
-        int8_t turn = ((desiredHeading - currentHeading) / SCALE);
+        // turn to left if negative and right if positive
+        turn = ((desiredHeading - currentHeading) / SCALE);
 
         // Distance of checkpoint and final distance
-        distToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
-        distToDest = calcDistToFinalDest(distToChkPnt);
+        distanceToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
+        distanceToDest = calcDistToFinalDest(distanceToChkPnt);
 
         // check if the car has reached the checkpoint
-        finalChkPnt_b = checkPntReached(distToChkPnt);
+        finalChkPnt_b = checkPntReached(distanceToChkPnt);
 
         //Sending GPS data and compass data to master.
         sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
-        sendCompass_data(turn, presentChkPnt, distToChkPnt, distToDest);
+        sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
 
         if(finalChkPnt_b)
             destReached();
@@ -166,19 +182,28 @@ void period_10Hz(void)
     }
     else
     {
+        finalChkPnt_b = false;
+        distanceToDest = 0;
+        distanceToChkPnt = 0;
+        desiredHeading = 0;
+        currentHeading = 0;
+        gpsCurrentData.latitude = 0;
+        gpsCurrentData.longitude = 0;
+        presentChkPnt = 0;
+
         LE.toggle(1);
         LE.toggle(2);
     }
 
-    presentChkPnt = 2;
+    /*presentChkPnt = 2;
     presentLat = 37.33345;
     presentLon = 121.33345;
-    finalChkPnt_b = 0;
-    distToChkPnt = 34;
-    distToDest = 189;
-    sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
-    sendCompass_data(2, presentChkPnt, distToChkPnt, distToDest);
-
+    finalChkPnt_b = 1;
+    distanceToChkPnt = 34;
+    distanceToDest = 189;
+    //sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
+    sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
+*/
     if(CALIBRATIONMODE == compassMode)
         compassMode = compass_calibrationMode(compassMode); //calibration mode
     else if(HEADINGMODE == compassMode)

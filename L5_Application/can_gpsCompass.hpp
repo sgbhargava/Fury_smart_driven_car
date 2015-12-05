@@ -15,6 +15,7 @@ typedef struct checkPointData{
         double_t chkPntLat;          // latitude of checkpoint
         double_t chkPntLong;         // longitude of checkpoint
         uint8_t chkPntNo;           // checkpoint number
+        bool    isFinal;
         checkPointData *next;       // pointing to next node
         checkPointData *prev;       // pointing to previous node
 }checkPointData_t;
@@ -28,7 +29,7 @@ typedef struct checkPointData{
  * @num         : checkpoint number
  * returns true if added, false if not
  */
-bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num);
+bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num, bool isFinal);
 
 /*
  * Converts the received latitude to the required format which is in degrees.
@@ -69,5 +70,7 @@ bool updateToNxtChkPnt();
  * returns false if it is the first checkpoint
  */
 bool updateToPrevChkPnt();
+
+bool isFinal();
 
 #endif /* L5_APPLICATION_CAN_GPSCOMPASS_HPP_ */

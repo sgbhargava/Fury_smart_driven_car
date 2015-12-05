@@ -52,7 +52,7 @@ void gps_data::formatGPSData()
        calcLat = gpsFormattedData.latitude / TEN_2;
        calcLong = gpsFormattedData.longitude / TEN_2;
        gpsFormattedData.latitude = ((gpsFormattedData.latitude - (calcLat * TEN_2)) / MINUTES) + calcLat;
-       gpsFormattedData.longitude = ((gpsFormattedData.longitude - (calcLong * TEN_2)) / MINUTES) + calcLong;
+       gpsFormattedData.longitude = (((gpsFormattedData.longitude - (calcLong * TEN_2)) / MINUTES) + calcLong) * -1;
 
 #if TESTCODE
        latTesting = gpsFormattedData.latitude;

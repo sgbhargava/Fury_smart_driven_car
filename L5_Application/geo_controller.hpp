@@ -18,14 +18,22 @@
 	        uint32_t bIsFinal:1;
 	}long_lat __attribute__((packed));
 
-
-	typedef struct compass{
+typedef union
+{
+	struct{
 		  int8_t turnDecision     : 8;
-		  uint8_t checkpoint      : 8;
+		  uint8_t checkpoint      : 7;
+		  uint8_t isFinal		  :1;
 		  uint32_t dist_finalDest : 16;
 		  uint32_t dist_nxtPnt    : 16;
-	}compass __attribute__((packed));
+	}__attribute__((packed));
+	uint64_t compassData;
+}compass;
 
+typedef struct{
+	int8_t number :7;
+	uint8_t isFinal :1;
+} checkpoint_struct;
 class geo_controller_class: public CAN_base_class
 {
 public:
@@ -39,8 +47,10 @@ public:
 	uint16_t distance_destination =0;
 	uint16_t distance_checkpoint =0;
 	uint8_t  checkpoint_request =0;
-	compass *compass_data = new compass;
+	checkpoint_struct *checkpoint = new checkpoint_struct;
 	long_lat *lat_long_data = new long_lat;
+	int8_t turnDecision;
+
 
 	bool get_heartbeat();
 	bool get_coordinates();

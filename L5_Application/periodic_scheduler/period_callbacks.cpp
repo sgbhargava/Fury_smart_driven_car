@@ -63,6 +63,22 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (2*512 * 4);
 #if 1
 
 void Obstruction_avoidance_algorithm(void) {
+printf("geo %d\n", geo_controller->turnDecision);
+if(geo_controller->turnDecision < 0)
+{
+	motor->motor_steering = 4;
+	//motor->send_motor_steering();
+}
+else if(geo_controller->turnDecision > 0)
+{
+	motor->motor_steering = 1;
+	//motor->send_motor_steering();
+}
+else
+{
+	motor->motor_steering = 0;
+	//motor->send_motor_steering();*/
+}
 	motor->get_motor_status();
 	sensor->lidar_threshold = 70 + motor->motor_rpm / 2;
 	sensor->sensor_threshold = 50 + motor->motor_rpm / 3;
@@ -76,7 +92,7 @@ void Obstruction_avoidance_algorithm(void) {
 
 		if ((sensor->left < sensor->sensor_threshold)
 				&& (sensor->right < sensor->sensor_threshold)) {
-			printf("stop\n");
+			//printf("stop\n");
 			motor->motor_steering = 0;
 			motor->stop();
 		}
@@ -95,20 +111,22 @@ void Obstruction_avoidance_algorithm(void) {
 		} else if (sensor->left < sensor->sensor_threshold) {
 			motor->motor_steering = 2;
 		} else {
-			motor->motor_steering = 0;
+			//motor->motor_steering = 0;
 		}
 		motor->custom_1();
 	}
 
-	//printf("motor steer %d\n", motor->motor_steering);
+	/*printf("motor steer %d\n", motor->motor_steering);
 
-	//printf("rpm is %d\n", motor->motor_rpm);
+	printf("rpm is %d\n", motor->motor_rpm);*/
 	if (!motor->send_motor_steering()) {
-		printf("ERROR failed to send 21\n");
+		//printf("ERROR failed to send 21\n");
 	}
 
 	if (!motor->send_motor_throttle())
-		printf("ERROR failed to send 22\n");
+	{
+		//printf("ERROR failed to send 22\n");
+	}
 }
 
 #endif
@@ -133,8 +151,8 @@ bool period_reg_tlm(void) {
 	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->right, tlm_int);
 	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->lidar, tlm_int);
 	TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor->back, tlm_int);
-	TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,
-			tlm_int);
+	TLM_REG_VAR(tlm_component_get_by_name("disk"), motor->motor_steering,tlm_int);
+	//TLM_REG_VAR(tlm_component_get_by_name("disk"), localCompassData.turnDecision , tlm_int);
 	// TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.sensor_threshold,tlm_int);
 	// TLM_REG_VAR(tlm_component_get_by_name("disk"), sensor.lidar_threshold,tlm_int);
 	return true; // Must return true upon success
@@ -142,7 +160,9 @@ bool period_reg_tlm(void) {
 
 void period_1Hz(void) {
 
+
 	//geo_controller->reset();
+
 	static uint8_t timeout =0;
 	timeout++;
 	timeout %= 2;
@@ -161,7 +181,6 @@ void period_1Hz(void) {
 		if(!motor->get_heartbeat())
 			motor->reset();
 	}
-	/*sensor->get*/
 
 	sensor->get_battery();
 	printf("bat %d\n", sensor->battery);
@@ -171,6 +190,9 @@ void period_10Hz(void) {
 
 	if (!sensor->get_sensor_reading())
 		u0_dbg_printf("ERROR failed to get sensor data\n");
+
+	if(!geo_controller->get_compass_data())
+				u0_dbg_printf("ERROR failed to get compass data\n");
 	Obstruction_avoidance_algorithm();
 
 

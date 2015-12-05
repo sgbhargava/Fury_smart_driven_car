@@ -25,16 +25,16 @@ bool master_class::master_class_init()
 	printf("false\n");
 	return false;
 	}
-	if(!add_can_id(id_reset_communication_bridge, 0xFF))
+	if(!add_can_id(id_dest_geo_controller,id_reset_communication_bridge))
 	{
 		printf("false\n");
 			return false;
 	}
-	if(!add_can_id(id_dest_geo_controller, id_disp_communication_bridge))
+	/*if(!add_can_id(id_disp_communication_bridge))
 	{
 		printf("false\n");
 			return false;
-	}
+	}*/
 //printf("true\n");
 	return true;
 }

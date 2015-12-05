@@ -6,7 +6,7 @@
  */
 #include "geo_controller.hpp"
 
-
+extern compass localCompassData;
 geo_controller_class* geo_controller_class::single = NULL;
 geo_controller_class* geo_controller_class::getInstance()
 {
@@ -52,7 +52,9 @@ bool geo_controller_class::get_compass_data()
 	uint64_t temp;
 	if(!get_data(id_compass_heading_data, &temp))
 		return false;
-	compass_data =(compass*)temp;
+	turnDecision = getbyte(temp,0);
+	checkpoint = (checkpoint_struct *)getbyte(temp, 1);
+
 	return true;
 }
 

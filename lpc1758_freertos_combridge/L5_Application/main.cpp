@@ -47,6 +47,39 @@
  */
 
 // test code
+class uart2_rx : public scheduler_task
+{
+    Uart2 &u2;
+    public:
+        uart2_rx(uint8_t priority):
+            scheduler_task("Uart_rx", 2048, priority),u2(Uart2::getInstance())
+        {
+
+        }
+
+        bool run(void *p)
+        {
+           getDataFromBluetooth();
+           return true;
+        }
+};
+
+class uart2_tx : public scheduler_task
+{
+    Uart2 &u2;
+    public:
+        uart2_tx(uint8_t priority) :
+            scheduler_task("Uart_tx", 2048, priority),u2(Uart2::getInstance())
+        {
+
+        }
+
+        bool run(void *p)
+        {
+            //TODO send data over bluetooth
+           return true;
+        }
+};
 
 void init_uart2()
 {
@@ -55,12 +88,12 @@ void init_uart2()
     u2.init(38400,120,120);
 }
 
-
 int main(void)
 {
 
     init_uart2();
     initForGPSData();
+    wirelessInit();
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.
@@ -74,8 +107,13 @@ int main(void)
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
+
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
+#if NODE_BLUETOOTH
+    scheduler_add_task(new uart2_rx(PRIORITY_HIGH));
+    scheduler_add_task(new uart2_tx(PRIORITY_HIGH));
+#endif
 
   //  scheduler_add_task(new UartSend(PRIORITY_MEDIUM));
 

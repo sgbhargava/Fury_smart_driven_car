@@ -54,19 +54,32 @@ bool period_reg_tlm(void)
 
 void period_1Hz(void)
 {
+
+#if NODE_CAN
     SendHeartBeat();
-    GPS_SendDataToCANTx();
+
+#else
+
+#endif
+    GPS_SendDataToTxQueue();
 }
 
 void period_10Hz(void)
 {
+#if NODE_CAN
     bridge_canTx();
     bridge_canRx();
+#else
+    wirelessTransmitBT();
+#endif
 }
 
 void period_100Hz(void)
 {
-    getDataFromBluetooth();
+
+#if NODE_CAN
+    wirelessReceiveCAN();
+#endif
 }
 
 void period_1000Hz(void)

@@ -6,7 +6,8 @@
 extern "C" {
 #endif
 
-
+#define NODE_BLUETOOTH 0
+#define NODE_CAN    1
 #define BLUETOOTH_NODE 102
 #define CAN_WIRELESS_NODE 103
 
@@ -38,6 +39,7 @@ typedef struct {
 typedef union {
         long_lat_data data;
         uint64_t dWord;
+        uint8_t  bytes[8];
 } CAN_Gps_data;
 
 typedef struct gps_data{
@@ -54,11 +56,15 @@ typedef struct cmd_data
         uint8_t index;
 } cmd_data;
 
+void Uart2_flushData();
+bool wirelessTransmitBT();
+bool wirelessReceiveCAN();
+bool wirelessInit();
 void initForGPSData(void);
 void getDataFromBluetooth();
 void bridge_canTx();
 bool SendHeartBeat();
-bool GPS_SendDataToCANTx();
+bool GPS_SendDataToTxQueue();
 void bridge_canRx();
 
 #ifdef __cplusplus

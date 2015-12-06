@@ -77,6 +77,7 @@ class uart2_tx : public scheduler_task
         bool run(void *p)
         {
             //TODO send data over bluetooth
+           SendDataOverBluetooth();
            return true;
         }
 };

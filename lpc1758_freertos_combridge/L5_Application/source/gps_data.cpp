@@ -18,10 +18,12 @@
 /****************************************************************************************************************/
 /* gloabal variables*/
 gps_data gGpsData[20];
+gps_data gGpsDataRx[10];
 char gData[60];
 char rxData[60];
 QueueHandle_t GPSdataTxQueue =0;
 SemaphoreHandle_t GPSDataTxSem = 0;
+SemaphoreHandle_t GPSDataRxSem = 0;
 QueueHandle_t GPSdataRxQueue =0;
 bool sendStatusFlag = 0;/* flag to control GPS checkpoint data overwritten before being sent*/
 bool initStatusFlag = 0;
@@ -31,15 +33,16 @@ static int  gChrCnt =0;
 void initForGPSData(void)
 {
 #if NODE_CAN
-    const can_std_id_t slist[] = { CAN_gen_sid(can1,reset)};
+    const can_std_id_t slist[] = { CAN_gen_sid(can1,reset),CAN_gen_sid(can1,gps_loc),CAN_gen_sid(can1,gps_ack)};
     int count_slist = sizeof(slist);
     /* queue to transmit GPS data from Bridge module to GPS module */
 #endif
     GPSdataTxQueue = xQueueCreate(20,sizeof(cmd_data));
     /* Queue to Reciev data from GPS module */
     GPSdataRxQueue = xQueueCreate(20,sizeof(cmd_data));
-    /* semaphore to deque the data to canTX*/
+    /* semaphore to deque the data at a specific interval*/
     GPSDataTxSem = xSemaphoreCreateBinary();
+
     /* init Can */
 
 #if NODE_CAN
@@ -66,12 +69,73 @@ bool wirelessInit()
     mesh_set_node_address(CAN_WIRELESS_NODE);
     #endif
     printf("Node address:%d\n",mesh_get_node_address());
+
+    return 1;
+}
+
+bool FormPacketAndSendCAN(uint8_t len,uint8_t cmd,uint8_t index,uint8_t *p)
+{
+    mesh_packet_t pkt = {0};
+
+    if(mesh_form_pkt(&pkt,BLUETOOTH_NODE,mesh_pkt_ack,1,0))
+    {
+        pkt.info.data_len = len;
+        pkt.data[0] = cmd;
+
+        if(len >1 && p)
+        {
+            pkt.data[1] = index;
+            memcpy(&pkt.data[2],p,8);
+        }
+
+        if( !mesh_send_formed_pkt(&pkt))
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+bool wirelessTransmitCAN()
+{
+    cmd_data nCmd = {0};
+
+    if( xQueueReceive(GPSdataRxQueue,&nCmd,0) )
+    {
+        switch(nCmd.cmd)
+        {
+            case data_ack:
+            {
+               FormPacketAndSendCAN(1,data_ack,0,NULL);
+
+            }
+            break;
+            case data_loc:
+            {
+                int i;
+                FormPacketAndSendCAN(10,data_loc,nCmd.index,gGpsDataRx[nCmd.index].longLatdata.bytes);
+
+            }
+            break;
+            // TODO add case for other msgs
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
 }
 
 bool wirelessReceiveCAN()
 {    mesh_packet_t pkt={0};
     cmd_data nCmd ={0};
-    CAN_Gps_data data = {0};
 
     if( wireless_get_rx_pkt(&pkt,0))
     {
@@ -83,14 +147,12 @@ bool wirelessReceiveCAN()
                 nCmd.cmd = pkt.data[0];
                 nCmd.index = pkt.data[1];
 
-                memcpy(data.bytes,&pkt.data[2],8);
-                gGpsData[nCmd.index].longLatdata = data.data;
+                memcpy(gGpsData[nCmd.index].longLatdata.bytes,&pkt.data[2],8);
                 gGpsData[nCmd.index].cmd = nCmd.cmd;
-                gGpsData[nCmd.index].bDestination = data.data.bIsFinal;
+                gGpsData[nCmd.index].bDestination = gGpsData[nCmd.index].longLatdata.bIsFinal;
 
-
-                printf("%d %d.%d\n",nCmd.cmd,gGpsData[nCmd.index].longLatdata.lattitude_dec,gGpsData[nCmd.index].longLatdata.lattitude_float);
-                printf("packet Recieved\n");
+               // printf("%d %d.%d\n",nCmd.cmd,gGpsData[nCmd.index].longLatdata.lattitude_dec,gGpsData[nCmd.index].longLatdata.lattitude_float);
+               // printf("packet Recieved\n");
 
                 if( gGpsData[nCmd.index].bDestination)
                 {
@@ -110,15 +172,58 @@ bool wirelessReceiveCAN()
     }
     else
     {
+        return 0;
       //  printf("not Receiving\n");
     }
+
+    return 1;
+}
+
+
+bool wirelessReceiveBT()
+{
+    mesh_packet_t pkt={0};
+    cmd_data nCmd ={0};
+    long_lat_data data ={0};
+
+    if( wireless_get_rx_pkt(&pkt,0))
+    {
+        nCmd.cmd = pkt.data[0];
+        switch(nCmd.cmd)
+        {
+            case data_ack:
+            {
+                printf("Ack received\n");
+                xQueueSend(GPSdataRxQueue,&nCmd,0);
+            }
+            break;
+            case data_loc:
+            {
+
+                nCmd.index = pkt.data[1];
+
+                memcpy(data.bytes,&pkt.data[2],8);
+                printf("lat:%d.%d, long:-%d.%d\n",data.lattitude_dec,data.lattitude_float,data.longitude_dec,
+                        data.longitude_float);
+                printf("\n");
+            }
+            break;
+            // TODO handle msgs for other incoming data to display on App
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
 }
 
 bool wirelessTransmitBT()
 {
     mesh_packet_t pkt = {0};
     cmd_data nCmd = {0};
-    CAN_Gps_data data ={0};
+    long_lat_data data ={0};
 
     if( xQueueReceive(GPSdataTxQueue,&nCmd,0) )
     {
@@ -126,7 +231,7 @@ bool wirelessTransmitBT()
        {
            case check:
            {
-               data.data = gGpsData[nCmd.index].longLatdata;
+               data = gGpsData[nCmd.index].longLatdata;
 
                if(mesh_form_pkt(&pkt,CAN_WIRELESS_NODE,mesh_pkt_ack,1,0))
                {
@@ -166,12 +271,18 @@ bool wirelessTransmitBT()
        }
 
     }
+    else
+   {
+       return 0;
+   }
+
+   return 1;
 }
 
 bool SendHeartBeat()
 {
     can_msg_t msg ={0};
-
+    cmd_data nCmd = {0};
     msg.data.qword = 0;
     msg.frame_fields.data_len =0;
     msg.msg_id = heartbeat;
@@ -190,8 +301,10 @@ bool SendHeartBeat()
     }
     else
     {
-     // printf("Heart Beat failed\n");
-      return 0;
+        nCmd.cmd = data_ack;
+        xQueueSend(GPSdataRxQueue,&nCmd,0);
+        printf(" Sent data_ack \n");
+        return 0;
     }
 
 }
@@ -276,6 +389,8 @@ bool ParseGPSData(char *cmdParams,gps_data *pGps,int count, int checkCount)
     }
     return 0;
 }
+
+
 
 bool ProcessDataAndSend(char * pData)
 {
@@ -385,7 +500,6 @@ void bridge_canTx()
     can_msg_t canData ={0};
     cmd_data nCmd  ={0};
     int i=0;
-    CAN_Gps_data data={0};
 
     if( xQueueReceive(GPSdataTxQueue,&nCmd,0) )
     {
@@ -397,16 +511,15 @@ void bridge_canTx()
                     canData.msg_id = location ; // sending latitude  to master
                     i = nCmd.index;
 
-                   data.data = gGpsData[i].longLatdata;
 #if 1
-                   printf("lat:%u.%d,long:%u.%d,chk:%d,dest:%d \n",data.data.lattitude_dec,
-                           data.data.lattitude_float,
-                           data.data.longitude_dec,
-                           data.data.longitude_float,
-                           data.data.checkpoint,
-                           data.data.bIsFinal);
+                   printf("lat:%u.%d,long:%u.%d,chk:%d,dest:%d \n",gGpsData[i].longLatdata.lattitude_dec,
+                           gGpsData[i].longLatdata.lattitude_float,
+                           gGpsData[i].longLatdata.longitude_dec,
+                           gGpsData[i].longLatdata.longitude_float,
+                           gGpsData[i].longLatdata.checkpoint,
+                           gGpsData[i].longLatdata.bIsFinal);
 #endif
-                   canData.data.qword = data.dWord;
+                   canData.data.qword = gGpsData[i].longLatdata.qWord;
 
                    if( CAN_tx(can1,&canData,0))
                    {
@@ -459,15 +572,29 @@ void bridge_canTx()
 
 }
 
+bool Send_Uart2(char *p)
+{
+    Uart2::getInstance().put(p,100);
+    return 1;
+}
+
 bool SendDataOverBluetooth(void)
 {
-    uint8_t nCmd = 0;
+    cmd_data nCmd = {0};
     char *p = rxData;
 
     if(xQueueReceive(GPSdataRxQueue,&nCmd,0))
     {
-        Uart2::getInstance().put(p,0);
-        Uart2::getInstance().putChar('$',0);// to mark the end of transmission
+        switch(nCmd.cmd)
+        {
+            case data_ack:
+            {
+                sprintf(p,"a~");
+                printf("received: %s\n",p);
+                Send_Uart2(p);
+            }
+            break;
+        }
     }
     else
     {
@@ -479,16 +606,18 @@ bool SendDataOverBluetooth(void)
 void bridge_canRx()
 {
    can_msg_t msg ={0};
-   uint16_t nCmd = 0;
-   long_lat_data data = {0};
+   cmd_data nCmd = {0};
+   static int count = 0;
 
    if( CAN_rx(can1,&msg,0))
    {
        switch(msg.msg_id)
        {
-           case rx_init:
+           case gps_ack:
            {
-               //TODO not used, change to check point received ack from GPS module
+               nCmd.cmd = data_ack;
+               xQueueSend(GPSdataRxQueue,&nCmd,0);
+               printf("gps ack received\n");
            }
            break;
 
@@ -499,11 +628,26 @@ void bridge_canRx()
                sys_reboot();
            }
            break;
+
+           case gps_loc:
+           {
+             //  printf("gps loc received\n");
+               int i = count%10;
+               gGpsDataRx[i].cmd = data_loc;
+               gGpsDataRx[i].longLatdata.qWord = msg.data.qword;
+               gGpsDataRx[i].bDestination = gGpsDataRx[i].longLatdata.bIsFinal;
+               nCmd.cmd = data_loc;
+               nCmd.index = i;
+               count++;
+               xQueueSend(GPSdataRxQueue,&nCmd,0);
+
+           }
+           break;
        }
    }
    else
    {
-     //  printf("CAN RX failed!!\n");
+     //printf("CAN RX failed!!\n");
    }
 
 }

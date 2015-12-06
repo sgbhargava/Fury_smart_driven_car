@@ -69,8 +69,10 @@ void period_10Hz(void)
 #if NODE_CAN
     bridge_canTx();
     bridge_canRx();
+    wirelessTransmitCAN();
 #else
     wirelessTransmitBT();
+    wirelessReceiveBT();
 #endif
 }
 

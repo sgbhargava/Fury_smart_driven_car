@@ -31,8 +31,9 @@
 #define  TEN_6                  1000000    // 10^6
 #define  TEN_2                  100
 #define  MAGENTIC_DECLINTAION   14
-#define  SCALE                  30
+#define  SCALE                  30.0
 #define  TWO_METERS             2
+#define  FULLCIRCLE             360.0
 
 // Message IDs and data length for CAN communication
 #define  HEARTBEAT_ID           0x160

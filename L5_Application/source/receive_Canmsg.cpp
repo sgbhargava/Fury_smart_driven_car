@@ -63,8 +63,8 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
 {
     uint32_t sendLat_dec   = (uint32_t) *currentLat;
     uint32_t sendLat_float = (*currentLat - sendLat_dec) * (TEN_6);
-    uint32_t sendLon_dec   = (uint32_t) *currentLon;
-    uint32_t sendLon_float = (*currentLon - sendLon_dec) * (TEN_6);
+    uint32_t sendLon_dec   = (uint32_t) (*currentLon * -1);
+    uint32_t sendLon_float = ((*currentLon * -1) - sendLon_dec) * (TEN_6);
 
     // with dbc: you can use scale of 0.000001
     // 123456789 ==> 123.456789

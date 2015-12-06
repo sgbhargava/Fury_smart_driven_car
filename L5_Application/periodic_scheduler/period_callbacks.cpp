@@ -137,6 +137,26 @@ void period_10Hz(void)
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
     double_t presentLat, presentLon;
 
+// compass reading and calibration
+    if(BEARINGMODE == compassMode)
+        currentHeading = compassBearing_inDeg();
+
+    if (CALIBRATIONMODE == compassMode)
+        compassMode = compass_calibrationMode(compassMode); //calibration mode
+    else if (HEADINGMODE == compassMode)
+        compassMode = compass_headingMode(); //To get back to bearing compassMode
+    else
+        LD.setNumber(13);
+
+    if (SW.getSwitch(2))
+    {
+        compassMode = HEADINGMODE; //0
+        LD.setNumber(10);
+    }
+    if (SW.getSwitch(1))
+        compassMode = CALIBRATIONMODE;
+
+// read gps and compute everything
     if(NULL == gpsCurrData_q)
     {
         LE.on(1);
@@ -159,11 +179,10 @@ void period_10Hz(void)
 
         // heading degree of car
         desiredHeading = headingdir(presentLat, presentLon, chkPntLat, chkPntLon);
-        if(BEARINGMODE == compassMode)
-            currentHeading = compassBearing_inDeg();
+
 
         // turn to left if negative and right if positive
-        turn = ((desiredHeading - currentHeading) / SCALE);
+        turn = turnDecision(desiredHeading, currentHeading);
 
         // Distance of checkpoint and final distance
         distanceToChkPnt = calcDistToNxtChkPnt(presentLat, presentLon, chkPntLat, chkPntLon);
@@ -204,20 +223,6 @@ void period_10Hz(void)
     //sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
     sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
 */
-    if(CALIBRATIONMODE == compassMode)
-        compassMode = compass_calibrationMode(compassMode); //calibration mode
-    else if(HEADINGMODE == compassMode)
-        compassMode = compass_headingMode();   //To get back to bearing compassMode
-    else
-        LD.setNumber(13);
-
-    if(SW.getSwitch(2))
-    {
-        compassMode = HEADINGMODE; //0
-        LD.setNumber(10);
-    }
-    if(SW.getSwitch(1))
-        compassMode = CALIBRATIONMODE;
 
 }
 

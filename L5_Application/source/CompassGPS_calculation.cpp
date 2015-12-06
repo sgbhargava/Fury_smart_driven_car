@@ -45,19 +45,13 @@ float_t calcDistToFinalDest(float_t distToChkPnt)
 {
     static float_t restOfChkPntDist;
     float_t finalDist;
-    uint8_t chkPnt = getPresentChkPnt()+1;
+    uint8_t chkPnt = getPresentChkPnt();
     uint8_t totalChkPnts = getNumOfChkPnts();
-    static uint8_t prevChkPnt = getPresentChkPnt();
-
-    // Calculating the total distance of the rest of checkpoints.
-    if(prevChkPnt != chkPnt){
         restOfChkPntDist = 0.0;
-        prevChkPnt = chkPnt;
         for (uint8_t i = chkPnt; i <= totalChkPnts; i++)
         {
             restOfChkPntDist += calcDistToNxtChkPnt(getLatitude(i), getLongitude(i), getLatitude(i+1), getLongitude(i+1));
         }
-    }
 
     // adding the present distance to checkpoint with the rest of the checkpoint distance
     finalDist = (float_t)restOfChkPntDist + distToChkPnt;
@@ -93,12 +87,33 @@ double_t headingdir(double_t latitude1, double_t longitude1, double_t latitude2,
     return fmodf((headingdirection+360),360);
 }
 
+int8_t turnDecision(double_t desired,double_t current)
+{
+    float_t turnAngle = (desired - current)/SCALE;
+
+    if(turnAngle>6)
+    {
+        turnAngle = turnAngle - (FULLCIRCLE/SCALE);
+    }
+    else if(turnAngle<-6)
+    {
+        turnAngle = turnAngle + (FULLCIRCLE/SCALE);
+    }
+    else
+    {
+    }
+
+    return (int8_t)turnAngle;
+}
+
 bool checkPntReached(float_t distance)
 {
     static bool intermediateChkPnt = true;
 
     if (distance <= TWO_METERS)
         intermediateChkPnt = updateToNxtChkPnt() && !isFinal();
+    else
+        intermediateChkPnt = true;
 
     if (intermediateChkPnt)
         return false;

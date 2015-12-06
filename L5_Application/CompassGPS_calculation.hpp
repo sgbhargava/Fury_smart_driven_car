@@ -12,6 +12,7 @@
 #define L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_
 
 #include "math.h"
+#include "stdint.h"
 
 /*
  * Function to calculate the current direction!!
@@ -71,5 +72,10 @@ bool updateDestPoints(bool isFinal);
  * update message telling destination is reached
  */
 void destReached();
+
+/*
+ * Function to make the turn decision
+ */
+int8_t turnDecision(double_t desired,double_t current);
 
 #endif /* L5_APPLICATION_COMPASSGPS_CALCULATION_HPP_ */

@@ -10,12 +10,16 @@
 #include "can_gpsCompass.hpp"
 #include "hashDefine.hpp"
 #include "stdio.h"
+#include "sevenSeg_display.hpp"
 
 static checkPointData_t *nextChkPnt = NULL;
 static checkPointData_t *prevChkPnt = NULL;
 static checkPointData_t *firstChkPnt = NULL;
 static checkPointData_t *giveCheckPoint = NULL;
 static uint8_t numberOfChkPnts = 0;
+
+
+sevenSegDispFunc sendCheckPoint;
 
 bool addChkPnts(uint8_t latDec, uint32_t latFloat, uint8_t lonDec, uint32_t lonFloat, uint8_t num, bool isFinal)
 {
@@ -145,6 +149,8 @@ uint8_t getPresentChkPnt()
 {
     if(numberOfChkPnts == 0)
         return 0;
+
+    sendCheckPoint.seg_display(giveCheckPoint->chkPntNo);
 
     if(giveCheckPoint->chkPntNo == 0)
         updateToNxtChkPnt();

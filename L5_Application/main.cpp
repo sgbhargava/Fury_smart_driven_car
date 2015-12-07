@@ -32,6 +32,7 @@
 #include "gps.hpp"
 #include "inttypes.h"
 #include "receive_Canmsg.hpp"
+#include "sevenSeg_display.hpp"
 
 #if TESTCODE
 #include "compass.hpp"
@@ -109,6 +110,11 @@ void testCode(void *p)
  */
 int main(void)
 {
+/*    while(1)
+    {
+        printf("compassBearing_inDeg:%f\n",compassBearing_inDeg());
+        delay_ms(1000);
+    }*/
     /**
      * A few basic tasks for this bare-bone system :
      *      1.  Terminal task provides gateway to interact with the board through UART terminal.
@@ -131,14 +137,16 @@ int main(void)
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 1
+    #if 0
     scheduler_add_task(new periodicSchedulerTask());
     #endif
+
 
 #if TESTCODE
     /*
      * Testing purpose
      */
+
 
     /*
     addChkPnts(37, 335382, 121, 881242, 1, 0); // latitude: 37.33422, longitude: 121.8834
@@ -149,6 +157,15 @@ int main(void)
 
     xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);
 */
+
+    /*addChkPnts(37, 334429, 121, 883402, 1); // latitude: 37.33422, longitude: 121.8834
+    addChkPnts(37, 334453, 121, 883290, 2); // latitude: 3720.06544, longitude: 12152.98048
+    addChkPnts(37, 334642, 121, 882854, 3); // latitude: 3720.07426, longitude: 12152.9776
+    addChkPnts(37, 334804, 121, 882389, 4); // latitude: 3720.08884, longitude: 12152.94292
+    addChkPnts(37, 335100, 121, 881664, 5); // latitude: 3720.10654, longitude: 12152.89942
+
+    xTaskCreate(testCode, "Test code", 2048, NULL, 1, NULL);*/
+
 #endif
     /* The task for the IR receiver */
     // scheduler_add_task(new remoteTask  (PRIORITY_LOW));

@@ -43,7 +43,7 @@ BO_ 200 SONARS: 6 SENSOR
  SG_ SENSOR_SONARS_middle : 12|12@1+ (0.1,0) [0|0] "" DRIVER,IO
  SG_ SENSOR_SONARS_right : 24|12@1+ (0.1,0) [0|0] "" DRIVER,IO
  SG_ SENSOR_SONARS_rear : 36|12@1+ (0.1,0) [0|0] "" DRIVER,IO
-
+ 
 BO_ 300 MOTOR_CMD: 1 DRIVER
  SG_ MOTOR_CMD_steer : 0|4@1- (1,-5) [-5|5] "" MOTOR
  SG_ MOTOR_CMD_drive : 4|4@1+ (1,0) [0|9] "" MOTOR

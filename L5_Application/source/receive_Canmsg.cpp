@@ -67,6 +67,7 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
     uint32_t sendLon_float = ((*currentLon * -1) - sendLon_dec) * (TEN_6);
 
     // with dbc: you can use scale of 0.000001
+
     // 123456789 ==> 123.456789
     transmit_gpsData->lat_dec    = sendLat_dec;
     transmit_gpsData->lat_float  = sendLat_float;
@@ -88,7 +89,6 @@ void sendCompass_data(int8_t turn, uint8_t presentChkPnt,
      *  Negative number indicates the car has to turn left.
      *  Else head straight.
      */
-
     transmit_compassData->checkpoint        =   presentChkPnt;
     transmit_compassData->turnDecision      =   turn;
     transmit_compassData->dist_nxtPnt       =   (uint16_t) nxtChkPntDist;
@@ -150,7 +150,5 @@ void heartbeat()
 void can_checkBusOff(uint32_t a)
 {
     if(CAN_is_bus_off(can1))
-    {
         CAN_reset_bus(can1);
-    }
 }

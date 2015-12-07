@@ -41,8 +41,8 @@
 #include "tlm/c_tlm_var.h"
 #include "receive_Canmsg.hpp"
 #include "lpc_sys.h"
+#include "sevenSeg_display.hpp"
 
-/// This is the stack size used for each of the period tasks
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 gpsData_t  gpsCurrentData;
@@ -59,7 +59,6 @@ double_t test_chkPntLat[5], test_chkPntLong[5];
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-
     can_communicationInit();
     can_addMsgIDs(MASTER_RESET_ID, COMM_GPSDATA_ID);
     //can_addMsgIDs(, 0xFFFF);
@@ -105,7 +104,6 @@ bool period_reg_tlm(void)
 
     return true; // Must return true upon success
 }
-
 
 void period_1Hz(void)
 {
@@ -229,7 +227,6 @@ void period_10Hz(void)
 
 void period_100Hz(void)
 {
-    bool ok;
     uint64_t data = 0;
 
     if(can_receive(COMM_GPSDATA_ID, &data))

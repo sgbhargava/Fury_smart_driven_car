@@ -92,17 +92,12 @@ int8_t turnDecision(double_t desired,double_t current)
     float_t turnAngle = (desired - current)/SCALE;
 
     if(turnAngle>6)
-    {
         turnAngle = turnAngle - (FULLCIRCLE/SCALE);
-    }
     else if(turnAngle<-6)
-    {
         turnAngle = turnAngle + (FULLCIRCLE/SCALE);
-    }
     else
     {
     }
-
     return (int8_t)turnAngle;
 }
 

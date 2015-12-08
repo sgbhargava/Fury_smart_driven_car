@@ -35,7 +35,7 @@ DirectionCtrl * DirectionCtrl::getInstance()
 
 void DirectionCtrl::setDirection(int dir)
 {
-    LD.setNumber(dir);
+    //LD.setNumber(dir);
     switch (dir)
     {
         case dirFarRight:
@@ -77,7 +77,6 @@ SpeedCtrl::SpeedCtrl() :
 {
     speedPWM = basePWM;
     throttlePWM.set(basePWM);
-    //LD.setNumber(speedPWM);
     desiredDirection = goStop;
     desiredCustom = 0;
     desiredRpm = 0;
@@ -104,12 +103,10 @@ void SpeedCtrl::initESC()
     throttlePWM.set(SpeedCtrl::basePWM);
     speedPWM = SpeedCtrl::basePWM;
     LE.on(1);
-    //LD.setNumber((int)speedPWM);
 
 }
 bool SpeedCtrl::checkPWM(float pwm)
 {
-    //printf("Check speed %f\n", pwm);
     if ((pwm > backLimitPWM) && (pwm < frontLimitPWM))
     {
         if (basePWM - pwm > 0.5)
@@ -126,30 +123,34 @@ bool SpeedCtrl::checkPWM(float pwm)
     }
     return false;
 }
-#if 0
+
 void SpeedCtrl::selfTuningSpeed()
 {
-    if (startSelfTuning!=0)
+    int readbackRpm = SpeedMonitor::getInstance()->getRpm();
+    int rpmDiff = readbackRpm - desiredRpm;
+    if (selfTuning && rpmDiff > RPM_THRESHOLD_3)
     {
-        if (startSelfTuning == 1)
+        setSpeedPWM(basePWM, selfTuning);
+        LD.setNumber(99);
+    }
+    else if (startSelfTuning!=0)
+    {
+        if (startSelfTuning < 2)
             startSelfTuning ++;
         else
         {
             startSelfTuning = 0;
             selfTuning = true;
         }
+        LD.setNumber(88);
     }
-    if (selfTuning)
+    else if (selfTuning && desiredDirection != goStop)
     {
-        int readbackRpm = 0;
-        float readbackSpeed = 0;
-        bool shouldDescr = false;
-
-        SpeedMonitor::getInstance()->getSpeed(&readbackRpm, &readbackSpeed);
         if (desiredRpm == 0 && (int)readbackRpm != 0)
         {
             setSpeedPWM(basePWM, selfTuning);
-            lastSelfTuning = 0;
+            lastSelfTuning = 6;
+            LD.setNumber(lastSelfTuning);
         }
         else
         {
@@ -159,267 +160,52 @@ void SpeedCtrl::selfTuningSpeed()
 
             if ( abs(deltaRpm) == desiredRpm )
             {
-                updateTime = 2;
-                updateStep = 4;
-
-                if (lastSelfTuning != 4) selfTuningTimer = updateTime+1;
-                lastSelfTuning = 4;
-
-            }
-            if ( abs(deltaRpm) > RPM_THERHOLD_3 )
-            {
-#ifdef incline_test
-                if (AS.getY() < -50) //incline
-                {
-                    updateTime = 1;
-                    updateStep = 4;
-                    incline = true;
-                    decline = false;
-                }
-                else if (AS.getY() > 50) //decline
-                {
-                    updateTime = 1;
-                    updateStep = 8;
-                    shouldDescr = true;
-                    incline = false;
-                    decline = true;
-                }
-                else
-                {
-                    if (incline)
-                    {
-                        updateTime = 1;
-                        updateStep = 4;
-                        shouldDescr = true;
-                        incline = false;
-                        decline = false;
-                    }
-                    else if (decline)
-                    {
-                        updateTime = 1;
-                        updateStep = 8;
-                        incline = false;
-                        decline = false;
-                    }
-                    else
-                    {
-                        updateTime = 2;
-                        updateStep = 3;
-                        incline = false;
-                        decline = false;
-                    }
-                }
-                if (lastSelfTuning != 3) selfTuningTimer = updateTime+1;
-                lastSelfTuning = 3;
-#else
-
-                updateTime = 2;
-                updateStep = 3;
-                if (lastSelfTuning != 3) selfTuningTimer = updateTime+1;
-                lastSelfTuning = 3;
-#endif
-            }
-            else if ( abs(deltaRpm) > RPM_THERHOLD_2 )
-            {
-                updateTime = 6;
-                updateStep = 2;
-                if (lastSelfTuning != 2) selfTuningTimer = updateTime+1;
-                lastSelfTuning = 2;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
-            }
-            else if (abs(deltaRpm) > RPM_THERHOLD_1)
-            {
-                updateTime = 4;
-                updateStep = 1;
-                if (lastSelfTuning != 1) selfTuningTimer = updateTime+1;
-                lastSelfTuning = 1;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
-            }
-            else
-            {
-                lastSelfTuning = 0;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
-            }
-
-            if (updateTime != 0 && updateStep != 0)
-            {
-                if (selfTuningTimer > updateTime)
-                {
-                    if (deltaRpm > 0 && shouldDescr == false)
-                    {
-                        incrSpeedPWM(updateStep);
-                    }
-                    else
-                    {
-                        descrSpeedPWM(updateStep);
-                    }
-                    selfTuningTimer = 0;
-                }
-                else
-                    selfTuningTimer ++;
-            }
-            else
-                selfTuningTimer = 0;
-        }
-    }
-}
-#else
-void SpeedCtrl::selfTuningSpeed()
-{
-    if (startSelfTuning!=0)
-    {
-        if (startSelfTuning == 1)
-            startSelfTuning ++;
-        else
-        {
-            startSelfTuning = 0;
-            selfTuning = true;
-        }
-    }
-    if (selfTuning)
-    {
-        int readbackRpm = SpeedMonitor::getInstance()->getRpm();
-        bool shouldDescr = false;
-
-        if (desiredRpm == 0 && (int)readbackRpm != 0)
-        {
-            setSpeedPWM(basePWM, selfTuning);
-            lastSelfTuning = 0;
-        }
-        else
-        {
-            int deltaRpm = desiredRpm - readbackRpm;
-            int updateTime = 0;
-            int updateStep = 0;
-
-            if ( abs(deltaRpm) == desiredRpm )
-            {
-                updateTime = 2;
-                updateStep = 4;
+                updateTime = 1;
+                updateStep = 10;
 
                 if (lastSelfTuning != 5) selfTuningTimer = updateTime+1;
                 lastSelfTuning = 5;
 
             }
-            else if ( abs(deltaRpm) > RPM_THERHOLD_4 )
+            else if ( abs(deltaRpm) > RPM_THRESHOLD_4 )
             {
+                updateTime = 5;
+                updateStep = 12;
 
-                if (deltaRpm > 0)
-                {
-                    updateTime = 10;
-                    updateStep = 0;
-
-                    setSpeedPWMDirect(basePWM);
-                }
-                else
-                {
-                    updateTime = 5;
-                    updateStep = 10;
-
-                }
                 if (lastSelfTuning != 4) selfTuningTimer = updateTime+1;
                 lastSelfTuning = 4;
             }
-            else if ( lastSelfTuning != 4 && abs(deltaRpm) > RPM_THERHOLD_3 )
+            else if ( abs(deltaRpm) > RPM_THRESHOLD_3 )
             {
-                /*
-                int slope = AS.getY();
-                if (slope < -50) //incline
-                {
-                    updateTime = 1;
-                    updateStep = 4;
-                    incline = true;
-                    decline = false;
-                }
-                else if (slope > 50) //decline
-                {
-                    updateTime = 1;
-                    updateStep = 10;
-                    shouldDescr = true;
-                    incline = false;
-                    decline = true;
-                }
-                else
-                {
-                    if (incline)
-                    {
-                        updateTime = 1;
-                        updateStep = 4;
-                        shouldDescr = true;
-                        incline = false;
-                        decline = false;
-                    }
-                    else if (decline)
-                    {
-                        updateTime = 1;
-                        updateStep = 8;
-                        incline = false;
-                        decline = false;
-                    }
-                    else
-                    {
-                        updateTime = 2;
-                        updateStep = 3;
-                        incline = false;
-                        decline = false;
-                    }
-                }*/
-                updateTime = 3;
+                updateTime = 2;
                 updateStep = 3;
                 if (lastSelfTuning != 3) selfTuningTimer = updateTime+1;
                 lastSelfTuning = 3;
             }
-            else if ( abs(deltaRpm) > RPM_THERHOLD_2 )
+            else if ( abs(deltaRpm) > RPM_THRESHOLD_2 )
             {
-                updateTime = 6;
-                updateStep = 2;
+                updateTime = 3;
+                updateStep = 3;
                 if (lastSelfTuning != 2) selfTuningTimer = updateTime+1;
                 lastSelfTuning = 2;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
             }
-            else if (abs(deltaRpm) > RPM_THERHOLD_1)
+            else if (abs(deltaRpm) > RPM_THRESHOLD_1)
             {
-                updateTime = 4;
+                updateTime = 2;
                 updateStep = 1;
                 if (lastSelfTuning != 1) selfTuningTimer = updateTime+1;
                 lastSelfTuning = 1;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
             }
             else
             {
                 lastSelfTuning = 0;
-
-#ifdef incline_test
-                incline = false;
-                decline = false;
-#endif
             }
-
+            LD.setNumber(lastSelfTuning);
             if (updateTime != 0 && updateStep != 0)
             {
                 if (selfTuningTimer > updateTime)
                 {
-                    if (deltaRpm > 0 && shouldDescr == false)
+                    if (deltaRpm > 0)
                     {
                         if (desiredDirection == goForward)
                             incrSpeedPWM(updateStep);
@@ -443,84 +229,55 @@ void SpeedCtrl::selfTuningSpeed()
         }
     }
 }
-#endif
-void SpeedCtrl::checkSlope()
+
+void SpeedCtrl::setSpeedPWM(float pwm, bool selfTuning_f, bool backSeq)
 {
-    int16_t slope = AS.getY();
-    int16_t slope_thershold = 50;
-    float readbackRpm = 0;
-    float readbackSpeed = 0;
-    int deltaRpm;
-
-    SpeedMonitor::getInstance()->getSpeed(&readbackRpm, &readbackSpeed);
-
-    if (abs(slope) > slope_thershold)
+    if (!backSeq || (backwardSequence && backSeq))
     {
-        deltaRpm = desiredRpm - (int)readbackRpm;
-        if ( abs(deltaRpm) > RPM_THERHOLD_4)
+        if (checkPWM(pwm))
         {
-            setSpeedPWM(basePWM, selfTuning);
-        }
-        else if ( abs(deltaRpm) > RPM_THERHOLD_3 )
-        {
-            if (deltaRpm > 0)
-                incrSpeedPWM(4);
+            bool wasForward = false;
+            int curDirection;
+
+            if (desiredDirection == goStop)
+            {
+                wasForward = (speedPWM < basePWM );
+            }
             else
-                descrSpeedPWM(4);
-        }
-        else if ( abs(deltaRpm) > RPM_THERHOLD_2 )
-        {
-            if (deltaRpm > 0)
-                incrSpeedPWM(1);
+            {
+                wasForward = (desiredDirection == goForward);
+            }
+
+            curDirection = (pwm < basePWM )? goBackward: ((floatIsSame(pwm,basePWM) && !selfTuning)? goStop: goForward);
+
+            desiredDirection = curDirection;
+            selfTuning = selfTuning_f;
+
+            if (wasForward && curDirection == goBackward)
+            {
+                backwardSequence = true;
+                xQueueSend(scheduler_task::getSharedObject(shared_directionQueue), &pwm, portMAX_DELAY);
+                selfTuning = false;
+                startSelfTuning = 0;
+            }
             else
-                descrSpeedPWM(1);
+            {
+                throttlePWM.set(pwm);
+                speedPWM = pwm;
+                backwardSequence = backSeq;
+            }
+
+            if (! selfTuning_f)
+            {
+                desiredCustom = 0;
+            }
         }
-    }
-}
-
-void SpeedCtrl::setSpeedPWM(float pwm, bool selfTuning_f)
-{
-    if (checkPWM(pwm))
-    {
-        bool wasForward = false;
-        int curDirection;
-
-        if (desiredDirection == goStop)
-        {
-            wasForward = (speedPWM < basePWM );
-        }
-        else
-        {
-            wasForward = (desiredDirection == goForward);
-        }
-
-        curDirection = (pwm < basePWM )? goBackward: ((pwm > basePWM)? goForward:goStop );
-
-        desiredDirection = curDirection;
-        selfTuning = selfTuning_f;
-
-        if (wasForward && curDirection == goBackward)
-        {
-            printf("wasForward\n");
-            xQueueSend(scheduler_task::getSharedObject(shared_directionQueue), &pwm, portMAX_DELAY);
-            selfTuning = false;
-            startSelfTuning = 0;
-        }
-        else
-        {
-            throttlePWM.set(pwm);
-            speedPWM = pwm;
-        }
-
-        if (! selfTuning_f)
-        {
-            desiredCustom = 0;
-        }
-
     }
 }
 void SpeedCtrl::setStop()
 {
+    selfTuning = false;
+    desiredDirection = goStop;
     if (desiredDirection == goForward)
     {
         speedPWM = backLimitPWM;
@@ -531,8 +288,6 @@ void SpeedCtrl::setStop()
         speedPWM = basePWM;
         throttlePWM.set(basePWM);
     }
-    desiredDirection = goStop;
-    selfTuning = false;
 }
 void SpeedCtrl::setSpeedCustom(bool forward, uint8_t speedSetting)
 {
@@ -565,24 +320,31 @@ void SpeedCtrl::setSpeedCustom(bool forward, uint8_t speedSetting)
     }
 
 }
+float SpeedCtrl::getCustom1PWM(){
+    return pwm_backward_custom[0];
+}
 void SpeedCtrl::setSelfTuning(bool tune)
 {
     selfTuning = tune;
     if (tune)
         startSelfTuning = 1;
 }
-void SpeedCtrl::setSpeedPWMDirect(float pwm)
+void SpeedCtrl::setSpeedPWMDirect(float pwm, bool backSeq)
 {
-    speedPWM = pwm;
-    throttlePWM.set(pwm);
-    selfTuning = false;
+    if (!backSeq || ( backwardSequence && backSeq))
+    {
+        speedPWM = pwm;
+        throttlePWM.set(pwm);
+        selfTuning = false;
+        backwardSequence = backSeq;
+    }
 }
 void SpeedCtrl::incrSpeedPWM(int step)
 {
     float pwm = speedPWM + ((float)PWMStep* (float)step);
     if (checkPWM(pwm))
     {
-        if (desiredCustom != 0)
+        if (desiredCustom != 0 && desiredDirection != goStop)
         {
             if (desiredDirection == goForward)
                 pwm_forward_custom[desiredCustom - 1] = pwm;
@@ -592,12 +354,6 @@ void SpeedCtrl::incrSpeedPWM(int step)
         speedPWM = pwm;
         throttlePWM.set(pwm);
     }
-#if 0
-    else
-    {
-        printf("This(PWM:%f) is out of limit\n", pwm);
-    }
-#endif
 }
 
 void SpeedCtrl::descrSpeedPWM(int step)
@@ -606,7 +362,7 @@ void SpeedCtrl::descrSpeedPWM(int step)
     if (checkPWM(pwm))
     {
         //printf("Set speed %f\n", pwm);
-        if (desiredCustom != 0)
+        if (desiredCustom != 0 && desiredDirection != goStop)
         {
             if (desiredDirection == goForward)
                 pwm_forward_custom[desiredCustom - 1] = pwm;
@@ -616,22 +372,20 @@ void SpeedCtrl::descrSpeedPWM(int step)
         speedPWM = pwm;
         throttlePWM.set(pwm);
     }
-#if 0
-    else
-    {
-        printf("This(PWM:%f) is out of limit\n", pwm);
-    }
-#endif
 }
 
 int SpeedCtrl::getGoDesiredDirection()
 {
     return desiredDirection;
 }
+
+void SpeedCtrl::setBackwardSequence(bool bs)
+{
+    backwardSequence = bs;
+}
 SpeedMonitor* SpeedMonitor::m_pInstance = NULL;
 void speed_pulse_start(void)
 {
-    //SpeedMonitor::getInstance()->calSpeed();
     SpeedMonitor::getInstance()->addRpmCounter();
 }
 
@@ -666,6 +420,11 @@ int SpeedMonitor::getRpm()
 
 void SpeedMonitor::getSpeed(float* rpm, float* speed)
 {
+    *rpm = m_rpm;
+    *speed = m_rpm;
+}
+void SpeedMonitor::periodGetSpeed(float* rpm, float* speed)
+{
     const uint64_t ONE_SECOND = 1000;
     uint64_t cur_time = sys_get_uptime_ms();
     if ((cur_time - m_last_time > ONE_SECOND/2) &&
@@ -680,3 +439,5 @@ void SpeedMonitor::getSpeed(float* rpm, float* speed)
     *rpm = m_rpm = (*speed) /5*60*2;
     *speed = m_rpm * DIAMETER*2*PI /60;
 }
+
+

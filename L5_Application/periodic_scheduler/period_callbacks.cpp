@@ -72,22 +72,21 @@ void period_1Hz(void)
 {
     sendHeartBeat();
     readCANMsgs();
-
 }
 int counter = 0;
+int tuningCounter = 0;
 void period_10Hz(void)
 {
-    //SpeedCtrl::getInstance()->checkSlope();
-    if (counter >= 5)
+    bool tuned = false;
+
+    if (counter >= 5 )
     {
+        sendSpeed(); // This has to go before tuning
         SpeedCtrl::getInstance()->selfTuningSpeed();
-        sendSpeed();
         counter = 1;
     }
     else
-    {
         counter ++;
-    }
 }
 
 void period_100Hz(void)

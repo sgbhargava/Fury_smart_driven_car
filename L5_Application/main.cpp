@@ -83,25 +83,24 @@ class changeDirectionTask: public scheduler_task {
     public:
         changeDirectionTask(uint8_t priority):
             scheduler_task("backwardTask", 1024, priority) {
+            speed = SpeedCtrl::getInstance();
         }
         bool init(void) {
             addSharedObject(shared_directionQueue, mChangeDirection_QueueHandler);
             mChangeDirection_QueueHandler = getSharedObject(shared_directionQueue);
 
-            speed = SpeedCtrl::getInstance();
             return true;
         }
         bool run (void* p){
             float pwm;
             if (xQueueReceive(mChangeDirection_QueueHandler, &pwm, portMAX_DELAY)) {
-#if 1
-                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE-0.3);
+
+                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE-0.3, true);
                 vTaskDelay(1000);
-                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE);
+                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE, true);
                 vTaskDelay(1000);
-                speed->setSpeedPWM(pwm, true);
-                printf("PWM %f", pwm);
-#endif
+                speed->setSpeedPWM(pwm, true, true);
+                speed->setBackwardSequence(false);
             }
             return true;
         }

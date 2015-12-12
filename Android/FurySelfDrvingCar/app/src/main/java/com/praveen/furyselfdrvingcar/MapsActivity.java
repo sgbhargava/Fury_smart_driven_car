@@ -1,10 +1,12 @@
 package com.praveen.furyselfdrvingcar;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
@@ -16,6 +18,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -25,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -59,6 +63,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static Location iLoc = null;
     public JSONObject checkObj = null;
     public SupportMapFragment mapFragment = null;
+    public static TextView rpm;
+    public static String lSensor=null;
+    public static String cSensor=null;
+    public static String rSensor=null;
+    public static String bSensor=null;
+    public static String canBattery=null;
+    public static String carBattery=null;
+    public static String remdist=null;
+
+    public static int sensorFlag=0;
+    public static int baterryFlag=0;
+    public static int remDistFlag=0;
 
 
     public Double totalDistance;
@@ -280,7 +296,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         Criteria c = new Criteria();
         Log.d("BT", "Entered OMR");
-        provider = lm.getBestProvider(c, false);
+        provider = lm.getBestProvider(c, true);
         //now you have best provider
         //get location
         Location l = lm.getLastKnownLocation(provider);
@@ -343,6 +359,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             });
             on();
+
+            TextView sensor= (TextView) findViewById(R.id.sensor);
+
+            sensor.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sensorFlag=1;
+                    baterryFlag=0;
+                    remDistFlag=0;
+
+                }
+            });
+            TextView battery= (TextView) findViewById(R.id.sensor);
+
+            battery.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sensorFlag=0;
+                    baterryFlag=1;
+                    remDistFlag=0;
+
+                }
+            });
         }
         Log.d("BT", "Exited BS");
     }
@@ -390,92 +429,176 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
     private final android.os.Handler reciever = new android.os.Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 2: {
                     byte[] readBuf = (byte[]) msg.obj;
+                    StringBuffer receiveData = new StringBuffer();
                     String read = new String(readBuf, 0, msg.arg1);
                     Toast.makeText(getApplicationContext(), read, Toast.LENGTH_LONG).show();
+                    receiveData.append(receiveData);
+
+                    Log.d("msg", receiveData.toString());//keep appending to string until ~
+
+                    int endIndex = receiveData.indexOf("~");
+                    if (endIndex>0)
+                    {
+                        if(receiveData.charAt(0)=='r')
+                        {
+                            Toast.makeText(getApplicationContext(), "Retransmit Destination Location", Toast.LENGTH_SHORT).show();
+                        }
+
+                        if(receiveData.charAt(0)=='a')
+                        {
+                            Toast.makeText(getApplicationContext(), "Destination Fixed", Toast.LENGTH_SHORT).show();
+                        }
+                        if(receiveData.charAt(0)=='v')
+                        {
+                            int rpmEnd=receiveData.indexOf("~");
+
+                            String RPM=receiveData.substring(1, rpmEnd);
+
+                            rpm.setText(RPM);
+                        }
+                        if(receiveData.charAt(0)=='s')
+                        {
+
+                        }
+                        if(receiveData.charAt(0)=='b')
+                        {
+
+                        }
+                        if(receiveData.charAt(0)=='l')
+                        {
+
+                        }
+                    }
+
+                    if(sensorFlag==1)
+                    {
+                        AlertDialog alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
+                        alertDialog.setTitle("Sensor Values");
+                        alertDialog.setMessage("Left Sensor Value : " + lSensor + "\n" + "Right Sensor Value : " + rSensor + "\n" + "Center Sensor Value : " + cSensor
+                                + "\n" + "Back Sensor Value : " + bSensor);
+                        alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        alertDialog.show();
+                    }
+                    else if(baterryFlag==1)
+                    {
+                        AlertDialog alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
+                        alertDialog.setTitle("Sensor Values");
+                        alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery );
+                        alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        alertDialog.show();
+                    }
 
                 }
                 break;
 
                 case 3: {
                     Button confirnButton = (Button) findViewById(R.id.InitLoc);
+
                     confirnButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            if (sLoc != null) {
-                                MarkerOptions cMarkerOptions = new MarkerOptions();
-                                checkPointLoc loc = new checkPointLoc();
-                                final GoogleMap googleMap = mapFragment.getMap();
-                                googleMap.clear();
-                                LatLng initMarker = new LatLng(iLoc.getLatitude(), iLoc.getLongitude());
-                                cMarkerOptions.position(initMarker);
-                                cMarkerOptions.title(initMarker.latitude + " : " + initMarker.longitude);
-                                //GoogleMap googleMap = null;
-                                googleMap.animateCamera(CameraUpdateFactory.newLatLng(initMarker));
+                            AlertDialog alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
 
-                                // Placing a marker on the touched position
-                                googleMap.addMarker(cMarkerOptions);
-                                for (int j = 0; j < v.size(); j++) {
-                                    Log.d("CM", String.valueOf(v.size()));
-                                    loc = v.get(j);
-                                    LatLng ml = new LatLng(loc.lat, loc.lng);
-                                    Log.d("lat", String.valueOf(loc.lat));
-                                    Log.d("lng", String.valueOf(loc.lng));
-
-                                    cMarkerOptions.position(ml);
-                                    cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
-                                    //GoogleMap googleMap = null;
-                                    googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
-                                    StringBuilder strData = new StringBuilder();
-                                    strData.append("check");
-
-                                    strData.append(' ');
-                                    strData.append(String.valueOf(iLoc.getLatitude()));
-                                    strData.append(' ');
-                                    strData.append(String.valueOf(iLoc.getLongitude()));
-                                    strData.append(' ');
-                                    strData.append(String.valueOf('0'));
-                                    strData.append(' ');
-                                    strData.append(String.valueOf('0'));
-                                    strData.append('$');
-
-                                    // Placing a marker on the touched position
-                                    googleMap.addMarker(cMarkerOptions);
-                                    // BlueToothActivity.activity = "maps";
-                                    //Intent sendCheckpoints = new Intent(MapsActivity.this,BlueToothActivity.class);
-
-                                    checkPointLoc sendLoc = new checkPointLoc();
-                                    for (int i = 0; i < v.size(); i++) {
-                                        sendLoc = v.get(i);
-                                        strData.append("check");
-                                        strData.append(' ');
-                                        strData.append(String.valueOf(sendLoc.lat));
-                                        strData.append(' ');
-                                        strData.append(String.valueOf(sendLoc.lng));
-                                        strData.append(' ');
-
-                                        strData.append(String.valueOf(sendLoc.checkNo));
-                                        strData.append(' ');
-                                        strData.append(String.valueOf(sendLoc.isFinal));
-                                        strData.append('$');
-                                    }
-                                    send(strData.toString());
-                                    Log.d("Sending", strData.toString());
-
-                                    //Intent sendCheckpoints = new Intent(MapsActivity.this, BlueToothActivity.class);
-                                    //sendCheckpoints.putExtra("checkPoints", strData.toString());
-                                    //startActivity(sendCheckpoints);
-
-
+                            alertDialog.setMessage("Are you Sure?");
+                            alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
                                 }
-                            } else
-                                Toast.makeText(getApplicationContext(), "Please Set Destination", Toast.LENGTH_LONG).show();
+                            });
+                            alertDialog.setButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
 
+                                    if (sLoc != null) {
+                                        MarkerOptions cMarkerOptions = new MarkerOptions();
+                                        checkPointLoc loc = new checkPointLoc();
+                                        final GoogleMap googleMap = mapFragment.getMap();
+                                        googleMap.clear();
+                                        LatLng initMarker = new LatLng(iLoc.getLatitude(), iLoc.getLongitude());
+                                        cMarkerOptions.position(initMarker);
+                                        cMarkerOptions.title(initMarker.latitude + " : " + initMarker.longitude);
+                                        //GoogleMap googleMap = null;
+                                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(initMarker));
+
+                                        // Placing a marker on the touched position
+                                        googleMap.addMarker(cMarkerOptions);
+                                        for (int j = 0; j < v.size(); j++) {
+                                            Log.d("CM", String.valueOf(v.size()));
+                                            loc = v.get(j);
+                                            LatLng ml = new LatLng(loc.lat, loc.lng);
+                                            Log.d("lat", String.valueOf(loc.lat));
+                                            Log.d("lng", String.valueOf(loc.lng));
+
+                                            cMarkerOptions.position(ml);
+                                            cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
+                                            //GoogleMap googleMap = null;
+                                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
+                                            StringBuilder strData = new StringBuilder();
+                                            strData.append("check");
+
+                                            strData.append(' ');
+                                            strData.append(String.valueOf(iLoc.getLatitude()));
+                                            strData.append(' ');
+                                            strData.append(String.valueOf(iLoc.getLongitude()));
+                                            strData.append(' ');
+                                            strData.append(String.valueOf('0'));
+                                            strData.append(' ');
+                                            strData.append(String.valueOf('0'));
+                                            strData.append('$');
+
+                                            // Placing a marker on the touched position
+                                            googleMap.addMarker(cMarkerOptions);
+                                            // BlueToothActivity.activity = "maps";
+                                            //Intent sendCheckpoints = new Intent(MapsActivity.this,BlueToothActivity.class);
+
+                                            checkPointLoc sendLoc = new checkPointLoc();
+                                            for (int i = 0; i < v.size(); i++) {
+                                                sendLoc = v.get(i);
+                                                strData.append("check");
+                                                strData.append(' ');
+                                                strData.append(String.valueOf(sendLoc.lat));
+                                                strData.append(' ');
+                                                strData.append(String.valueOf(sendLoc.lng));
+                                                strData.append(' ');
+
+                                                strData.append(String.valueOf(sendLoc.checkNo));
+                                                strData.append(' ');
+                                                strData.append(String.valueOf(sendLoc.isFinal));
+                                                strData.append('$');
+                                            }
+                                            send(strData.toString());
+                                            Log.d("Sending", strData.toString());
+
+                                            //Intent sendCheckpoints = new Intent(MapsActivity.this, BlueToothActivity.class);
+                                            //sendCheckpoints.putExtra("checkPoints", strData.toString());
+                                            //startActivity(sendCheckpoints);
+
+
+                                        }
+                                    } else
+                                        Toast.makeText(getApplicationContext(), "Please Set Destination", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                            alertDialog.show();
                         }
+
                     });
 
                     Log.d("CM", "Exit");
@@ -485,6 +608,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 }
+
 
             }
         }

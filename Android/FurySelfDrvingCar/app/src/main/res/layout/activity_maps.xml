@@ -75,4 +75,29 @@
         android:text=""
         android:id="@+id/distance"
         android:layout_gravity="right|top" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/RPM"
+        android:layout_gravity="center_horizontal|top" />
+
+    <TextView
+        android:layout_width="71dp"
+        android:layout_height="28dp"
+        android:text="Battery"
+        android:id="@+id/Battery"
+        android:onClick="onClick"
+        android:clickable="true"
+        android:layout_gravity="left|center_vertical" />
+
+    <TextView
+        android:layout_width="71dp"
+        android:layout_height="37dp"
+        android:text="Sensor"
+        android:id="@+id/sensor"
+        android:onClick="onClick"
+        android:clickable="true"
+        android:layout_gravity="right|center_vertical" />
+
 </FrameLayout>

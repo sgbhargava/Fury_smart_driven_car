@@ -21,6 +21,7 @@ public:
 	static master_class* getInstance();
 	bool master_class_init();
 	bool heartbeat();
+	bool send();
 
 private:
 	static master_class *single;

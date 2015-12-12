@@ -29,6 +29,7 @@
 #include "examples/examples.hpp"
 #include "file_logger.h"
 #include "io.hpp"
+bool override =false;
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.

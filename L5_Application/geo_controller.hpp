@@ -31,9 +31,10 @@ typedef union
 }compass;
 
 typedef struct{
-	int8_t number :7;
+	uint8_t number :7;
 	uint8_t isFinal :1;
-} checkpoint_struct;
+
+} __attribute__((packed)) checkpoint_struct;
 class geo_controller_class: public CAN_base_class
 {
 public:
@@ -47,7 +48,7 @@ public:
 	uint16_t distance_destination =0;
 	uint16_t distance_checkpoint =0;
 	uint8_t  checkpoint_request =0;
-	checkpoint_struct *checkpoint = new checkpoint_struct;
+	checkpoint_struct checkpoint;
 	long_lat *lat_long_data = new long_lat;
 	int8_t turnDecision;
 

@@ -52,8 +52,11 @@ bool geo_controller_class::get_compass_data()
 	uint64_t temp;
 	if(!get_data(id_compass_heading_data, &temp))
 		return false;
+	uint8_t temp_8;
 	turnDecision = getbyte(temp,0);
-	checkpoint = (checkpoint_struct *)getbyte(temp, 1);
+	temp_8 =  getbyte(temp, 1);
+	checkpoint.number = (temp_8 >>1);
+	checkpoint.isFinal = (temp_8 >>7);
 
 	return true;
 }

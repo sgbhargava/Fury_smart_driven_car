@@ -80,7 +80,20 @@ uint8_t compass_calibrationMode(uint8_t compassMode)
      compass.writeReg(0xC0,0,0xF6);
      delay_ms(20);
 
-    return MODE_THREE;
+    return MODE_INCALIBRATION;
+}
+
+uint8_t compass_factoryReset()
+{
+    /**Here register address 0 indicates its a command register**/
+      compass.writeReg(0xC0,0,0x20);
+      delay_ms(20);
+      compass.writeReg(0xC0,0,0x2A);
+      delay_ms(20);
+      compass.writeReg(0xC0,0,0x60);
+      delay_ms(20);
+
+     return MODE_INRESET;
 }
 
 uint8_t compass_headingMode()

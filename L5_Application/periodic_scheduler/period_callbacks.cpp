@@ -110,16 +110,6 @@ void period_1Hz(void)
 #if TESTCODE
     uint8_t i = 0;
 
-    static int8_t j = -5;
-    if(j < 5)
-    {
-        turn = j;
-        j++;
-    }
-    else
-    {
-        j = -5;
-    }
     //printf("chkpnt: %d, distToChkPnt: %d, distToFinalDest: %d\n", presentChkPnt, distToChkPnt, distanceToDest);
     for(i = 0; (i < getNumOfChkPnts() && i < 5); i++)
     {
@@ -138,6 +128,7 @@ void period_10Hz(void)
 // compass reading and calibration
     if(BEARINGMODE == compassMode)
         currentHeading = compassBearing_inDeg();
+    printf("currentHeading:%f\n",currentHeading);
 
     if (CALIBRATIONMODE == compassMode)
         compassMode = compass_calibrationMode(compassMode); //calibration mode
@@ -153,6 +144,9 @@ void period_10Hz(void)
     }
     if (SW.getSwitch(1))
         compassMode = CALIBRATIONMODE;
+
+    if(SW.getSwitch(3))
+        compass_factoryReset();
 
 // read gps and compute everything
     if(NULL == gpsCurrData_q)
@@ -192,6 +186,7 @@ void period_10Hz(void)
         //Sending GPS data and compass data to master.
         sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
         sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
+        sendDegrees_data(desiredHeading, currentHeading);
 
         if(finalChkPnt_b)
             destReached();
@@ -203,7 +198,6 @@ void period_10Hz(void)
         distanceToDest = 0;
         distanceToChkPnt = 0;
         desiredHeading = 0;
-        currentHeading = 0;
         gpsCurrentData.latitude = 0;
         gpsCurrentData.longitude = 0;
         presentChkPnt = 0;

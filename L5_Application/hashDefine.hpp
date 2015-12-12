@@ -21,7 +21,9 @@
 #define  BEARINGMODE            0
 #define  CALIBRATIONMODE        1
 #define  HEADINGMODE            2
-#define  MODE_THREE             3          // RANDOMN VALUE
+#define  RESETMODE              3
+#define  MODE_INCALIBRATION     4          // RANDOMN VALUE
+#define  MODE_INRESET           5
 
 // #defines for conversion and calculation
 #define  TO_DEG                 (180 / 3.14159)
@@ -42,8 +44,10 @@
 #define  COMM_GPSDATA_ID        0x382
 #define  MASTER_RESET_ID        0x320
 #define  COMM_RECACK_ID         0x47F
+#define  COMPASS_DEGREE_ID      0x465
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_SIX           6
+#define  DATA_LEN_FOUR          4
 #define  DATA_LEN_ZERO          0
 
 #endif /* L5_APPLICATION_HASHDEFINE_HPP_ */

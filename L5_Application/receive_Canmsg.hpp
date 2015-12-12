@@ -39,6 +39,11 @@ typedef union
         uint64_t compassData;
 } compass_distance_info;
 
+typedef struct
+{
+        uint32_t desiredAngle   : 16;
+        uint32_t currentAngle   : 16;
+}__attribute__((packed)) degree_info;
 
 // function to initialize can1 for communication with other modules
 bool can_communicationInit();
@@ -63,6 +68,12 @@ void sendGPS_data(uint8_t *currentChkPnt,double_t *currentLat, double_t *current
  * @finalDestDist : distance to final destination.
  */
 void sendCompass_data(int8_t turn, uint8_t presentChkPnt, float_t nxtChkPntDist, float_t finalDestDist, bool isFinal);
+
+/* To send compass data to comm board
+ * @desiredHeading  : heading at which the car has to head.
+ * @currentHeading  : heading at which is pointing.
+ */
+void sendDegrees_data(uint16_t desiredHeading, uint16_t currentHeading);
 
 /*Receives data from CANBUS*/
 bool can_receive(uint16_t id, uint64_t *data);

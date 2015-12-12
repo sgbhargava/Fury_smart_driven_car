@@ -20,6 +20,7 @@
 lat_long_info          *receive_gpsData      = new lat_long_info;
 lat_long_info          *transmit_gpsData     = new lat_long_info;
 compass_distance_info  *transmit_compassData = new compass_distance_info;
+degree_info            *transmit_degreeData  = new degree_info;
 
 
 bool can_communicationInit()
@@ -99,6 +100,16 @@ void sendCompass_data(int8_t turn, uint8_t presentChkPnt,
     uint32_t msgID = COMPASS_DIST_ID;
 
     can_transmit(msgID, &presentCompassDist_data, DATA_LEN_SIX);
+}
+
+void sendDegrees_data(uint16_t desiredHeading, uint16_t currentHeading)
+{
+    transmit_degreeData->desiredAngle = desiredHeading;
+    transmit_degreeData->currentAngle = currentHeading;
+
+    uint64_t degreeData = *(uint64_t *)(transmit_degreeData);
+
+    can_transmit(COMPASS_DEGREE_ID, &degreeData, DATA_LEN_FOUR);
 }
 
 bool can_receive(uint16_t id, uint64_t *data)

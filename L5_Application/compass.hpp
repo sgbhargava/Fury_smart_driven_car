@@ -17,6 +17,8 @@
 #include "utilities.h"
 #include "math.h"
 
+// function to reset the compass to factory mode.
+uint8_t compass_factoryReset();
 
 /* Calculates heading direction for a full circle!!
  * Returns values between 0 to 255

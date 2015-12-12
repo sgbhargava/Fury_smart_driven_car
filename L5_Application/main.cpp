@@ -93,7 +93,6 @@ void testCode(void *p)
 }
 #endif
 
-
 /**
  * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
  * for details.  There is a very simple example towards the beginning of this class's declaration.
@@ -126,7 +125,6 @@ int main(void)
      * control codes can be learned by typing the "learn" terminal command.
      */
 
-    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
 
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
@@ -137,9 +135,11 @@ int main(void)
     #endif
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 0
-    scheduler_add_task(new periodicSchedulerTask());
+    #if 1
+       scheduler_add_task(new periodicSchedulerTask());
+
     #endif
+       scheduler_add_task(new terminalTask(PRIORITY_MEDIUM));
 
 
 #if TESTCODE

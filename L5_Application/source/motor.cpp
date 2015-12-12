@@ -94,9 +94,8 @@ motor_class* motor_class::getInstance()
 bool motor_class::get_heartbeat()
 {
 	uint64_t temp;
-	if(!get_data(id_heart_beat, &temp))
-		return false;
-	return true;
+	return get_data(id_heart_beat, &temp);
+
 }
 
 bool motor_class::reset()

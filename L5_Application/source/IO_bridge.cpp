@@ -17,11 +17,7 @@ IO_base_class* IO_base_class::get_Instance()
 bool IO_base_class::get_heartbeat()
 {
 	uint64_t temp;
-	if(get_data(id_heart_beat, &temp))
-	{
-		return true;
-	}
-	return false;
+	return get_data(id_heart_beat, &temp);
 }
 bool IO_base_class::IO_base_class_init()
 {

@@ -6,7 +6,6 @@
  */
 #include "geo_controller.hpp"
 
-extern compass localCompassData;
 geo_controller_class* geo_controller_class::single = NULL;
 geo_controller_class* geo_controller_class::getInstance()
 {
@@ -18,11 +17,9 @@ geo_controller_class* geo_controller_class::getInstance()
 bool geo_controller_class::get_heartbeat()
 {
 	uint64_t temp;
-	if(get_data(id_heartbeat, &temp))
-	{
-		return true;
-	}
-	return false;
+	return get_data(id_heartbeat, &temp);
+
+
 }
 
 bool geo_controller_class::geo_controller_class_init()

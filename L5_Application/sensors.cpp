@@ -40,11 +40,8 @@ sensor_class* sensor_class::getInstance()
 bool sensor_class::get_heartbeat()
 {
 	uint64_t temp;
-	if(!get_data(id_heart_beat, &temp))
-	{
-		return false;
-	}
-	return true;
+	return get_data(id_heart_beat, &temp);
+
 }
 
 bool sensor_class::reset()

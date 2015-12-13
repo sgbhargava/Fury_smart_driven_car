@@ -37,7 +37,7 @@
 #include "gps_data.h"
 
 /// This is the stack size used for each of the period tasks
-const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 6);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -48,28 +48,29 @@ bool period_init(void)
 /// Register any telemetry variables
 bool period_reg_tlm(void)
 {
+#if NODE_BLUETOOTH
+    initTelemetry();
+#endif
     // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
     return true; // Must return true upon success
 }
 
 void period_1Hz(void)
 {
-
-#if NODE_CAN
     SendHeartBeat();
-
-#else
-
-#endif
+#if NODE_BLUETOOTH
     GPS_SendDataToTxQueue();
+#else
+    bridge_canRx1Hhz();
+#endif
 }
 
 void period_10Hz(void)
 {
 #if NODE_CAN
     bridge_canTx();
-    bridge_canRx();
-    wirelessTransmitCAN();
+    bridge_canRx10Hhz();
+
 #else
     wirelessTransmitBT();
     wirelessReceiveBT();
@@ -80,11 +81,12 @@ void period_100Hz(void)
 {
 
 #if NODE_CAN
+    wirelessTransmitCAN();
     wirelessReceiveCAN();
 #endif
 }
 
 void period_1000Hz(void)
 {
-    LE.toggle(4);
+ //   LE.toggle(4);
 }

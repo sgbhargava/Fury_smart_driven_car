@@ -19,6 +19,9 @@ typedef enum {
     data_ack,
     data_nack,
     data_loc,
+    compass_data,
+    distance_data,
+    reset_compass
 } CMD_CAN;
 
 typedef enum{
@@ -28,7 +31,10 @@ typedef enum{
     rx_init = 0x162,
     reset = 0x420,
     gps_ack =0x47F,
-    gps_loc = 0x461
+    gps_loc = 0x461,
+    compass_id = 0x465,
+    distance_id =  0x162,
+    reset_compassId = 0x385
 } CAN_MSG_ID_T;
 
 typedef union{
@@ -46,6 +52,19 @@ typedef union{
     uint64_t qWord;
 } long_lat_data ;
 
+typedef union
+{
+        struct
+        {
+                int32_t turnDecision     : 8;
+                uint32_t checkpoint      : 7;
+                uint32_t isFinal         : 1;
+                uint32_t dist_finalDest : 16;
+                uint32_t dist_nxtPnt    : 16;
+        }__attribute__((packed));
+        uint64_t compassData;
+        uint8_t compassData8[8];
+} compass_distance_info;
 
 typedef struct gps_data{
 
@@ -70,10 +89,12 @@ void getDataFromBluetooth();
 void bridge_canTx();
 bool SendHeartBeat();
 bool GPS_SendDataToTxQueue();
-void bridge_canRx();
+void bridge_canRx1Hhz();
+void bridge_canRx10Hhz();
 bool wirelessTransmitCAN();
 bool SendDataOverBluetooth();
 bool wirelessReceiveBT();
+void initTelemetry();
 
 #ifdef __cplusplus
 }

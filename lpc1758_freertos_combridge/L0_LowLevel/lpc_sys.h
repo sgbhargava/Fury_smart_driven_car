@@ -39,8 +39,6 @@ extern "C" {
 #include "rtc.h"
 #include "sys_config.h"
 
-
-
 /**
  * Enumeration of the reboot type
  */

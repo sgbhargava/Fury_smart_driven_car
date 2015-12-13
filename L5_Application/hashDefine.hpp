@@ -34,7 +34,7 @@
 #define  TEN_2                  100
 #define  MAGENTIC_DECLINTAION   14
 #define  SCALE                  30.0
-#define  TWO_METERS             2
+#define  STOP_METERS            5.0
 #define  FULLCIRCLE             360.0
 
 // Message IDs and data length for CAN communication
@@ -45,6 +45,7 @@
 #define  MASTER_RESET_ID        0x320
 #define  COMM_RECACK_ID         0x47F
 #define  COMPASS_DEGREE_ID      0x465
+#define  COMPASS_RESET_ID       0x385
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_SIX           6
 #define  DATA_LEN_FOUR          4

@@ -50,6 +50,9 @@ double_t convertLongitudeToDegree(uint8_t lonDec, uint32_t lonFloat);
 /* returns the number of checkpoints added */
 uint8_t getNumOfChkPnts();
 
+/* returns the number of checkpoints to final dest */
+uint8_t getNumOfChkPntsFinal();
+
 /* returns the present check point */
 uint8_t getPresentChkPnt();
 

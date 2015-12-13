@@ -61,7 +61,7 @@ bool period_init(void)
 {
     can_communicationInit();
     can_addMsgIDs(MASTER_RESET_ID, COMM_GPSDATA_ID);
-    //can_addMsgIDs(, 0xFFFF);
+    can_addMsgIDs(COMPASS_RESET_ID, 0xFFFF);
 
     CAN_reset_bus(can1);
 
@@ -128,7 +128,6 @@ void period_10Hz(void)
 // compass reading and calibration
     if(BEARINGMODE == compassMode)
         currentHeading = compassBearing_inDeg();
-    printf("currentHeading:%f\n",currentHeading);
 
     if (CALIBRATIONMODE == compassMode)
         compassMode = compass_calibrationMode(compassMode); //calibration mode
@@ -206,18 +205,20 @@ void period_10Hz(void)
         LE.toggle(2);
     }
 
-    /*presentChkPnt = 2;
+   /* presentChkPnt = 2;
     presentLat = 37.33345;
     presentLon = 121.33345;
     finalChkPnt_b = 1;
     distanceToChkPnt = 34;
     distanceToDest = 189;
-    //sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
+    desiredHeading = 340;
+    currentHeading = 160;
+    turn = -3;
+    sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
     sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
+    sendDegrees_data(desiredHeading, currentHeading);
 */
-
 }
-
 
 void period_100Hz(void)
 {
@@ -231,6 +232,12 @@ void period_100Hz(void)
 
     if(can_receive(MASTER_RESET_ID, &data))
         sys_reboot();
+
+    if(can_receive(COMPASS_RESET_ID, &data))
+    {
+        can_sendAck();
+        compass_factoryReset();
+    }
 }
 
 void period_1000Hz(void)

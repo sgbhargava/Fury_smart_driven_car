@@ -109,7 +109,10 @@ class SonicSensorTask : public scheduler_task
             {// Get reading
                 sensor_data.LIDAR = (buffer[0] << 8) & 0xff00;
                 sensor_data.LIDAR = sensor_data.LIDAR | buffer[1];
+                if (sensor_data.LIDAR == 0)		// Take care of out of range case
+                    sensor_data.LIDAR = 600 ;
             }
+
             SensorTrig2.setHigh();
             delay_us(TriggerDelay_us);
             SensorTrig2.setLow();

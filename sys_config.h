@@ -55,7 +55,8 @@ extern "C" {
 
 #define SYS_CFG_SPI1_CLK_MHZ            24          ///< Max speed of SPI1 for SD Card and Flash memory
 #define SYS_CFG_SPI0_CLK_MHZ            8           ///< Nordic wireless requires 1-8Mhz max
-#define SYS_CFG_I2C2_CLK_KHZ            100         ///< 100Khz is standard I2C speed
+#define SYS_CFG_I2C2_CLK_KHZ            50         ///< 100Khz is standard I2C speed -> Scope shows double the rate Lidar max = 100Khz
+
 
 /// If defined, a boot message is logged to this file
 //#define SYS_CFG_LOG_BOOT_INFO_FILENAME        "boot.csv"

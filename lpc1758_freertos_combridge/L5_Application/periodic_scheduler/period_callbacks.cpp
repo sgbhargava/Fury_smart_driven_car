@@ -58,8 +58,9 @@ bool period_reg_tlm(void)
 void period_1Hz(void)
 {
     SendHeartBeat();
-#if NODE_BLUETOOTH
     GPS_SendDataToTxQueue();
+#if NODE_BLUETOOTH
+
 #else
     bridge_canRx1Hhz();
 #endif

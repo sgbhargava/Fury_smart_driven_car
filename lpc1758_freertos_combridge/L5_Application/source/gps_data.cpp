@@ -213,14 +213,12 @@ bool wirelessTransmitCAN()
 
 bool wirelessReceiveCAN()
 {
-    mesh_packet_t pkt =
-    { 0 };
-    cmd_data nCmd =
-    { 0 };
+    mesh_packet_t pkt ={ 0 };
+    cmd_data nCmd ={ 0 };
 
     if (wireless_get_rx_pkt(&pkt, 0))
     {
-        printf("packet received\n");
+
         switch (pkt.data[0])
         {
             case check:
@@ -230,11 +228,10 @@ bool wirelessReceiveCAN()
 
                 memcpy(gGpsData[nCmd.index].longLatdata.bytes, &pkt.data[2], 8);
                 gGpsData[nCmd.index].cmd = nCmd.cmd;
-                gGpsData[nCmd.index].bDestination =
-                        gGpsData[nCmd.index].longLatdata.bIsFinal;
+                gGpsData[nCmd.index].bDestination =gGpsData[nCmd.index].longLatdata.bIsFinal;
 
-                // printf("%d %d.%d\n",nCmd.cmd,gGpsData[nCmd.index].longLatdata.lattitude_dec,gGpsData[nCmd.index].longLatdata.lattitude_float);
-                // printf("packet Recieved\n");
+                 printf("%d %d.%d\n",nCmd.cmd,gGpsData[nCmd.index].longLatdata.lattitude_dec,gGpsData[nCmd.index].longLatdata.lattitude_float);
+                 printf("packet Recieved\n");
 
                 if (gGpsData[nCmd.index].bDestination)
                 {
@@ -242,7 +239,7 @@ bool wirelessReceiveCAN()
                     xSemaphoreGive(GPSDataTxSem);
                 }
             }
-                break;
+             break;
 
             case start:
             {

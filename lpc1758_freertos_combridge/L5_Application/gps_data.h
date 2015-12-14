@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 
-#define NODE_BLUETOOTH 1
-#define NODE_CAN    0
+#define NODE_BLUETOOTH 0
+#define NODE_CAN    1
 #define BLUETOOTH_NODE 102
 #define CAN_WIRELESS_NODE 103
 

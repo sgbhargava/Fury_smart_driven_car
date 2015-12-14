@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 
-#define NODE_BLUETOOTH 0
-#define NODE_CAN    1
+#define NODE_BLUETOOTH 1
+#define NODE_CAN    0
 #define BLUETOOTH_NODE 102
 #define CAN_WIRELESS_NODE 103
 
@@ -22,14 +22,15 @@ typedef enum {
     compass_data,
     distance_data,
     reset_compass,
-    kFilter_on
+    kFilter_on,
+    stop
 } CMD_CAN;
 
 typedef enum{
     heartbeat= 0x180,
     drive_mode = 0x181,
+    stop_mode = 0x182,
     location = 0x382,
-    rx_init = 0x162,
     reset = 0x420,
     gps_ack =0x47F,
     gps_loc = 0x461,

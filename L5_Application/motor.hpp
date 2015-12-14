@@ -11,10 +11,10 @@
 #define MAX_DUTY_CYCLE 11
 #define MIN_DUTY_CYCLE 5.5
 #define BASE_DUTY_CYCLE ((MAX_DUTY_CYCLE+MIN_DUTY_CYCLE)/2)
-#define RPM_THRESHOLD_1 36
-#define RPM_THRESHOLD_2 72
-#define RPM_THRESHOLD_3 136
-#define RPM_THRESHOLD_4 160
+#define RPM_THRESHOLD_1 48
+#define RPM_THRESHOLD_2 88
+#define RPM_THRESHOLD_3 108
+#define RPM_THRESHOLD_4 144
 
 class DirectionCtrl
 {
@@ -38,11 +38,11 @@ class DirectionCtrl
         GPIO pin0_29;
         GPIO pin0_30;
         const float halfTurn = ((MAX_DUTY_CYCLE - BASE_DUTY_CYCLE) / 2);
-        const float basePWM = BASE_DUTY_CYCLE;
+        const float basePWM = BASE_DUTY_CYCLE - 0.2; //0.02
         const float farRight = MAX_DUTY_CYCLE;
         const float farLeft = MIN_DUTY_CYCLE;
-        const float right = basePWM + halfTurn;
-        const float left = basePWM - halfTurn;
+        const float right = basePWM + halfTurn ;
+        const float left = basePWM - halfTurn - 0.8;
 };
 
 class SpeedCtrl
@@ -68,7 +68,7 @@ class SpeedCtrl
         int getGoDesiredDirection();
         void setSelfTuning(bool tune);
         void setBackwardSequence(bool bs);
-        float getCustom1PWM();
+        void setDesiredDirection(int dir);
 
     private:
         SpeedCtrl();
@@ -91,10 +91,10 @@ class SpeedCtrl
         int desiredRpm;
         int desiredCustom;
         int desiredDirection;
-        float pwm_forward_custom[3] ={8.7, 8.7, 8.72}; //Level 2-3 requires tuning
-        const int rpm_forward_custom[3] ={120, 180, 240}; // need to be a factor of 12 due to number of magnetic
-        float pwm_backward_custom[3] ={7.8, 7.6, 7.4};
-        const int rpm_backward_custom[3] ={120, 180, 240};
+        float pwm_forward_custom[3] ={8.655, 8.7, 8.75}; //Level 2-3 requires tuning
+        const int rpm_forward_custom[3] ={132, 168, 204}; // need to be a factor of 12 due to number of magnetic
+        float pwm_backward_custom[3] ={7.755, 7.6, 7.4};
+        const int rpm_backward_custom[3] ={132, 168, 204};
 };
 
 

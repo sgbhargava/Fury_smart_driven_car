@@ -43,7 +43,7 @@ void recvAndAnalysisCanMsg(void)
 
     if (CAN_fullcan_read_msg_copy(reset_fc_ptr, &fc_temp))
     {
-        //sys_reboot();
+        sys_reboot();
     }
 
     can_fullcan_msg_t *steer_fc_ptr = CAN_fullcan_get_entry_ptr(
@@ -119,37 +119,25 @@ void readCANMsgs(void)
     sprintf(buffer, "RPM:%d, Act:%s\n", (int)rpm, stop? "Stop": (isForward? "Fwd": "Back"));
     printStr.append(buffer);
 
-
-    sprintf(buffer, "PWM:%f\n", SpeedCtrl::getInstance()->getCustom1PWM());
-    printStr.append(buffer);
-
     can_fullcan_msg_t *sensor_fc_ptr = CAN_fullcan_get_entry_ptr(
             CAN_gen_sid(can1, CAN_MSG_ID_SENSOR));
 
     if (CAN_fullcan_read_msg_copy(sensor_fc_ptr, &fc_temp))
     {
 
-#if 1//def PRINT_ALL_CAN_MSG
         const int centerSensor = 1;
         const int leftSensor = 3;
         const int rightSensor = 5;
         const int backSensor = 7;
         if (fc_temp.data_len == 8)
         {
-            sprintf(buffer, "L:%x C:%x R:%x B:%x\n",
+            sprintf(buffer, "L%d|C%d|R%d|B%d",
                     fc_temp.data.bytes[leftSensor],
                     fc_temp.data.bytes[centerSensor],
                     fc_temp.data.bytes[rightSensor],
                     fc_temp.data.bytes[backSensor] );
             printStr.append(buffer);
-#if 0
-            printf("Sensor:: Center %x\n", fc_temp.data.bytes[centerSensor]);
-            printf("Sensor:: Left %x\n", fc_temp.data.bytes[leftSensor]);
-            printf("Sensor:: Right %x\n", fc_temp.data.bytes[rightSensor]);
-            printf("Sensor:: Back %x\n", fc_temp.data.bytes[backSensor]);
-#endif
         }
-#endif
     }
 
     can_fullcan_msg_t *compass_fc_ptr = CAN_fullcan_get_entry_ptr(
@@ -158,18 +146,12 @@ void readCANMsgs(void)
     {
 
 
-        sprintf(buffer, "Comp:%d Chk:%d\nFDis:%d, CDis:%d\n",
+        sprintf(buffer, "T:%d|Chk:%d\nFD:%d|CD:%d\n",
                 fc_temp.data.bytes[0],
                 fc_temp.data.bytes[1],
                 fc_temp.data.words[1],
                 fc_temp.data.words[2]);
         printStr.append(buffer);
-#ifdef PRINT_ALL_CAN_MSG
-        for (int i = 0; i < fc_temp.data_len; i ++)
-        {
-            printf("GPS::Compass(%d) %x\n", i, fc_temp.data.bytes[i]);
-        }
-#endif
     }
 
     can_fullcan_msg_t *gps_fc_ptr = CAN_fullcan_get_entry_ptr(
@@ -187,7 +169,6 @@ void readCANMsgs(void)
 
     Uart2::getInstance().putline("$CLR_SCR");
     Uart2::getInstance().printf(printStr.c_str());
-    //Uart2::getInstance().printf("RPM: %f\nAction: %s\n", rpm, stop? "Stop": (isForward? "Forward": "Backward"));
 
 }
 void sendSpeed(void)
@@ -197,11 +178,6 @@ void sendSpeed(void)
     SpeedMonitor::getInstance()->periodGetSpeed(&rpm, &speed);
 
     can_msg_t msg;
-    //MOTOR_TX_SPEED_t speedMsg;
-    //speedMsg.MOTOR_SPEED_rpm = rpm;
-    //speedMsg.MOTOR_SPEED_speed = (int) speed;
-    //msg_hdr_t hdr = MOTOR_TX_SPEED_encode((uint64_t *) &,
-      //      &speedMsg);
 
     msg.data.bytes[0] = (((int) speed ) >> 8) & 0xff;
     msg.data.bytes[1] = ((int) speed ) & 0xff;

@@ -77,8 +77,6 @@ int counter = 0;
 int tuningCounter = 0;
 void period_10Hz(void)
 {
-    bool tuned = false;
-
     if (counter >= 5 )
     {
         sendSpeed(); // This has to go before tuning

@@ -95,12 +95,15 @@ class changeDirectionTask: public scheduler_task {
             float pwm;
             if (xQueueReceive(mChangeDirection_QueueHandler, &pwm, portMAX_DELAY)) {
 
-                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE-0.3, true);
-                vTaskDelay(1000);
+                printf("Get Queue backward\n");
+                speed->setBackwardSequence(true);
+                speed->setSpeedPWMDirect(BASE_DUTY_CYCLE-0.5, true);
+                vTaskDelay(1500);
                 speed->setSpeedPWMDirect(BASE_DUTY_CYCLE, true);
-                vTaskDelay(1000);
+                vTaskDelay(1250);
                 speed->setSpeedPWM(pwm, true, true);
                 speed->setBackwardSequence(false);
+                speed->setSelfTuning(true);
             }
             return true;
         }

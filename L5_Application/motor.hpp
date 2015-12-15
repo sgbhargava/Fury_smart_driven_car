@@ -91,8 +91,8 @@ class SpeedCtrl
         int desiredRpm;
         int desiredCustom;
         int desiredDirection;
-        float pwm_forward_custom[3] ={8.655, 8.7, 8.75}; //Level 2-3 requires tuning
-        const int rpm_forward_custom[3] ={132, 168, 204}; // need to be a factor of 12 due to number of magnetic
+        float pwm_forward_custom[3] ={8.7, 8.7, 8.75}; //Level 2-3 requires tuning
+        const int rpm_forward_custom[3] ={144, 168, 204}; // need to be a factor of 12 due to number of magnetic
         float pwm_backward_custom[3] ={7.755, 7.6, 7.4};
         const int rpm_backward_custom[3] ={132, 168, 204};
 };

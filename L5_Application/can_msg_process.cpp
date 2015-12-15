@@ -176,6 +176,7 @@ void sendSpeed(void)
     float rpm = 0;
     float speed = 0;
     SpeedMonitor::getInstance()->periodGetSpeed(&rpm, &speed);
+    printf("RPM %f\n", rpm);
 
     can_msg_t msg;
 

@@ -163,42 +163,42 @@ void SpeedCtrl::selfTuningSpeed()
 
             if ( abs(deltaRpm) == desiredRpm )
             {
-                updateTime = 2;
+                updateTime = 1;
                 updateStep = 4;
 
                 if ((lastSelfTuning != 5) || (selfTuningTimer == 0))
-                    selfTuningTimer = updateTime;
+                    selfTuningTimer = 0;
                 lastSelfTuning = 5;
 
             }
-            else if ( (abs(deltaRpm) >= RPM_THRESHOLD_3) &&
+            else if ( (abs(deltaRpm) >= RPM_THRESHOLD_3) /*&&
                     ( ((lastSelfTuning > 3) && (selfTuningTimer == 0)) ||
-                      (lastSelfTuning <= 3) ) )
+                      (lastSelfTuning <= 3) ) */)
             {
                 updateTime = 6;
                 updateStep = 3;
                 if ((lastSelfTuning != 3) || (selfTuningTimer == 0))
-                    selfTuningTimer = updateTime;
+                    selfTuningTimer = 0;
                 lastSelfTuning = 3;
             }
-            else if ( (abs(deltaRpm) >= RPM_THRESHOLD_2 )  &&
+            else if ( (abs(deltaRpm) >= RPM_THRESHOLD_2 ) /* &&
                     ( ((lastSelfTuning > 2) && (selfTuningTimer == 0)) ||
-                      (lastSelfTuning <= 2) ) )
+                      (lastSelfTuning <= 2) )*/ )
             {
                 updateTime = 5;
                 updateStep = 2;
                 if ((lastSelfTuning != 2) || (selfTuningTimer == 0))
-                    selfTuningTimer = updateTime;
+                    selfTuningTimer = 0;
                 lastSelfTuning = 2;
             }
-            else if ((abs(deltaRpm) >= RPM_THRESHOLD_1)  &&
+            else if ((abs(deltaRpm) >= RPM_THRESHOLD_1)  /*&&
                     ( ((lastSelfTuning > 1) && (selfTuningTimer == 0)) ||
-                      (lastSelfTuning <= 1) ) )
+                      (lastSelfTuning <= 1) ) */)
             {
                 updateTime = 4;
                 updateStep = 1;
                 if ((lastSelfTuning != 1) || (selfTuningTimer == 0))
-                    selfTuningTimer = updateTime;
+                    selfTuningTimer = 0;
                 lastSelfTuning = 1;
             }
             else

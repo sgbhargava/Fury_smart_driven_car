@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MapActivity" >
-
     <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -11,6 +10,45 @@
         android:layout_weight="1"
         android:scrollbars="vertical"
         class="com.google.android.gms.maps.SupportMapFragment"/>
+    <RadioGroup
+        android:id="@+id/radio_group_list_selector1"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="#80000000"
+        android:layout_gravity="top"
+        android:padding="4dp" >
+
+
+
+        <TextView
+            android:layout_width="71dp"
+            android:layout_height="28dp"
+            android:text="GPS"
+            android:id="@+id/Battery"
+            android:onClick="onClick"
+            android:clickable="true"/>
+
+        <TextView
+            android:layout_width="71dp"
+            android:layout_height="37dp"
+            android:text="Sensor"
+            android:id="@+id/sensor"
+            android:onClick="onClick"
+            android:clickable="true" />
+
+        <TextView
+            android:layout_width="71dp"
+            android:layout_height="37dp"
+            android:text="Map Reset"
+            android:id="@+id/mapReset"
+            android:onClick="onClick"
+            android:clickable="true"/>
+
+    </RadioGroup>
+
+
+
 
 
     <RadioGroup
@@ -69,49 +107,5 @@
 
     </RadioGroup>
 
-    <RadioGroup
-        android:id="@+id/radio_group_list_selector1"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:orientation="horizontal"
-        android:background="#80000000"
-        android:layout_gravity="top"
-        android:padding="4dp" >
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/RPM"
-        android:layout_gravity="center_horizontal|top"
-        android:text=""/>
-
-    <TextView
-        android:layout_width="71dp"
-        android:layout_height="28dp"
-        android:text="Battery"
-        android:id="@+id/Battery"
-        android:onClick="onClick"
-        android:clickable="true"
-        android:layout_gravity="left|center_vertical" />
-
-    <TextView
-        android:layout_width="71dp"
-        android:layout_height="37dp"
-        android:text="Sensor"
-        android:id="@+id/sensor"
-        android:onClick="onClick"
-        android:clickable="true"
-        android:layout_gravity="right|center_vertical" />
-
-    <TextView
-        android:layout_width="71dp"
-        android:layout_height="37dp"
-        android:text="Map Reset"
-        android:id="@+id/mapReset"
-        android:onClick="onClick"
-        android:clickable="true"
-
-        android:layout_gravity="top|center" />
-    </RadioGroup>
 
 </FrameLayout>

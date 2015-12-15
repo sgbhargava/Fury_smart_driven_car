@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -29,6 +31,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,6 +44,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.PublicKey;
+import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -60,7 +66,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static Location iLoc = null;
     public JSONObject checkObj = null;
     public SupportMapFragment mapFragment = null;
-    public static TextView rpm;
+    public static TextView distance;
     public static String lSensor=null;
     public static String cSensor=null;
     public static String rSensor=null;
@@ -72,6 +78,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static int sensorFlag=0;
     public static int baterryFlag=0;
     public static int remDistFlag=0;
+    public static int startFlag=0;
+    public static String finalDis=null;
+    public static String nxtDis=null;
+    public static String turn=null;
+    public static String lat=null;
+    public static String logg=null;
+    //public static Bitmap icon= new Bitmap();
+
+
     public  AlertDialog alertDialog;
     public static int bluetoothCon=0;
 
@@ -353,10 +368,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         map.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sLoc=null;
-                iLoc=null;
-                bluetoothCon=0;
-                
+                sLoc = null;
+                iLoc = null;
+                bluetoothCon = 0;
+
                 googleMap.clear();
                 String provider;
                 //get location service
@@ -369,7 +384,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 Log.d("BT", "Entered OMR");
                 provider = lm.getBestProvider(c, false);
-                Log.d("GPS",provider);
+                Log.d("GPS", provider);
 
             }
         });
@@ -397,6 +412,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // Toast.makeText(getApplicationContext(), "Pressed start", Toast.LENGTH_SHORT).show();
                     byte[] temp = null;
                     if (sLoc != null) {
+                        startFlag=1;
                         send("start$");
                     } else
                         Toast.makeText(getApplicationContext(), "Please Set Destination Location", Toast.LENGTH_SHORT).show();
@@ -438,12 +454,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             battery.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sensorFlag=0;
-                    baterryFlag=1;
-                    remDistFlag=0;
+                    sensorFlag = 0;
+                    baterryFlag = 1;
+                    remDistFlag = 0;
                     alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
-                    alertDialog.setTitle("Battery Values");
-                    alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery );
+                    alertDialog.setTitle("GPS Values");
+                    alertDialog.setMessage("Desired angle : " + canBattery + "\n" + "Heading angle : " + carBattery + "\n" + "Next distance : " + nxtDis + "\n"+
+                            "Final distance : " + finalDis+ "\n"+ "Turn : " + turn+ "\n"+ "Lat : " + lat+ "\n"+ "Long : " + logg+ "\n");
                     alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -512,80 +529,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 break;
                 case 2: {
-                   // byte[] readBuf = (byte[]) msg.obj;
+                   //byte[] readBuf = (byte[]) msg.obj;
                     //StringBuffer receiveData = new StringBuffer();
                     String read = (String) msg.obj;
                     //String read = new String(readBuf, 0, msg.arg1);
                     //Toast.makeText(getApplicationContext(), read, Toast.LENGTH_LONG).show();
-                    receiveData.append(read);
+                   // while (read.contains("~")
 
-                    Log.d("msg", receiveData.toString());//keep appending to string until ~
-
-                    int endIndex = receiveData.indexOf("~");
-                    if (endIndex>0)
+                   // receiveData.append(read);
+                    if(!read.endsWith("~"))
                     {
-                        if(receiveData.charAt(0)=='r')
-                        {
-                            reciever.obtainMessage(1, (Object) String.valueOf("Retransmit Destination Location")).sendToTarget();
-                            //Toast.makeText(getApplicationContext(), "Retransmit Destination Location", Toast.LENGTH_SHORT).show();
+                        receiveData.append(read);
+                    }
+                    else
+                    {
+                        receiveData.append(read);
+                        Log.d("msg", receiveData.toString());
+                        if(startFlag==1) {
+                            parseData(receiveData);
                         }
-
-                        if(receiveData.charAt(0)=='a')
-
-                        {
-
-                            reciever.obtainMessage(1,(Object)String.valueOf("Destination Fixed")).sendToTarget();
-                            //Toast.makeText(getApplicationContext(), "Destination Fixed", Toast.LENGTH_SHORT).show();
-                        }
-                        if(receiveData.charAt(0)=='v')
-                        {
-                            int rpmEnd=receiveData.indexOf("~");
-
-                            String RPM=receiveData.substring(1, rpmEnd);
-
-                            rpm.setText(RPM);
-                        }
-                        if(receiveData.charAt(0)=='s')
-                        {
-
-                        }
-                        if(receiveData.charAt(0)=='b')
-                        {
-
-                        }
-                        if(receiveData.charAt(0)=='l')
-                        {
-
-                        }
+                        
                     }
 
-                    if(sensorFlag==1)
-                    {
+                    ;//keep appending to string until ~
 
-                        alertDialog.setTitle("Sensor Values");
-                        alertDialog.setMessage("Left Sensor Value : " + lSensor + "\n" + "Right Sensor Value : " + rSensor + "\n" + "Center Sensor Value : " + cSensor
-                                + "\n" + "Back Sensor Value : " + bSensor);
-                        alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
-                        //alertDialog.show();
-                    }
-                    else if(baterryFlag==1)
-                    {
-
-                        alertDialog.setTitle("Battery Values");
-                        alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery);
-                        alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
-                        //alertDialog.show();
-                    }
 
                 }
                 break;
@@ -608,7 +575,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             alertDialog.setButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-
+                                    PolylineOptions rectOptions = new PolylineOptions();
                                     if (sLoc != null  ) {
                                         if(bluetoothCon==1) {
                                             MarkerOptions cMarkerOptions = new MarkerOptions();
@@ -624,12 +591,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             // Placing a marker on the touched position
                                             googleMap.addMarker(cMarkerOptions);
                                             for (int j = 0; j < v.size(); j++) {
+
+
                                                 Log.d("CM", String.valueOf(v.size()));
                                                 loc = v.get(j);
                                                 LatLng ml = new LatLng(loc.lat, loc.lng);
                                                 Log.d("lat", String.valueOf(loc.lat));
                                                 Log.d("lng", String.valueOf(loc.lng));
 
+                                                        //.add(new LatLng(loc.lat, loc.lng));
+                                                   rectOptions.add(ml);
                                                 cMarkerOptions.position(ml);
                                                 cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
                                                 //GoogleMap googleMap = null;
@@ -667,6 +638,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                                     strData.append(String.valueOf(sendLoc.isFinal));
                                                     strData.append('$');
                                                 }
+                                                rectOptions.color(Color.RED);
+
+
+                                                Polyline polyline = googleMap.addPolyline(rectOptions);
                                                 send(strData.toString());
                                                 Log.d("Sending", strData.toString());
 
@@ -712,7 +687,107 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-        public void connect(View v) {
+    public void parseData(StringBuilder receiveData) {
+        int endIndex = receiveData.indexOf("~");
+        if (endIndex>0)
+        {
+            if(receiveData.charAt(0)=='r')
+            {
+                reciever.obtainMessage(1, (Object) String.valueOf("Retransmit Destination Location")).sendToTarget();
+                //Toast.makeText(getApplicationContext(), "Retransmit Destination Location", Toast.LENGTH_SHORT).show();
+            }
+
+            if(receiveData.charAt(0)=='a')
+
+            {
+
+                reciever.obtainMessage(1,(Object)String.valueOf("Destination Fixed")).sendToTarget();
+                //Toast.makeText(getApplicationContext(), "Destination Fixed", Toast.LENGTH_SHORT).show();
+            }
+            if(receiveData.charAt(0)=='c')
+            {
+                int angleEnd=receiveData.indexOf("~");
+                String angle=receiveData.substring(1, angleEnd);
+                Log.d("angle",angle);
+                StringTokenizer st= new StringTokenizer(angle);
+                canBattery=st.nextToken();
+                carBattery=st.nextToken();
+            }
+            if(receiveData.charAt(0)=='d')
+            {
+                int gpsEnd=receiveData.indexOf("~");
+                String gps=receiveData.substring(1, gpsEnd);
+                Log.d("GPS",gps);
+                StringTokenizer st= new StringTokenizer(gps);
+                nxtDis=st.nextToken();
+                finalDis=st.nextToken();
+                turn=st.nextToken();
+            }
+            if(receiveData.charAt(0)=='b')
+            {
+
+            }
+            if(receiveData.charAt(0)=='l')
+            {
+                int locEnd=receiveData.indexOf("~");
+                String loc=receiveData.substring(1, locEnd);
+                Log.d("Current Loc",loc);
+                StringTokenizer st= new StringTokenizer(loc);
+                lat=st.nextToken();
+                logg=st.nextToken();
+
+                MarkerOptions cMarkerOptions = new MarkerOptions();
+                // checkPointLoc loc = new checkPointLoc();
+                LatLng currLoc=new LatLng(Double.valueOf(lat),Double.valueOf(logg));
+                final GoogleMap googleMap = mapFragment.getMap();
+                //googleMap.clear();
+                LatLng initMarker = new LatLng(currLoc.latitude, currLoc.longitude);
+                cMarkerOptions.position(initMarker);
+              //  cMarkerOptions.icon()
+                cMarkerOptions.title(initMarker.latitude + " : " + initMarker.longitude);
+                //GoogleMap googleMap = null;
+                googleMap.animateCamera(CameraUpdateFactory.newLatLng(initMarker));
+
+                // Placing a marker on the touched position
+                googleMap.addMarker(cMarkerOptions);
+
+
+            }
+        }
+
+        if(sensorFlag==1)
+        {
+
+            alertDialog.setTitle("Sensor Values");
+            alertDialog.setMessage("Left Sensor Value : " + lSensor + "\n" + "Right Sensor Value : " + rSensor + "\n" + "Center Sensor Value : " + cSensor
+                    + "\n" + "Back Sensor Value : " + bSensor);
+            alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            //alertDialog.show();
+        }
+        else if(baterryFlag==1)
+        {
+
+            alertDialog.setTitle("GPS Values");
+            alertDialog.setMessage("Desired angle : " + canBattery + "\n" + "Heading angle : " + carBattery + "\n" + "Next distance : " + nxtDis + "\n"+
+                    "Final distance : " + finalDis+ "\n"+ "Turn : " + turn+ "\n"+ "Lat : " + lat+ "\n"+ "Long : " + logg+ "\n");
+            alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            //alertDialog.show();
+        }
+        receiveData.delete(0, receiveData.length());
+
+    }
+
+    public void connect(View v) {
             if (BA.isDiscovering())
 
             {
@@ -867,7 +942,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 while (true) {
                     try {
                         bytes = mmInStream.read(buffer);
-                        reciever.obtainMessage(2, bytes, -1, buffer).sendToTarget();
+                      // if(buffer.toString().contains("~")) {
+                           String readMessage = new String(buffer, 0, bytes);
+                           reciever.obtainMessage(2, bytes, -1,readMessage).sendToTarget();
+                       //}
                     } catch (IOException e) {
                         break; //change
                     }

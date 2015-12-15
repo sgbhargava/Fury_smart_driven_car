@@ -21,7 +21,8 @@ typedef enum {
     data_loc,
     compass_data,
     distance_data,
-    reset_compass
+    reset_compass,
+    kFilter_on
 } CMD_CAN;
 
 typedef enum{
@@ -34,7 +35,8 @@ typedef enum{
     gps_loc = 0x461,
     compass_id = 0x465,
     distance_id =  0x162,
-    reset_compassId = 0x385
+    reset_compassId = 0x385,
+    kFilter_id=0x387
 } CAN_MSG_ID_T;
 
 typedef union{

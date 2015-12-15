@@ -610,7 +610,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 public void onClick(DialogInterface dialog, int which) {
 
                                     if (sLoc != null  ) {
-                                        if(bluetoothCon!=1) {
+                                        if(bluetoothCon==1) {
                                             MarkerOptions cMarkerOptions = new MarkerOptions();
                                             checkPointLoc loc = new checkPointLoc();
                                             final GoogleMap googleMap = mapFragment.getMap();

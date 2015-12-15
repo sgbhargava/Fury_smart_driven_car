@@ -277,6 +277,8 @@ bool wirelessReceiveBT()
     cmd_data nCmd = { 0 };
     long_lat_data data = { 0 };
 
+    static int i =0;
+
     if (wireless_get_rx_pkt(&pkt, 0))
     {
         nCmd.cmd = pkt.data[0];
@@ -293,10 +295,9 @@ bool wirelessReceiveBT()
                 }
                 xQueueSend(GPSdataRxQueue, &nCmd, 0);
             }
-                break;
+             break;
             case data_loc:
             {
-
                 nCmd.index = pkt.data[1];
 
                 memcpy(data.bytes, &pkt.data[2], 8);
@@ -305,14 +306,16 @@ bool wirelessReceiveBT()
               /*  printf("lat:%d.%d, long:-%d.%d\n",data.lattitude_dec,data.lattitude_float,data.longitude_dec,
                 data.longitude_float);*/
                 xQueueSend( GPSdataRxQueue, &nCmd, 0);
-                printf("\n");
+            //    printf("\n");
             }
-                break;
+              break;
             case compass_data:
             {
-                printf("Desired:%d, Actual:%d\n",((pkt.data[1]<<8)|pkt.data[2]),((pkt.data[3]<<8)|pkt.data[4]));
+            //    printf("Desired:%d, Actual:%d\n",((pkt.data[1]<<8)|pkt.data[2]),((pkt.data[3]<<8)|pkt.data[4]));
                 desired = ((pkt.data[1] << 8) | pkt.data[2]);
                 actual = ((pkt.data[3] << 8) | pkt.data[4]);
+                i++;
+                xQueueSend( GPSdataRxQueue, &nCmd, 0);
             }
                 break;
             case distance_data:
@@ -325,7 +328,7 @@ bool wirelessReceiveBT()
                 isFinal = gDistanceInfo[nCmd.index].isFinal;
                 turnDecision = gDistanceInfo[nCmd.index].turnDecision;
                 checkpoint = gDistanceInfo[nCmd.index].checkpoint;
-
+                xQueueSend( GPSdataRxQueue, &nCmd, 0);
             }
                 break;
                 // TODO handle msgs for other incoming data to display on App
@@ -542,7 +545,6 @@ bool ParseGPSData(char *cmdParams, gps_data *pGps, int count, int checkCount)
             b1 = abs(b1);
             pGps->longLatdata.longitude_dec = b1;
             pGps->longLatdata.longitude_float = b2;
-
 
         }
             break;
@@ -804,17 +806,29 @@ bool SendDataOverBluetooth(void)
             case data_ack:
             {
                 sprintf(p, "a~");
-                printf("received: %s\n",p);
                 Send_Uart2(p);
             }
              break;
             case data_loc:
             {
-               sprintf(p, "l%f -%f~",lat,longitude);
-               printf("received: %s\n",p);
+               sprintf(p,"l%f -%f~",lat,longitude);
                Send_Uart2(p);
             }
             break;
+            case compass_data:
+            {
+                sprintf(p,"c%d %d~",actual,desired);
+                Send_Uart2(p);
+            }
+            break;
+
+            case distance_data:
+            {
+                sprintf(p,"d%d %d %d~",dist_nxtPnt,dist_finalDest,turnDecision);
+                Send_Uart2(p);
+            }
+            break;
+
         }
     }
     else

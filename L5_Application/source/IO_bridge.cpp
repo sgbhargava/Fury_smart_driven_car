@@ -22,7 +22,7 @@ bool IO_base_class::get_heartbeat()
 bool IO_base_class::IO_base_class_init()
 {
 	add_can_id(id_heart_beat, id_drive_mode);
-	add_can_id(id_location, 0xFFFF);
+	add_can_id(id_kill, 0xFFFF);
 	return false;
 }
 
@@ -35,10 +35,10 @@ bool IO_base_class::get_drive_authotization()
 	return true;
 }
 
-bool IO_base_class::get_location_details()
+bool IO_base_class::get_stop()
 {
 	uint64_t temp;
-	if(!get_data(id_location, &temp))
+	if(!get_data(id_kill, &temp))
 		return false;
 	lat_long_from_IO = (long_lat *)temp;
 	return true;

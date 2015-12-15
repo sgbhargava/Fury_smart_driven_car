@@ -47,6 +47,7 @@
 #include "can_gpsCompass.hpp"
 #include "master_class.hpp"
 #include "io.hpp"
+#include "lpc_sys.h"
 ////////////remove after test
 extern bool override;
 Switches main_sw = Switches::getInstance();
@@ -82,25 +83,34 @@ else if(geo_controller->turnDecision > 0)
 else
 {
 	motor->motor_steering = 0;
+
+
 	//motor->send_motor_steering();*/
 }
-	motor->get_motor_status();
-	sensor->lidar_threshold = 70 + motor->motor_rpm / 2;
-	sensor->sensor_threshold = 50 + motor->motor_rpm / 3;
+	/*motor->get_motor_status();
+	sensor->lidar_threshold = 50 + motor->motor_rpm / 2;
+	sensor->sensor_threshold = 25 + motor->motor_rpm / 3;
+
 
 	if ((sensor->lidar_threshold > 120) | (sensor->sensor_threshold > 80)) {
 		sensor->lidar_threshold = 120;
 		sensor->sensor_threshold = 80;
-	}
+	}*/
+sensor->lidar_threshold = 50;
+sensor->sensor_threshold = 30;
 
 	if (sensor->lidar < sensor->lidar_threshold) {
 
 		if ((sensor->left < sensor->sensor_threshold)
 				&& (sensor->right < sensor->sensor_threshold)) {
-			//printf("stop\n");
-			motor->motor_steering = 0;
-			motor->stop();
+			printf("stop\n");
+			motor->motor_steering = 4;
+			if(sensor->back > 10)
+				motor->reverse();
+			else
+				motor->stop();
 		}
+
 
 		else if (sensor->right < sensor->sensor_threshold) {
 			motor->motor_steering = 4; //left
@@ -110,7 +120,8 @@ else
 			motor->custom_1();
 		}
 
-	} else {
+	}
+	else {
 		if (sensor->right < sensor->sensor_threshold) {
 			motor->motor_steering = 3;
 		} else if (sensor->left < sensor->sensor_threshold) {
@@ -119,7 +130,8 @@ else
 		motor->custom_1();
 	}
 
-	//printf("motor steer %d\n", motor->motor_steering);
+	motor->custom_1();
+	printf("motor steer %d\n", motor->motor_steering);
 
 	//printf("rpm is %d\n", motor->motor_rpm);*/
 	if (!motor->send_motor_steering()) {
@@ -176,8 +188,8 @@ void period_1Hz(void) {
 
 	static uint8_t timeout =0;
 	timeout++;
-	timeout %= 2;
-	if(timeout == 1)
+	timeout %= 5;
+	if(timeout == 4)
 	{
 
 		if(!geo_controller->get_heartbeat())
@@ -199,6 +211,15 @@ void period_1Hz(void) {
 
 void period_10Hz(void) {
 
+	if(IO_controller->get_stop())
+	{
+		printf("%d\n",geo_controller->reset());
+		printf("%d\n",motor->reset());
+		printf("%d\n",sensor->reset());
+		printf("%d\n",IO_controller->reset());
+		delay_ms(20);
+		sys_reboot();
+	}
 	if (!sensor->get_sensor_reading())
 		u0_dbg_printf("ERROR failed to get sensor data\n");
 
@@ -208,17 +229,21 @@ void period_10Hz(void) {
 	if(!override)
 	{
 		//////end remove after test
-	if(geo_controller->checkpoint.isFinal == 1)
-	{
-		printf("received 1\n");
-		motor->stop();
-		motor->send_motor_throttle();
+		if(geo_controller->checkpoint.isFinal == 1)
+		{
+			printf("received 1\n");
+			motor->stop();
+			motor->send_motor_throttle();
+			geo_controller->reset();
+			sys_reboot();
+		}
+		else
+			Obstruction_avoidance_algorithm();
 	}
 	else
-	Obstruction_avoidance_algorithm();
-	}
-	else
-	Obstruction_avoidance_algorithm();
+		Obstruction_avoidance_algorithm();
+
+
 
 }
 

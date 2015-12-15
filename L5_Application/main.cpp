@@ -76,7 +76,7 @@ int main(void)
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
 
     Switches main_sw = Switches::getInstance();
-    while(!main_sw.getSwitch(1));
+   // while(!main_sw.getSwitch(1));
     #if 1
     printf("starting periodic\n");
     scheduler_add_task(new periodicSchedulerTask());

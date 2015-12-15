@@ -11,6 +11,8 @@ bool sensor_class::get_sensor_reading()
 	if(get_data(id_sensors, &temp))
 	{
 		lidar = getword(temp,0);
+		if(lidar == 0)
+			lidar = 200;
 		left = getword(temp, 1);
 		right = getword(temp, 2);
 		back = getword(temp, 3);

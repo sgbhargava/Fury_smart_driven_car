@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,11 +30,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,8 +40,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -71,12 +68,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static String canBattery=null;
     public static String carBattery=null;
     public static String remdist=null;
-
+    private StringBuilder receiveData = new StringBuilder();
     public static int sensorFlag=0;
     public static int baterryFlag=0;
     public static int remDistFlag=0;
+    public  AlertDialog alertDialog;
+    public static int bluetoothCon=0;
 
-
+    LocationManager lm =null;
     public Double totalDistance;
     public Vector<checkPointLoc> v = new Vector<checkPointLoc>();
 
@@ -276,6 +275,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         Log.d("BT", "Exited SD");
     }
+    final LocationListener listener = new LocationListener() {
+        @Override
+
+
+        public void onLocationChanged(Location location) {
+
+            iLoc = location;
+            //Double data[]={iLoc.getLatitude(),iLoc.getLongitude()};
+            //locationHash.put(1,data);
+
+            LatLng initialLocation = new LatLng(iLoc.getLatitude(), iLoc.getLongitude());
+            //   LatLng initialLocation = new LatLng(37.33538164, -121.88124232);
+            Log.e("GPS", String.valueOf(iLoc.getLatitude()));
+            Log.e("GPS", String.valueOf(iLoc.getLongitude()));
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(initialLocation)      // Sets the center of the map to LatLng (refer to previous snippet)
+                    .zoom(18)                   // Sets the zoom
+                    .bearing(90)                // Sets the orientation of the camera to east
+                    .tilt(30)                   // Sets the tilt of the camera to 30 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            mMap.addMarker(new MarkerOptions().position(initialLocation).title("Initial Car Location").snippet("37.33538164, -121.88124232"));
+            Log.d("BT", "Exited OMR");
+
+            reciever.obtainMessage(4).sendToTarget();
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            Toast.makeText(getApplicationContext(), "status changed", Toast.LENGTH_LONG).show();
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
 
 
     /**
@@ -288,40 +333,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(final GoogleMap googleMap) {
         Log.d("BT", "Entered OMR");
         mMap = googleMap;
         String provider;
         //get location service
-        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        Location l = new Location(LocationManager.GPS_PROVIDER);
+
         Criteria c = new Criteria();
+        c.setAccuracy(Criteria.ACCURACY_FINE);
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
+
         Log.d("BT", "Entered OMR");
-        provider = lm.getBestProvider(c, true);
-        //now you have best provider
-        //get location
-        Location l = lm.getLastKnownLocation(provider);
+        provider = lm.getBestProvider(c, false);
+        Log.d("GPS",provider);
+        TextView map= (TextView) findViewById(R.id.mapReset);
 
-        if(null!=l) {
+        map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sLoc=null;
+                iLoc=null;
+                bluetoothCon=0;
+                
+                googleMap.clear();
+                String provider;
+                //get location service
 
-            iLoc = l;
-            //Double data[]={iLoc.getLatitude(),iLoc.getLongitude()};
-            //locationHash.put(1,data);
-            LatLng initialLocation = new LatLng(l.getLatitude(), l.getLongitude());
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(initialLocation)      // Sets the center of the map to LatLng (refer to previous snippet)
-                    .zoom(18)                   // Sets the zoom
-                    .bearing(90)                // Sets the orientation of the camera to east
-                    .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-                    .build();                   // Creates a CameraPosition from the builder
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            mMap.addMarker(new MarkerOptions().position(initialLocation).title("Initial Car Location").snippet("37.33538164, -121.88124232"));
-            Log.d("BT", "Exited OMR");
-        }
-        else
-        {
-            Toast.makeText(this, "No Provider", Toast.LENGTH_LONG).show();
-        }
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(initialLocation));
+                Location l = new Location(LocationManager.GPS_PROVIDER);
+
+                Criteria c = new Criteria();
+                c.setAccuracy(Criteria.ACCURACY_FINE);
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
+
+                Log.d("BT", "Entered OMR");
+                provider = lm.getBestProvider(c, false);
+                Log.d("GPS",provider);
+
+            }
+        });
     }
 
 
@@ -368,10 +419,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     sensorFlag=1;
                     baterryFlag=0;
                     remDistFlag=0;
+                    alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
+                    alertDialog.setTitle("Sensor Values");
+                    alertDialog.setMessage("Left Sensor Value : " + lSensor + "\n" + "Right Sensor Value : " + rSensor + "\n" + "Center Sensor Value : " + cSensor
+                            + "\n" + "Back Sensor Value : " + bSensor);
+                    alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    alertDialog.show();
 
                 }
             });
-            TextView battery= (TextView) findViewById(R.id.sensor);
+            TextView battery= (TextView) findViewById(R.id.Battery);
 
             battery.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -379,6 +441,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     sensorFlag=0;
                     baterryFlag=1;
                     remDistFlag=0;
+                    alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
+                    alertDialog.setTitle("Battery Values");
+                    alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery );
+                    alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    alertDialog.show();
 
                 }
             });
@@ -433,12 +505,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final android.os.Handler reciever = new android.os.Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
+                case 1:{
+
+                    String s = (String) msg.obj;
+                    Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+                }
+                break;
                 case 2: {
-                    byte[] readBuf = (byte[]) msg.obj;
-                    StringBuffer receiveData = new StringBuffer();
-                    String read = new String(readBuf, 0, msg.arg1);
-                    Toast.makeText(getApplicationContext(), read, Toast.LENGTH_LONG).show();
-                    receiveData.append(receiveData);
+                   // byte[] readBuf = (byte[]) msg.obj;
+                    //StringBuffer receiveData = new StringBuffer();
+                    String read = (String) msg.obj;
+                    //String read = new String(readBuf, 0, msg.arg1);
+                    //Toast.makeText(getApplicationContext(), read, Toast.LENGTH_LONG).show();
+                    receiveData.append(read);
 
                     Log.d("msg", receiveData.toString());//keep appending to string until ~
 
@@ -447,12 +526,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     {
                         if(receiveData.charAt(0)=='r')
                         {
-                            Toast.makeText(getApplicationContext(), "Retransmit Destination Location", Toast.LENGTH_SHORT).show();
+                            reciever.obtainMessage(1, (Object) String.valueOf("Retransmit Destination Location")).sendToTarget();
+                            //Toast.makeText(getApplicationContext(), "Retransmit Destination Location", Toast.LENGTH_SHORT).show();
                         }
 
                         if(receiveData.charAt(0)=='a')
+
                         {
-                            Toast.makeText(getApplicationContext(), "Destination Fixed", Toast.LENGTH_SHORT).show();
+
+                            reciever.obtainMessage(1,(Object)String.valueOf("Destination Fixed")).sendToTarget();
+                            //Toast.makeText(getApplicationContext(), "Destination Fixed", Toast.LENGTH_SHORT).show();
                         }
                         if(receiveData.charAt(0)=='v')
                         {
@@ -478,7 +561,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     if(sensorFlag==1)
                     {
-                        AlertDialog alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
+
                         alertDialog.setTitle("Sensor Values");
                         alertDialog.setMessage("Left Sensor Value : " + lSensor + "\n" + "Right Sensor Value : " + rSensor + "\n" + "Center Sensor Value : " + cSensor
                                 + "\n" + "Back Sensor Value : " + bSensor);
@@ -488,20 +571,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 dialog.cancel();
                             }
                         });
-                        alertDialog.show();
+                        //alertDialog.show();
                     }
                     else if(baterryFlag==1)
                     {
-                        AlertDialog alertDialog = new AlertDialog.Builder(MapsActivity.this).create();
-                        alertDialog.setTitle("Sensor Values");
-                        alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery );
+
+                        alertDialog.setTitle("Battery Values");
+                        alertDialog.setMessage("Can Battery : " + canBattery + "\n" + "Car Battery : " + carBattery);
                         alertDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
                         });
-                        alertDialog.show();
+                        //alertDialog.show();
                     }
 
                 }
@@ -526,73 +609,81 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
-                                    if (sLoc != null) {
-                                        MarkerOptions cMarkerOptions = new MarkerOptions();
-                                        checkPointLoc loc = new checkPointLoc();
-                                        final GoogleMap googleMap = mapFragment.getMap();
-                                        googleMap.clear();
-                                        LatLng initMarker = new LatLng(iLoc.getLatitude(), iLoc.getLongitude());
-                                        cMarkerOptions.position(initMarker);
-                                        cMarkerOptions.title(initMarker.latitude + " : " + initMarker.longitude);
-                                        //GoogleMap googleMap = null;
-                                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(initMarker));
-
-                                        // Placing a marker on the touched position
-                                        googleMap.addMarker(cMarkerOptions);
-                                        for (int j = 0; j < v.size(); j++) {
-                                            Log.d("CM", String.valueOf(v.size()));
-                                            loc = v.get(j);
-                                            LatLng ml = new LatLng(loc.lat, loc.lng);
-                                            Log.d("lat", String.valueOf(loc.lat));
-                                            Log.d("lng", String.valueOf(loc.lng));
-
-                                            cMarkerOptions.position(ml);
-                                            cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
+                                    if (sLoc != null  ) {
+                                        if(bluetoothCon!=1) {
+                                            MarkerOptions cMarkerOptions = new MarkerOptions();
+                                            checkPointLoc loc = new checkPointLoc();
+                                            final GoogleMap googleMap = mapFragment.getMap();
+                                            googleMap.clear();
+                                            LatLng initMarker = new LatLng(iLoc.getLatitude(), iLoc.getLongitude());
+                                            cMarkerOptions.position(initMarker);
+                                            cMarkerOptions.title(initMarker.latitude + " : " + initMarker.longitude);
                                             //GoogleMap googleMap = null;
-                                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
-                                            StringBuilder strData = new StringBuilder();
-                                            strData.append("check");
-
-                                            strData.append(' ');
-                                            strData.append(String.valueOf(iLoc.getLatitude()));
-                                            strData.append(' ');
-                                            strData.append(String.valueOf(iLoc.getLongitude()));
-                                            strData.append(' ');
-                                            strData.append(String.valueOf('0'));
-                                            strData.append(' ');
-                                            strData.append(String.valueOf('0'));
-                                            strData.append('$');
+                                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(initMarker));
 
                                             // Placing a marker on the touched position
                                             googleMap.addMarker(cMarkerOptions);
-                                            // BlueToothActivity.activity = "maps";
-                                            //Intent sendCheckpoints = new Intent(MapsActivity.this,BlueToothActivity.class);
+                                            for (int j = 0; j < v.size(); j++) {
+                                                Log.d("CM", String.valueOf(v.size()));
+                                                loc = v.get(j);
+                                                LatLng ml = new LatLng(loc.lat, loc.lng);
+                                                Log.d("lat", String.valueOf(loc.lat));
+                                                Log.d("lng", String.valueOf(loc.lng));
 
-                                            checkPointLoc sendLoc = new checkPointLoc();
-                                            for (int i = 0; i < v.size(); i++) {
-                                                sendLoc = v.get(i);
+                                                cMarkerOptions.position(ml);
+                                                cMarkerOptions.title(ml.latitude + " : " + ml.longitude);
+                                                //GoogleMap googleMap = null;
+                                                googleMap.animateCamera(CameraUpdateFactory.newLatLng(ml));
+                                                StringBuilder strData = new StringBuilder();
                                                 strData.append("check");
-                                                strData.append(' ');
-                                                strData.append(String.valueOf(sendLoc.lat));
-                                                strData.append(' ');
-                                                strData.append(String.valueOf(sendLoc.lng));
-                                                strData.append(' ');
 
-                                                strData.append(String.valueOf(sendLoc.checkNo));
                                                 strData.append(' ');
-                                                strData.append(String.valueOf(sendLoc.isFinal));
+                                                strData.append(String.valueOf(iLoc.getLatitude()));
+                                                strData.append(' ');
+                                                strData.append(String.valueOf(iLoc.getLongitude()));
+                                                strData.append(' ');
+                                                strData.append(String.valueOf('0'));
+                                                strData.append(' ');
+                                                strData.append(String.valueOf('0'));
                                                 strData.append('$');
-                                            }
-                                            send(strData.toString());
-                                            Log.d("Sending", strData.toString());
 
-                                            //Intent sendCheckpoints = new Intent(MapsActivity.this, BlueToothActivity.class);
-                                            //sendCheckpoints.putExtra("checkPoints", strData.toString());
-                                            //startActivity(sendCheckpoints);
+                                                // Placing a marker on the touched position
+                                                googleMap.addMarker(cMarkerOptions);
+                                                // BlueToothActivity.activity = "maps";
+                                                //Intent sendCheckpoints = new Intent(MapsActivity.this,BlueToothActivity.class);
+
+                                                checkPointLoc sendLoc = new checkPointLoc();
+                                                for (int i = 0; i < v.size(); i++) {
+                                                    sendLoc = v.get(i);
+                                                    strData.append("check");
+                                                    strData.append(' ');
+                                                    strData.append(String.valueOf(sendLoc.lat));
+                                                    strData.append(' ');
+                                                    strData.append(String.valueOf(sendLoc.lng));
+                                                    strData.append(' ');
+
+                                                    strData.append(String.valueOf(sendLoc.checkNo));
+                                                    strData.append(' ');
+                                                    strData.append(String.valueOf(sendLoc.isFinal));
+                                                    strData.append('$');
+                                                }
+                                                send(strData.toString());
+                                                Log.d("Sending", strData.toString());
+
+                                                //Intent sendCheckpoints = new Intent(MapsActivity.this, BlueToothActivity.class);
+                                                //sendCheckpoints.putExtra("checkPoints", strData.toString());
+                                                //startActivity(sendCheckpoints);
+
+
+                                            }
 
 
                                         }
-                                    } else
+                                        else
+                                            Toast.makeText(getApplicationContext(), "Bluetooth not Connected", Toast.LENGTH_LONG).show();
+                                    }
+                                    else
+
                                         Toast.makeText(getApplicationContext(), "Please Set Destination", Toast.LENGTH_LONG).show();
                                 }
                             });
@@ -608,7 +699,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 }
+                case 4:
+                {
 
+                    lm.removeUpdates(listener);
+                    Toast.makeText(getApplicationContext(),"got initial location",Toast.LENGTH_SHORT).show();
+
+                }
+                break;
 
             }
         }
@@ -648,6 +746,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(), "Device not in range", Toast.LENGTH_SHORT).show();
                     Log.d("BT", "get socket failed");
+                    reciever.obtainMessage(1,(Object)String.valueOf("Failed to obtain Socket")).sendToTarget();
                 }
 
                 mmSocket = t;
@@ -664,9 +763,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     else
                         return;
                   //  Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_LONG).show();
-
+                    bluetoothCon=1;
+                    reciever.obtainMessage(1,(Object)String.valueOf("Bluetooth Connected")).sendToTarget();
                     Log.d("BT", "Connecting");
                 } catch (IOException e) {
+                    reciever.obtainMessage(1,(Object)String.valueOf("Bluetooth Connection Failed!! Try Again")).sendToTarget();
                     Log.d("BT", "Connecting failed");
 
                     try {

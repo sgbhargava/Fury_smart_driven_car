@@ -42,15 +42,18 @@
 #include "receive_Canmsg.hpp"
 #include "lpc_sys.h"
 #include "sevenSeg_display.hpp"
+#include "gps_filter.hpp"
 
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 gpsData_t  gpsCurrentData;
 float_t    distanceToDest = 0, distanceToChkPnt = 0, currentHeading = 0;
-double_t   chkPntLat = 0, chkPntLon = 0, desiredHeading = 0;
+double_t   chkPntLat = 0, chkPntLon = 0, desiredHeading = 0, presentLat = 0, presentLon = 0;
 uint8_t    presentChkPnt = 0, compassMode = 0;
-bool       finalChkPnt_b = false;
+bool       finalChkPnt_b = false, filter_flag = true;
 int8_t     turn;
+KalmanFilter filterGPS;
+uint8_t chkPntsToFinal = 0;
 
 #if TESTCODE
 double_t test_chkPntLat[5], test_chkPntLong[5];
@@ -61,9 +64,11 @@ bool period_init(void)
 {
     can_communicationInit();
     can_addMsgIDs(MASTER_RESET_ID, COMM_GPSDATA_ID);
-    can_addMsgIDs(COMPASS_RESET_ID, 0xFFFF);
+    can_addMsgIDs(COMPASS_RESET_ID, FILTER_ID);
 
     CAN_reset_bus(can1);
+
+    filterGPS = alloc_filter_velocity2d(NOISE);
 
     heartbeat();
 
@@ -77,8 +82,8 @@ bool period_reg_tlm(void)
     tlm_component *gpsCompass_cmp = tlm_component_add("GPS_Compass");
 
     TLM_REG_VAR(gpsCompass_cmp, presentChkPnt, tlm_uint);
-    TLM_REG_VAR(gpsCompass_cmp, gpsCurrentData.latitude, tlm_float);
-    TLM_REG_VAR(gpsCompass_cmp, gpsCurrentData.longitude, tlm_float);
+    TLM_REG_VAR(gpsCompass_cmp, presentLat, tlm_double);
+    TLM_REG_VAR(gpsCompass_cmp, presentLon, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, chkPntLat, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, chkPntLon, tlm_double);
     TLM_REG_VAR(gpsCompass_cmp, distanceToChkPnt, tlm_float);
@@ -88,6 +93,7 @@ bool period_reg_tlm(void)
     TLM_REG_VAR(gpsCompass_cmp, currentHeading, tlm_float);
     TLM_REG_VAR(gpsCompass_cmp, finalChkPnt_b, tlm_bit_or_bool);
     TLM_REG_VAR(gpsCompass_cmp, turn, tlm_int);
+    TLM_REG_VAR(gpsCompass_cmp, chkPntsToFinal, tlm_uint);
 
 #if TESTCODE
     TLM_REG_VAR(gpsCompass_cmp, test_chkPntLat[0], tlm_double);
@@ -123,8 +129,8 @@ void period_1Hz(void)
 void period_10Hz(void)
 {
     static QueueHandle_t gpsCurrData_q = scheduler_task::getSharedObject("gps_queue");
-    double_t presentLat, presentLon;
 
+    chkPntsToFinal = getNumOfChkPntsFinal();
 // compass reading and calibration
     if(BEARINGMODE == compassMode)
         currentHeading = compassBearing_inDeg();
@@ -160,9 +166,25 @@ void period_10Hz(void)
 
         presentChkPnt = getPresentChkPnt();
 
-        // present car latitude and longitude
-        presentLat = gpsCurrentData.latitude;
-        presentLon = gpsCurrentData.longitude;
+#if TESTCODE
+        if(filter_flag)
+        {
+#endif
+            update_velocity2d(filterGPS, gpsCurrentData.latitude,
+                    gpsCurrentData.longitude, RUN_TIME);
+
+            // present car latitude and longitude
+            presentLat = filterGPS.state_estimate.data[0][0] / 1000.0;
+            presentLon = filterGPS.state_estimate.data[0][2] / 1000.0;
+#if TESTCODE
+        }
+        else
+        {
+            // present car latitude and longitude
+            presentLat = gpsCurrentData.latitude;
+            presentLon = gpsCurrentData.longitude;
+        }
+#endif
 
         // latitude and longitude of checkpoint
         chkPntLat = getLatitude(presentChkPnt);
@@ -205,15 +227,17 @@ void period_10Hz(void)
         LE.toggle(2);
     }
 
-   /* presentChkPnt = 2;
-    presentLat = 37.33345;
-    presentLon = 121.33345;
-    finalChkPnt_b = 1;
+/*
+
+    presentChkPnt = 2;
+    presentLat = 37.335381;
+    presentLon = -121.881242;
+    finalChkPnt_b = 0;
     distanceToChkPnt = 34;
     distanceToDest = 189;
     desiredHeading = 340;
     currentHeading = 160;
-    turn = -3;
+    turn = 0;
     sendGPS_data(&presentChkPnt,&presentLat,&presentLon, finalChkPnt_b);
     sendCompass_data(turn, presentChkPnt, distanceToChkPnt, distanceToDest, finalChkPnt_b);
     sendDegrees_data(desiredHeading, currentHeading);
@@ -238,6 +262,14 @@ void period_100Hz(void)
         can_sendAck();
         compass_factoryReset();
     }
+
+#if TESTCODE
+    if(can_receive(FILTER_ID, &data))
+    {
+        can_sendAck();
+        filter_flag = !filter_flag;
+    }
+#endif
 }
 
 void period_1000Hz(void)

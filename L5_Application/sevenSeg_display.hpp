@@ -15,10 +15,6 @@
 class sevenSegDispFunc
 {
     public:
-        sevenSegDispFunc()
-        {
-            dispInit();
-        }
         void dispInit();
         void seg_display(uint8_t checkpoint_number);
     private:

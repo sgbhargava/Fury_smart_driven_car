@@ -26,8 +26,9 @@
 #define  MODE_INRESET           5
 
 // #defines for conversion and calculation
-#define  TO_DEG                 (180 / 3.14159)
-#define  TO_RAD                 (3.14159 / 180)
+#define  PI                     3.14159265
+#define  TO_DEG                 (180 / PI)
+#define  TO_RAD                 (PI / 180.0)
 #define  RADIUS                 6371000     // RADIUS OF EARTH IN METERS
 #define  MINUTES                60         // TO MINUTES
 #define  TEN_6                  1000000    // 10^6
@@ -36,6 +37,8 @@
 #define  SCALE                  30.0
 #define  STOP_METERS            5.0
 #define  FULLCIRCLE             360.0
+#define  NOISE                  4.0
+#define  RUN_TIME               0.1
 
 // Message IDs and data length for CAN communication
 #define  HEARTBEAT_ID           0x160
@@ -46,6 +49,7 @@
 #define  COMM_RECACK_ID         0x47F
 #define  COMPASS_DEGREE_ID      0x465
 #define  COMPASS_RESET_ID       0x385
+#define  FILTER_ID              0x387
 #define  DATA_LEN_EIGHT         8
 #define  DATA_LEN_SIX           6
 #define  DATA_LEN_FOUR          4

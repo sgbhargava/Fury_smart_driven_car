@@ -136,7 +136,7 @@ uint8_t getNumOfChkPnts()
 
 uint8_t getNumOfChkPntsFinal()
 {
-    uint8_t count = 1;
+    uint8_t count = 0;
 
     checkPointData_t *pntToGetNoChk = NULL;
     pntToGetNoChk = firstChkPnt;
@@ -145,9 +145,11 @@ uint8_t getNumOfChkPntsFinal()
         return 0;
     else
     {
-        while(!pntToGetNoChk->isFinal)
+        while(!pntToGetNoChk->isFinal && pntToGetNoChk != NULL)
+		{
+            pntToGetNoChk = pntToGetNoChk->next;
             count++;
-
+		}
         return count;
     }
 

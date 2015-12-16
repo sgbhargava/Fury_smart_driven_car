@@ -48,8 +48,6 @@
 #include "master_class.hpp"
 #include "io.hpp"
 #include "lpc_sys.h"
-////////////remove after test
-extern bool override;
 Switches main_sw = Switches::getInstance();
 ///////////end remove after test
 
@@ -69,6 +67,7 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (2*512 * 4);
 #if 1
 
 void Obstruction_avoidance_algorithm(void) {
+
 printf("geo %d\n", geo_controller->turnDecision);
 if(geo_controller->turnDecision < 0)
 {
@@ -93,47 +92,54 @@ else
 
 
 	if ((sensor->lidar_threshold > 120) | (sensor->sensor_threshold > 80)) {
-		sensor->lidar_threshold = 120;
-		sensor->sensor_threshold = 80;
-	}*/
-sensor->lidar_threshold = 50;
-sensor->sensor_threshold = 30;
+		sensor->lidar_threshold = 90;
+		sensor->sensor_threshold = 60;
+	}
 
-	if (sensor->lidar < sensor->lidar_threshold) {
+	*/
+sensor->lidar_threshold = 75;
+sensor->sensor_threshold = 50;
 
-		if ((sensor->left < sensor->sensor_threshold)
-				&& (sensor->right < sensor->sensor_threshold)) {
+	if (sensor->lidar < sensor->lidar_threshold)
+	{
+
+		if ((sensor->left < sensor->sensor_threshold) && (sensor->right < sensor->sensor_threshold))
+		{
 			printf("stop\n");
-			motor->motor_steering = 4;
-			if(sensor->back > 10)
-				motor->reverse();
-			else
-				motor->stop();
+			motor->stop();
+
 		}
 
 
-		else if (sensor->right < sensor->sensor_threshold) {
+		else if (sensor->right < sensor->sensor_threshold)
+		{
 			motor->motor_steering = 4; //left
 			motor->custom_1();
-		} else if (sensor->left < sensor->sensor_threshold) {
+		}
+
+		else if (sensor->left < sensor->sensor_threshold) {
 			motor->motor_steering = 1; //right
 			motor->custom_1();
 		}
 
 	}
-	else {
-		if (sensor->right < sensor->sensor_threshold) {
+	else
+	{
+		if (sensor->right < sensor->sensor_threshold)
+		{
 			motor->motor_steering = 3;
-		} else if (sensor->left < sensor->sensor_threshold) {
+		}
+		else if (sensor->left < sensor->sensor_threshold)
+		{
 			motor->motor_steering = 2;
 		}
 		motor->custom_1();
 	}
 
-	motor->custom_1();
+//	motor->custom_1();
 	printf("motor steer %d\n", motor->motor_steering);
 
-	//printf("rpm is %d\n", motor->motor_rpm);*/
+	//printf("rpm is %d\n", motor->motor_rpm);
 	if (!motor->send_motor_steering()) {
 		printf("ERROR failed to send 21\n");
 	}
@@ -157,10 +163,7 @@ bool period_init(void) {
 	master = master_class::getInstance();
 	my_can.CAN_base_class_init();
 
-	if(main_sw.getSwitch(2))
-	{
-		override = true;
-	}
+
 	while(!IO_controller->get_drive_authotization());
 
 	return true; // Must return true upon success
@@ -226,22 +229,19 @@ void period_10Hz(void) {
 	if(!geo_controller->get_compass_data())
 				u0_dbg_printf("ERROR failed to get compass data\n");
 	//////remove after test
-	if(!override)
-	{
-		//////end remove after test
+
 		if(geo_controller->checkpoint.isFinal == 1)
 		{
 			printf("received 1\n");
 			motor->stop();
 			motor->send_motor_throttle();
 			geo_controller->reset();
+			delay_ms(20);
 			sys_reboot();
 		}
 		else
 			Obstruction_avoidance_algorithm();
-	}
-	else
-		Obstruction_avoidance_algorithm();
+
 
 
 

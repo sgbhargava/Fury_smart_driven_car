@@ -74,7 +74,6 @@ void period_1Hz(void)
     readCANMsgs();
 }
 int counter = 0;
-int tuningCounter = 0;
 void period_10Hz(void)
 {
     if (counter >= 5 )

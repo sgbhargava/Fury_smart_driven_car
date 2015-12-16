@@ -131,7 +131,7 @@ void readCANMsgs(void)
         const int backSensor = 7;
         if (fc_temp.data_len == 8)
         {
-            sprintf(buffer, "L%d|C%d|R%d|B%d",
+            sprintf(buffer, "L%d|C%d|R%d|B%d\n",
                     fc_temp.data.bytes[leftSensor],
                     fc_temp.data.bytes[centerSensor],
                     fc_temp.data.bytes[rightSensor],

@@ -109,7 +109,10 @@ bool checkPntReached(float_t distance)
     static bool intermediateChkPnt = true;
 
     if (distance <= STOP_METERS)
-        intermediateChkPnt = updateToNxtChkPnt() && !isFinal();
+    {
+        intermediateChkPnt = !isFinal();
+        intermediateChkPnt = updateToNxtChkPnt() && intermediateChkPnt;
+    }
     else
         intermediateChkPnt = true;
 

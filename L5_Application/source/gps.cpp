@@ -21,7 +21,7 @@ extern float_t latTesting, longTesting;
 
 bool gps_data::initializeGPSBuffers()
 {
-    gpsDataBuffer_q = xQueueCreate(4, sizeof(gpsData_t));
+    gpsDataBuffer_q = xQueueCreate(1, sizeof(gpsData_t));
     addSharedObject("gps_queue", gpsDataBuffer_q);
     return (NULL != gpsDataBuffer_q);
 }
@@ -65,7 +65,7 @@ void gps_data::queueGPSData()
 {
     if(gpsExtendedData.valid[0] == 'A')
     {
-        if(!xQueueSend(gpsDataBuffer_q, &gpsFormattedData, 0))
+        if(!xQueueOverwrite(gpsDataBuffer_q, &gpsFormattedData))
         {
             LE.toggle(3);
         }

@@ -166,7 +166,7 @@ void period_10Hz(void)
 
         presentChkPnt = getPresentChkPnt();
 
-#if TESTCODE
+/*#if TESTCODE
         if(filter_flag)
         {
 #endif
@@ -179,12 +179,14 @@ void period_10Hz(void)
 #if TESTCODE
         }
         else
-        {
+        {*/
             // present car latitude and longitude
             presentLat = gpsCurrentData.latitude;
             presentLon = gpsCurrentData.longitude;
+/*
         }
 #endif
+*/
 
         // latitude and longitude of checkpoint
         chkPntLat = getLatitude(presentChkPnt);
@@ -215,14 +217,14 @@ void period_10Hz(void)
     }
     else
     {
-        finalChkPnt_b = false;
+       /* finalChkPnt_b = false;
         distanceToDest = 0;
         distanceToChkPnt = 0;
         desiredHeading = 0;
         gpsCurrentData.latitude = 0;
         gpsCurrentData.longitude = 0;
         presentChkPnt = 0;
-
+*/
         LE.toggle(1);
         LE.toggle(2);
     }
